@@ -1,4 +1,4 @@
-import { Arrow, Group, Line, Text } from 'react-konva'
+import { Arrow, Group, Line, Rect, Text } from 'react-konva'
 import type { Edge, Node } from '@/types/domain'
 import { NODE_H, NODE_W, anchorPoint, nearestAnchor } from './geometry'
 
@@ -78,15 +78,24 @@ export function EdgeShape({ edge, from, to, selected, onSelect, onLabelEdit }: P
       )}
       {edge.label && (
         <Group onDblClick={onLabelEdit} onDblTap={onLabelEdit}>
+          <Rect
+            x={midX - 50}
+            y={midY - 11}
+            width={100}
+            height={22}
+            fill="white"
+            stroke="#e3e6eb"
+            strokeWidth={1}
+            cornerRadius={4}
+          />
           <Text
-            x={midX - 60}
-            y={midY - 9}
-            width={120}
+            x={midX - 50}
+            y={midY - 8}
+            width={100}
             text={edge.label}
             align="center"
             fontSize={11}
             fill="#1f2328"
-            padding={2}
           />
         </Group>
       )}

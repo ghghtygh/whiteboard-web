@@ -281,10 +281,11 @@ export function Canvas({ doc }: Props) {
     if (editing.kind === 'node') {
       const n = nodes.find((x) => x.id === editing.id)
       if (!n) return null
+      // 라벨 영역: 노드 아래 가로 140px (LABEL_X = -30)
       return {
-        x: rect.left + (n.x + 4) * scale + vx,
-        y: rect.top + (n.y + NODE_H - 24) * scale + vy,
-        w: (NODE_W - 8) * scale,
+        x: rect.left + (n.x - 30) * scale + vx,
+        y: rect.top + (n.y + NODE_H + 4) * scale + vy,
+        w: 140 * scale,
       }
     }
     if (editing.kind === 'edge') {
@@ -465,6 +466,7 @@ export function Canvas({ doc }: Props) {
                 : groups.find((g) => g.id === editing.id)?.label ?? ''
           }
           maxLength={editing.kind === 'node' ? 50 : 30}
+          multiline={editing.kind === 'node'}
           screenX={editingScreen.x - (hostRef.current?.getBoundingClientRect().left ?? 0)}
           screenY={editingScreen.y - (hostRef.current?.getBoundingClientRect().top ?? 0)}
           width={editingScreen.w}

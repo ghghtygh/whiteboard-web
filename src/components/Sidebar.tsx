@@ -3,6 +3,7 @@ import { useCatalogStore } from '@/store/catalog'
 import type { ComponentType } from '@/types/domain'
 import { catalogColor } from '@/local/catalogSeed'
 import { localRecents } from '@/local/recents'
+import { iconDataUrl, hasIcon } from '@/canvas/icons'
 
 const CATEGORY_LABELS: Record<string, string> = {
   'ci-cd': 'CI / CD',
@@ -22,11 +23,16 @@ function ComponentRow({ item }: { item: ComponentType }) {
     e.dataTransfer.setData('application/x-whiteboard-component', item.type)
     e.dataTransfer.effectAllowed = 'copy'
   }
+  const url = iconDataUrl(item.type)
   return (
     <li draggable onDragStart={onDragStart} title={item.displayName}>
-      <span className="badge" style={{ background: catalogColor(item.type) }}>
-        {item.displayName.slice(0, 2).toUpperCase()}
-      </span>
+      {hasIcon(item.type) && url ? (
+        <img className="icon" src={url} alt="" width={20} height={20} draggable={false} />
+      ) : (
+        <span className="badge" style={{ background: catalogColor(item.type) }}>
+          {item.displayName.slice(0, 2).toUpperCase()}
+        </span>
+      )}
       <span className="name">{item.displayName}</span>
     </li>
   )
@@ -152,6 +158,7 @@ export function Sidebar() {
         .badge { display: inline-flex; align-items: center; justify-content: center;
                  width: 22px; height: 22px; border-radius: 4px;
                  color: white; font-size: 10px; font-weight: 700; flex-shrink: 0; }
+        .icon { width: 20px; height: 20px; flex-shrink: 0; object-fit: contain; }
         .name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .muted { color: var(--color-muted); font-size: 13px; }
         .error { color: var(--color-danger); font-size: 13px; }

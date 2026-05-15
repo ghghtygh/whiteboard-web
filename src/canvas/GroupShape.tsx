@@ -40,20 +40,21 @@ export function GroupShape({ group, selected, onSelect, onDragEnd, onLabelEdit }
       <Rect
         width={group.width}
         height={group.height}
-        fill={group.color ?? 'rgba(107, 114, 128, 0.06)'}
-        stroke={selected ? '#2563eb' : '#9ca3af'}
-        strokeWidth={selected ? 2 : 1}
-        dash={[6, 4]}
-        cornerRadius={8}
+        fill={group.color ?? 'rgba(255,255,255,0.4)'}
+        stroke={selected ? '#2563eb' : '#22c5a0'}
+        strokeWidth={selected ? 3 : 2}
+        cornerRadius={4}
       />
-      <Text
-        x={10}
-        y={8}
-        text={group.label ?? '(그룹)'}
-        fontSize={12}
-        fontStyle={group.label ? 'bold' : 'normal'}
-        fill={group.label ? '#1f2328' : '#9ca3af'}
-      />
+      {group.label && (
+        <Text
+          x={10}
+          y={8}
+          text={group.label}
+          fontSize={13}
+          fontStyle="bold"
+          fill="#1f2328"
+        />
+      )}
     </KGroup>
   )
 }
