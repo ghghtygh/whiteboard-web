@@ -6,6 +6,7 @@ import { IS_LOCAL_MODE } from '@/local/mode'
 import { Sidebar } from '@/components/Sidebar'
 import { Toolbar } from '@/components/Toolbar'
 import { ShareModal } from '@/components/ShareModal'
+import { PresenceBadges } from '@/components/PresenceBadges'
 import { Canvas } from '@/canvas/Canvas'
 import { useBoardCollab } from '@/collab/useBoardCollab'
 import { useUndoManager } from '@/canvas/hooks'
@@ -21,6 +22,17 @@ export function BoardEditPage() {
   const collab = useBoardCollab(boardId ?? null)
   const undoManager = useUndoManager(collab.doc)
   const clearSel = useSelection((s) => s.clear)
+
+  // 개발 모드 한정 — 테스트 자동화에서 Y.Doc 노드 개수 등을 검증할 수 있도록 노출.
+  useEffect(() => {
+    if (!import.meta.env.DEV) return
+    ;(window as unknown as { __wbDebug?: unknown }).__wbDebug = {
+      boardId,
+      doc: collab.doc,
+      syncEnabled: collab.syncEnabled,
+      syncConnected: collab.syncConnected,
+    }
+  }, [boardId, collab.doc, collab.syncEnabled, collab.syncConnected])
 
   useEffect(() => {
     if (!boardId) return
@@ -40,7 +52,9 @@ export function BoardEditPage() {
   }
 
   return (
-    <CanvasContextProvider value={{ doc: collab.doc, undoManager }}>
+    <CanvasContextProvider
+      value={{ doc: collab.doc, undoManager, awareness: collab.provider?.awareness ?? null }}
+    >
       <div className="board-shell">
         <header className="board-topbar">
           <Link to="/boards" className="back">← 보드 목록</Link>
@@ -48,6 +62,7 @@ export function BoardEditPage() {
             {board?.title ?? '…'}
           </button>
           <div className="spacer" />
+          <PresenceBadges awareness={collab.provider?.awareness ?? null} />
           <button className="share-btn" onClick={() => setShareOpen(true)}>공유</button>
           <span className="status" data-online={collab.syncEnabled ? collab.syncConnected : collab.ready}>
             {collab.syncEnabled

@@ -7,6 +7,8 @@ import type { Anchor, Node as DomainNode } from '@/types/domain'
 import { useEdgesSnapshot, useGroupsSnapshot, useNodesSnapshot } from './hooks'
 import { useCanvasContext } from './useCanvasContext'
 import { useGridStore } from './gridStore'
+import { setLocalCursor, setLocalSelection, useRemoteAwareness } from '@/collab/awareness'
+import { RemoteAwareness } from './RemoteAwareness'
 import { useSelection } from './selection'
 import { useToolStore } from './tool'
 import { NodeShape } from './NodeShape'
@@ -84,7 +86,8 @@ export function Canvas({ doc }: Props) {
   const nodes = useNodesSnapshot(doc)
   const edges = useEdgesSnapshot(doc)
   const groups = useGroupsSnapshot(doc)
-  const { undoManager } = useCanvasContext()
+  const { undoManager, awareness } = useCanvasContext()
+  const remoteAwareness = useRemoteAwareness(awareness)
 
   const selNodes = useSelection((s) => s.nodes)
   const selEdges = useSelection((s) => s.edges)
@@ -103,6 +106,29 @@ export function Canvas({ doc }: Props) {
     for (const n of nodes) m.set(n.id, n)
     return m
   }, [nodes])
+
+  const edgesById = useMemo(() => new Map(edges.map((e) => [e.id, e])), [edges])
+  const groupsById = useMemo(() => new Map(groups.map((g) => [g.id, g])), [groups])
+
+  // awareness: 로컬 selection 변경을 다른 peer 에 알림
+  useEffect(() => {
+    if (!awareness) return
+    const keys = [
+      ...[...selNodes].map((id) => `node:${id}`),
+      ...[...selEdges].map((id) => `edge:${id}`),
+      ...[...selGroups].map((id) => `group:${id}`),
+    ]
+    setLocalSelection(awareness, keys)
+  }, [awareness, selNodes, selEdges, selGroups])
+
+  // 커서 throttle (33ms ≈ 30fps)
+  const lastCursorAtRef = useRef(0)
+  // 컴포넌트 언마운트 시 awareness cursor 초기화
+  useEffect(() => {
+    return () => {
+      if (awareness) setLocalCursor(awareness, null)
+    }
+  }, [awareness])
 
   // 사이즈 추적
   useEffect(() => {
@@ -219,12 +245,22 @@ export function Canvas({ doc }: Props) {
     }
   }
 
-  // 마우스 이동 — pendingEdge / pendingGroup 추적
+  // 마우스 이동 — pendingEdge / pendingGroup 추적 + awareness 커서 송신
   const onStageMouseMove = () => {
     const stage = stageRef.current
     if (!stage) return
     const p = stage.getRelativePointerPosition()
     if (!p) return
+
+    // awareness 커서 (캔버스 좌표) — 33ms throttle
+    if (awareness) {
+      const now = performance.now()
+      if (now - lastCursorAtRef.current >= 33) {
+        lastCursorAtRef.current = now
+        setLocalCursor(awareness, { x: p.x, y: p.y })
+      }
+    }
+
     if (pendingEdge) setPendingEdge({ ...pendingEdge, x: p.x, y: p.y })
     if (pendingGroup) {
       setPendingGroup({
@@ -335,6 +371,7 @@ export function Canvas({ doc }: Props) {
         onMouseDown={onStageMouseDown}
         onMouseMove={onStageMouseMove}
         onMouseUp={onStageMouseUp}
+        onMouseLeave={() => awareness && setLocalCursor(awareness, null)}
       >
         <Layer>
           <Rect
@@ -454,6 +491,14 @@ export function Canvas({ doc }: Props) {
               listening={false}
             />
           )}
+
+          {/* 원격 awareness — 다른 peer 의 selection outline + 커서 */}
+          <RemoteAwareness
+            states={remoteAwareness}
+            nodesById={nodesById}
+            edgesById={edgesById}
+            groupsById={groupsById}
+          />
         </Layer>
       </Stage>
 

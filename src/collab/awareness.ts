@@ -1,3 +1,5 @@
+import { useEffect, useState } from 'react'
+import type { Awareness } from 'y-protocols/awareness'
 import type { WebsocketProvider } from 'y-websocket'
 import type { User } from '@/types/domain'
 
@@ -11,6 +13,7 @@ export interface AwarenessUser {
   color: string
 }
 
+// selection 은 ["node:abc", "edge:xyz", "group:g1"] 형식의 키 리스트
 export interface AwarenessState {
   user: AwarenessUser
   cursor: CursorState | null
@@ -35,8 +38,36 @@ export function bootstrapAwareness(provider: WebsocketProvider, user: User | nul
   provider.awareness.setLocalState(state)
 }
 
-export function updateCursor(provider: WebsocketProvider, cursor: CursorState | null): void {
-  const local = (provider.awareness.getLocalState() ?? {}) as Partial<AwarenessState>
-  provider.awareness.setLocalStateField('cursor', cursor)
-  void local
+export function setLocalCursor(awareness: Awareness | null, cursor: CursorState | null): void {
+  if (!awareness) return
+  awareness.setLocalStateField('cursor', cursor)
+}
+
+export function setLocalSelection(awareness: Awareness | null, selection: string[]): void {
+  if (!awareness) return
+  awareness.setLocalStateField('selection', selection)
+}
+
+// 다른 peer의 awareness state. 로컬 자기 자신은 제외.
+export function useRemoteAwareness(awareness: Awareness | null): Map<number, AwarenessState> {
+  const [states, setStates] = useState<Map<number, AwarenessState>>(() => new Map())
+  useEffect(() => {
+    if (!awareness) {
+      setStates(new Map())
+      return
+    }
+    const refresh = () => {
+      const local = awareness.clientID
+      const all = awareness.getStates() as Map<number, AwarenessState>
+      const remote = new Map<number, AwarenessState>()
+      all.forEach((s, id) => {
+        if (id !== local && s && s.user) remote.set(id, s)
+      })
+      setStates(remote)
+    }
+    refresh()
+    awareness.on('change', refresh)
+    return () => awareness.off('change', refresh)
+  }, [awareness])
+  return states
 }
