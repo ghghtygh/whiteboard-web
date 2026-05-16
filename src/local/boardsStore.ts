@@ -2,6 +2,7 @@ import { nanoid } from 'nanoid'
 import type { Board } from '@/types/domain'
 
 const KEY = 'whiteboard.boards.v1'
+const LAST_OPENED_KEY = 'whiteboard.lastOpenedBoardId.v1'
 const OWNER_ID = 'local-guest'
 
 function readAll(): Board[] {
@@ -61,5 +62,28 @@ export const localBoards = {
 
   delete(id: string): void {
     writeAll(readAll().filter((b) => b.id !== id))
+    if (localStorage.getItem(LAST_OPENED_KEY) === id) {
+      localStorage.removeItem(LAST_OPENED_KEY)
+    }
+  },
+
+  markOpened(id: string): void {
+    localStorage.setItem(LAST_OPENED_KEY, id)
+    this.touch(id)
+  },
+
+  lastOpenedId(): string | null {
+    const id = localStorage.getItem(LAST_OPENED_KEY)
+    if (!id) return null
+    return this.get(id) ? id : null
+  },
+
+  // 첫 방문 시: 마지막 보드 → 최근 보드 → 새 기본 보드 순으로 시도
+  lastOpenedOrDefault(): string {
+    const last = this.lastOpenedId()
+    if (last) return last
+    const all = this.list()
+    if (all.length > 0) return all[0]!.id
+    return this.create('무제 화이트보드').id
   },
 }

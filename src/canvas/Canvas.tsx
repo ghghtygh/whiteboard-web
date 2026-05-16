@@ -6,6 +6,7 @@ import type { BoardDoc } from '@/collab/doc'
 import type { Anchor, Node as DomainNode } from '@/types/domain'
 import { useEdgesSnapshot, useGroupsSnapshot, useNodesSnapshot } from './hooks'
 import { useCanvasContext } from './useCanvasContext'
+import { useGridStore } from './gridStore'
 import { useSelection } from './selection'
 import { useToolStore } from './tool'
 import { NodeShape } from './NodeShape'
@@ -78,6 +79,7 @@ export function Canvas({ doc }: Props) {
 
   const tool = useToolStore((s) => s.tool)
   const setTool = useToolStore((s) => s.set)
+  const gridVisible = useGridStore((s) => s.visible)
 
   const nodes = useNodesSnapshot(doc)
   const edges = useEdgesSnapshot(doc)
@@ -343,8 +345,8 @@ export function Canvas({ doc }: Props) {
             height={10000}
             fill="#fafbfc"
           />
-          {/* 그리드 가이드 — 약하게 */}
-          <GridLines />
+          {/* 그리드 가이드 — 약하게. 툴바에서 토글 */}
+          {gridVisible && <GridLines />}
 
           {/* 그룹 (가장 아래) */}
           {groups.map((g) => (

@@ -23,8 +23,9 @@ npm install
 npm run dev
 ```
 
-브라우저에서 `http://localhost:5173/` — 자동으로 게스트 사용자로 로그인되어
-보드 목록으로 이동한다.
+브라우저에서 `http://localhost:5173/` — 자동으로 게스트로 로그인 후
+**마지막에 열었던 보드 캔버스로 직행**한다 (Excalidraw 스타일). 보드가 없으면 자동 생성.
+명시적 보드 관리가 필요하면 `/boards` 로 이동.
 
 ## 스크립트
 
@@ -43,6 +44,7 @@ npm run dev
 | `VITE_REMOTE_MODE` | 미지정 (로컬) | `true` 면 백엔드 모드. 미지정/false 면 로컬 모드 |
 | `VITE_API_URL` | `http://localhost:8080` | 원격 모드 REST 베이스 (vite proxy 대상) |
 | `VITE_WS_URL` | `ws://localhost:8080` | 원격 모드 WebSocket 베이스 |
+| `VITE_SYNC_WS_URL` | 미지정 | Yjs 실시간 동기화 릴레이 URL. 설정 시 같은 boardId 가진 사용자끼리 동시 편집. 백엔드와 별개. 예: `wss://demos.yjs.dev/ws` |
 
 dev 서버는 `/api`와 `/ws`를 `VITE_API_URL` / `VITE_WS_URL` 로 프록시한다.
 
@@ -59,6 +61,8 @@ dev 서버는 `/api`와 `/ws`를 `VITE_API_URL` / `VITE_WS_URL` 로 프록시한
 - **팬/줌**: 빈 영역 드래그 = 팬. 마우스 휠 = 줌 (25%–400%).
 - **Undo/Redo**: `⌘Z` / `⌘⇧Z` 또는 툴바 버튼. `captureTimeout: 350ms` 로 묶음 처리.
 - **검색**: 사이드바 검색 (200ms debounce). 카테고리별 접힘/펼침. 최근 사용 5개 상단 고정.
+- **격자 토글**: 툴바 `격자` 버튼. localStorage 영속화.
+- **공유**: 헤더 `공유` 버튼 → 링크 복사 + 이메일 초대 (백엔드 도착 전엔 localStorage 보관). `VITE_SYNC_WS_URL` 설정 시 같은 링크 공유로 실시간 동시 편집.
 
 ## 디렉토리 구조
 
@@ -98,7 +102,7 @@ UndoManager 가 트랜잭션 단위로 stack 을 쌓는다. 끊긴 엣지는 노
 | M0 | ✅ | 프로젝트 셋업, 디렉토리 구조, 타입체크/린트/빌드 |
 | M1 | ⏸ | 백엔드 인증/보드 CRUD/카탈로그 API 연동 — 백엔드 도착 시 진행 |
 | M2 | ✅ | 캔버스: 노드·엣지·그룹, 드롭/드래그/선택/삭제, 라벨 편집, Undo/Redo. 로컬 영속화 (y-indexeddb) |
-| M3 | ⏸ | `y-websocket` 기반 실시간 협업 + awareness 커서 |
+| M3 | 🔌 | 하이브리드 collab 구조 완성 — IDB(항상) + WS(옵션). `VITE_SYNC_WS_URL` 지정 시 즉시 실시간 동작. awareness 커서 UI 는 후속. |
 | M4 | ⏸ | 보드 스냅샷 + update 로그 재연결 복구 |
 | M5 | ⏸ | JSON Import/Export, viewer 모드, 권한 UI |
 | M6 | ⏸ | 폴리싱, 부하 테스트, 베타 배포 |

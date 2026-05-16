@@ -1,10 +1,11 @@
-import { createBrowserRouter, Navigate } from 'react-router-dom'
+import { createBrowserRouter } from 'react-router-dom'
 import { RequireAuth } from '@/App'
 import { LoginPage } from '@/pages/LoginPage'
 import { SignupPage } from '@/pages/SignupPage'
 import { BoardListPage } from '@/pages/BoardListPage'
 import { BoardEditPage } from '@/pages/BoardEditPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
+import { LandingRedirect } from '@/pages/LandingRedirect'
 
 export const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
@@ -12,7 +13,7 @@ export const router = createBrowserRouter([
   {
     element: <RequireAuth />,
     children: [
-      { path: '/', element: <Navigate to="/boards" replace /> },
+      { path: '/', element: <LandingRedirect /> },
       { path: '/boards', element: <BoardListPage /> },
       { path: '/boards/:boardId', element: <BoardEditPage /> },
     ],

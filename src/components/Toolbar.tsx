@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useViewportStore } from '@/store/viewport'
 import { useToolStore } from '@/canvas/tool'
 import { useCanvasContext } from '@/canvas/useCanvasContext'
+import { useGridStore } from '@/canvas/gridStore'
 
 export function Toolbar() {
   const scale = useViewportStore((s) => s.scale)
@@ -9,6 +10,8 @@ export function Toolbar() {
   const reset = useViewportStore((s) => s.reset)
   const tool = useToolStore((s) => s.tool)
   const toggleGroup = useToolStore((s) => s.toggleGroup)
+  const gridVisible = useGridStore((s) => s.visible)
+  const toggleGrid = useGridStore((s) => s.toggle)
   const { undoManager } = useCanvasContext()
 
   // undoManager의 stack 상태를 가볍게 추적 (재렌더 트리거 용도)
@@ -50,6 +53,13 @@ export function Toolbar() {
           data-active={tool === 'group'}
         >
           그룹
+        </button>
+        <button
+          title="격자 표시"
+          onClick={toggleGrid}
+          data-active={gridVisible}
+        >
+          격자
         </button>
         <button disabled title="Export (M5)">Export</button>
         <button disabled title="Import (M5)">Import</button>

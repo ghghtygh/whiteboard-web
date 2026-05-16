@@ -5,65 +5,61 @@ import { createBoardDoc, type BoardDoc } from './doc'
 import { connectBoard } from './provider'
 import { bootstrapAwareness } from './awareness'
 import { useAuthStore } from '@/store/auth'
-import { IS_LOCAL_MODE } from '@/local/mode'
+import { SYNC_ENABLED } from '@/local/mode'
 
 export interface BoardCollab {
   doc: BoardDoc | null
   provider: WebsocketProvider | null
-  connected: boolean
-  // 로컬 모드: indexeddb 초기 로드 완료 여부. remote 모드에선 WebSocket 'synced' 신호.
+  // 실시간 동기화 연결 상태. SYNC_ENABLED 일 때만 의미 있음.
+  syncConnected: boolean
+  // 보드 초기 로드 완료 여부 (IDB synced 시점)
   ready: boolean
+  // 다른 사용자와 동기화 가능한지 (환경 설정에 따라)
+  syncEnabled: boolean
 }
 
+// 항상 IndexedDB로 로컬 영속화 + SYNC_WS_URL 이 있으면 같은 boardId로 WebSocket 동기화.
+// 같은 URL을 들고 두 명이 접속하면 자동으로 실시간 협업이 동작한다.
 export function useBoardCollab(boardId: string | null): BoardCollab {
   const user = useAuthStore((s) => s.user)
   const [doc, setDoc] = useState<BoardDoc | null>(null)
   const [provider, setProvider] = useState<WebsocketProvider | null>(null)
-  const [connected, setConnected] = useState(false)
+  const [syncConnected, setSyncConnected] = useState(false)
   const [ready, setReady] = useState(false)
 
   useEffect(() => {
     if (!boardId) return
     const next = createBoardDoc()
 
-    // 로컬 모드: IndexedDB 영속화만 사용
-    if (IS_LOCAL_MODE) {
-      const persistence = new IndexeddbPersistence(`whiteboard.board.${boardId}`, next.ydoc)
-      persistence.once('synced', () => setReady(true))
-      setDoc(next)
-      setConnected(true)
-      return () => {
-        void persistence.destroy()
-        next.ydoc.destroy()
-        setDoc(null)
-        setReady(false)
-        setConnected(false)
-      }
+    // 1) 로컬 IDB 영속화 — 항상.
+    const idb = new IndexeddbPersistence(`whiteboard.board.${boardId}`, next.ydoc)
+    idb.once('synced', () => setReady(true))
+
+    // 2) WebSocket 동기화 — SYNC_ENABLED 일 때만.
+    let prov: WebsocketProvider | null = null
+    let cleanup: (() => void) | null = null
+    if (SYNC_ENABLED) {
+      prov = connectBoard(boardId, next)
+      bootstrapAwareness(prov, user)
+      const onStatus = (e: { status: string }) => setSyncConnected(e.status === 'connected')
+      prov.on('status', onStatus)
+      cleanup = () => prov?.off('status', onStatus)
     }
 
-    // remote 모드: WebSocket
-    const prov = connectBoard(boardId, next)
-    bootstrapAwareness(prov, user)
     setDoc(next)
     setProvider(prov)
-    setConnected(false)
-
-    const onStatus = (event: { status: string }) => setConnected(event.status === 'connected')
-    const onSync = (synced: boolean) => synced && setReady(true)
-    prov.on('status', onStatus)
-    prov.on('sync', onSync)
 
     return () => {
-      prov.off('status', onStatus)
-      prov.off('sync', onSync)
-      prov.destroy()
+      cleanup?.()
+      prov?.destroy()
+      void idb.destroy()
       next.ydoc.destroy()
       setDoc(null)
       setProvider(null)
-      setConnected(false)
       setReady(false)
+      setSyncConnected(false)
     }
   }, [boardId, user])
 
-  return { doc, provider, connected, ready }
+  return { doc, provider, syncConnected, ready, syncEnabled: SYNC_ENABLED }
 }
