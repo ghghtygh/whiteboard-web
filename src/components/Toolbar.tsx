@@ -14,7 +14,6 @@ export function Toolbar() {
   const toggleGrid = useGridStore((s) => s.toggle)
   const { undoManager } = useCanvasContext()
 
-  // undoManager의 stack 상태를 가볍게 추적 (재렌더 트리거 용도)
   const [, setTick] = useState(0)
   useEffect(() => {
     if (!undoManager) return
@@ -32,50 +31,57 @@ export function Toolbar() {
 
   return (
     <div className="toolbar">
-      <div className="group">
-        <button title="줌 아웃" onClick={() => setScale(scale * 0.9)}>−</button>
-        <span className="zoom">{Math.round(scale * 100)}%</span>
-        <button title="줌 인" onClick={() => setScale(scale * 1.1)}>+</button>
-        <button title="초기화" onClick={reset}>리셋</button>
-      </div>
-      <div className="group">
-        <button title="실행 취소 (⌘Z)" disabled={!canUndo} onClick={() => undoManager?.undo()}>
-          ↶
-        </button>
-        <button title="다시 실행 (⌘⇧Z)" disabled={!canRedo} onClick={() => undoManager?.redo()}>
-          ↷
-        </button>
-      </div>
-      <div className="group">
-        <button
-          title="그룹 만들기 — 활성화 후 빈 영역 드래그"
-          onClick={toggleGroup}
-          data-active={tool === 'group'}
-        >
-          그룹
-        </button>
-        <button
-          title="격자 표시"
-          onClick={toggleGrid}
-          data-active={gridVisible}
-        >
-          격자
-        </button>
-        <button disabled title="Export (M5)">Export</button>
-        <button disabled title="Import (M5)">Import</button>
-      </div>
-      <div className="group hint">
-        <span>엣지 선택 시: 1 실선 · 2 점선 · 3 점점선 · D 방향 토글 · Delete 삭제</span>
-      </div>
+      <button className="ico" title="실행 취소 (⌘Z)" disabled={!canUndo} onClick={() => undoManager?.undo()}>
+        ↶
+      </button>
+      <button className="ico" title="다시 실행 (⌘⇧Z)" disabled={!canRedo} onClick={() => undoManager?.redo()}>
+        ↷
+      </button>
+      <span className="sep" />
+      <button
+        className="ico txt"
+        title="그룹 만들기 — 빈 영역 드래그"
+        data-active={tool === 'group'}
+        onClick={toggleGroup}
+      >
+        그룹
+      </button>
+      <button className="ico txt" title="격자 표시" data-active={gridVisible} onClick={toggleGrid}>
+        격자
+      </button>
+      <span className="sep" />
+      <button className="ico" title="줌 아웃" onClick={() => setScale(scale * 0.9)}>
+        −
+      </button>
+      <button className="zoom" title="기본 줌(100%)으로 리셋" onClick={reset}>
+        {Math.round(scale * 100)}%
+      </button>
+      <button className="ico" title="줌 인" onClick={() => setScale(scale * 1.1)}>
+        +
+      </button>
 
       <style>{`
-        .toolbar { display: flex; gap: 12px; padding: 8px 12px;
-                   background: var(--color-panel);
-                   border-bottom: 1px solid var(--color-border); align-items: center; }
-        .toolbar .group { display: flex; gap: 4px; align-items: center; }
-        .toolbar .zoom { font-size: 12px; color: var(--color-muted); min-width: 42px; text-align: center; }
-        .toolbar .hint { margin-left: auto; font-size: 11px; color: var(--color-muted); }
-        button[data-active="true"] { background: var(--color-accent); color: white; border-color: var(--color-accent); }
+        .toolbar { display: inline-flex; align-items: center; gap: 2px; }
+        .toolbar .ico {
+          width: 28px; height: 28px; padding: 0; font-size: 15px; line-height: 1;
+          display: inline-flex; align-items: center; justify-content: center;
+          background: transparent; border: 1px solid transparent; border-radius: 4px;
+          color: var(--color-text); cursor: pointer;
+        }
+        .toolbar .ico.txt { width: auto; padding: 0 10px; font-size: 12px; }
+        .toolbar .ico:hover:not(:disabled) { background: #f1f3f5; }
+        .toolbar .ico:disabled { opacity: 0.35; cursor: default; }
+        .toolbar .ico[data-active="true"] {
+          background: var(--color-accent); color: white;
+        }
+        .toolbar .zoom {
+          min-width: 48px; height: 28px; padding: 0 6px;
+          font-size: 12px; color: var(--color-muted);
+          background: transparent; border: 1px solid transparent; border-radius: 4px;
+          cursor: pointer;
+        }
+        .toolbar .zoom:hover { background: #f1f3f5; color: var(--color-text); }
+        .toolbar .sep { width: 1px; height: 16px; background: var(--color-border); margin: 0 4px; }
       `}</style>
     </div>
   )

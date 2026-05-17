@@ -23,7 +23,6 @@ export function BoardEditPage() {
   const undoManager = useUndoManager(collab.doc)
   const clearSel = useSelection((s) => s.clear)
 
-  // 개발 모드 한정 — 테스트 자동화에서 Y.Doc 노드 개수 등을 검증할 수 있도록 노출.
   useEffect(() => {
     if (!import.meta.env.DEV) return
     ;(window as unknown as { __wbDebug?: unknown }).__wbDebug = {
@@ -57,21 +56,23 @@ export function BoardEditPage() {
     >
       <div className="board-shell">
         <header className="board-topbar">
-          <Link to="/boards" className="back">← 보드 목록</Link>
+          <Link to="/boards" className="back" title="보드 목록">←</Link>
           <button className="title-btn" onClick={onRename}>
             {board?.title ?? '…'}
           </button>
+          <span className="vsep" />
+          <Toolbar />
           <div className="spacer" />
           <PresenceBadges awareness={collab.provider?.awareness ?? null} />
           <button className="share-btn" onClick={() => setShareOpen(true)}>공유</button>
           <span className="status" data-online={collab.syncEnabled ? collab.syncConnected : collab.ready}>
             {collab.syncEnabled
               ? collab.syncConnected
-                ? '실시간 동기화 중'
+                ? '동기화 중'
                 : '연결 중…'
               : collab.ready
-                ? '로컬 전용'
-                : '초기화 중…'}
+                ? '로컬'
+                : '…'}
           </span>
         </header>
 
@@ -86,7 +87,6 @@ export function BoardEditPage() {
         <div className="board-body">
           <Sidebar />
           <main className="board-main">
-            <Toolbar />
             <div className="canvas-host">
               {error ? <p className="error">{error}</p> : <Canvas boardId={boardId ?? ''} doc={collab.doc} />}
             </div>
@@ -95,19 +95,24 @@ export function BoardEditPage() {
 
         <style>{`
           .board-shell { display: flex; flex-direction: column; height: 100%; }
-          .board-topbar { display: flex; align-items: center; gap: 12px;
-                          padding: 8px 16px; border-bottom: 1px solid var(--color-border);
-                          background: var(--color-panel); }
-          .back { font-size: 13px; }
-          .title-btn { background: none; border: none; font-size: 16px; font-weight: 600; padding: 4px 6px; cursor: pointer; }
+          .board-topbar { display: flex; align-items: center; gap: 8px;
+                          padding: 4px 12px; border-bottom: 1px solid var(--color-border);
+                          background: var(--color-panel); min-height: 38px; }
+          .back { font-size: 16px; color: var(--color-text); text-decoration: none; padding: 0 4px; }
+          .back:hover { color: var(--color-accent); }
+          .title-btn { background: none; border: none; font-size: 14px; font-weight: 600;
+                       padding: 4px 6px; cursor: pointer; max-width: 200px;
+                       white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
           .title-btn:hover { background: #f1f3f5; border-radius: 4px; }
+          .vsep { width: 1px; height: 18px; background: var(--color-border); margin: 0 4px; }
           .spacer { flex: 1; }
-          .share-btn { font-size: 13px; background: var(--color-accent); color: white;
-                       border-color: var(--color-accent); }
+          .share-btn { font-size: 12px; padding: 4px 12px;
+                       background: var(--color-accent); color: white;
+                       border-color: var(--color-accent); border-radius: 4px; }
           .share-btn:hover { background: var(--color-accent-hover); }
-          .status { font-size: 12px; color: var(--color-muted); }
+          .status { font-size: 11px; color: var(--color-muted); padding: 0 4px; }
           .status[data-online="true"] { color: #16a34a; }
-          .board-body { flex: 1; display: grid; grid-template-columns: 240px 1fr; min-height: 0; }
+          .board-body { flex: 1; display: grid; grid-template-columns: 220px 1fr; min-height: 0; }
           .board-main { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
           .canvas-host { flex: 1; position: relative; background: #fafbfc; min-height: 0; }
           .error { color: var(--color-danger); padding: 16px; }
