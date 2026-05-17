@@ -8,6 +8,7 @@ import { Toolbar } from '@/components/Toolbar'
 import { ShareModal } from '@/components/ShareModal'
 import { PresenceBadges } from '@/components/PresenceBadges'
 import { ZoomOverlay } from '@/components/ZoomOverlay'
+import { Minimap } from '@/components/Minimap'
 import { Canvas } from '@/canvas/Canvas'
 import { useBoardCollab } from '@/collab/useBoardCollab'
 import { useUndoManager } from '@/canvas/hooks'
@@ -90,7 +91,12 @@ export function BoardEditPage() {
           <main className="board-main">
             <div className="canvas-host">
               {error ? <p className="error">{error}</p> : <Canvas boardId={boardId ?? ''} doc={collab.doc} />}
-              {!error && <ZoomOverlay />}
+              {!error && (
+                <>
+                  <Minimap />
+                  <ZoomOverlay />
+                </>
+              )}
             </div>
           </main>
         </div>

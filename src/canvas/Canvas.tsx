@@ -78,6 +78,7 @@ export function Canvas({ doc }: Props) {
   const vy = useViewportStore((s) => s.y)
   const setScale = useViewportStore((s) => s.setScale)
   const setPosition = useViewportStore((s) => s.setPosition)
+  const setCanvasSize = useViewportStore((s) => s.setCanvasSize)
 
   const tool = useToolStore((s) => s.tool)
   const setTool = useToolStore((s) => s.set)
@@ -130,15 +131,21 @@ export function Canvas({ doc }: Props) {
     }
   }, [awareness])
 
-  // 사이즈 추적
+  // 사이즈 추적 — 로컬 state + 미니맵용 store 동시 업데이트
   useEffect(() => {
     if (!hostRef.current) return
     const el = hostRef.current
-    const ro = new ResizeObserver(() => setSize({ width: el.clientWidth, height: el.clientHeight }))
+    const update = () => {
+      const w = el.clientWidth
+      const h = el.clientHeight
+      setSize({ width: w, height: h })
+      setCanvasSize(w, h)
+    }
+    const ro = new ResizeObserver(update)
     ro.observe(el)
-    setSize({ width: el.clientWidth, height: el.clientHeight })
+    update()
     return () => ro.disconnect()
-  }, [])
+  }, [setCanvasSize])
 
   // 키보드: Delete, ⌘Z, ⌘⇧Z, 엣지 스타일/방향 토글
   useEffect(() => {
