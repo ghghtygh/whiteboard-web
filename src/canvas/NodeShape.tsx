@@ -2,7 +2,7 @@ import { Group, Rect, Text, Circle, Image as KImage } from 'react-konva'
 import useImage from 'use-image'
 import type Konva from 'konva'
 import type { Anchor, Node } from '@/types/domain'
-import { ANCHOR_R, NODE_H, NODE_W } from './geometry'
+import { ANCHOR_R, BOX_H, BOX_X_OFFSET, LABEL_W, LABEL_GAP, LABEL_H, LABEL_LINE_H, NODE_H, NODE_W } from './geometry'
 import { catalogColor } from '@/local/catalogSeed'
 import { iconDataUrl, hasIcon } from './icons'
 
@@ -23,24 +23,22 @@ const ANCHORS: Anchor[] = ['top', 'right', 'bottom', 'left']
 const ICON_INSET = 8
 const ICON_SIZE = NODE_W - ICON_INSET * 2 // 64
 
-// 라벨 영역 — 아이콘 아래에 노출. 가로는 노드 폭보다 살짝 넓게.
-const LABEL_W = 140
-const LABEL_X = (NODE_W - LABEL_W) / 2 // 음수 → 노드 외부로 확장
-const LABEL_GAP = 4
-const LABEL_LINE_H = 16
-const LABEL_MAX_LINES = 3
-const LABEL_H = LABEL_LINE_H * LABEL_MAX_LINES
+// 라벨 영역 — 노드 박스의 가로 = 라벨 가로. (NODE_W - LABEL_W)/2 는 음수
+const LABEL_X = BOX_X_OFFSET
 
+// 앵커 = 박스(아이콘+라벨) 외곽 중점. geometry.anchorPoint 와 동일.
 function anchorXY(anchor: Anchor): { x: number; y: number } {
+  const left = BOX_X_OFFSET
+  const right = LABEL_X + LABEL_W
   switch (anchor) {
     case 'top':
       return { x: NODE_W / 2, y: 0 }
     case 'right':
-      return { x: NODE_W, y: NODE_H / 2 }
+      return { x: right, y: BOX_H / 2 }
     case 'bottom':
-      return { x: NODE_W / 2, y: NODE_H }
+      return { x: NODE_W / 2, y: BOX_H }
     case 'left':
-      return { x: 0, y: NODE_H / 2 }
+      return { x: left, y: BOX_H / 2 }
   }
 }
 
@@ -94,16 +92,16 @@ export function NodeShape(props: Props) {
         fill="transparent"
       />
 
-      {/* 선택/호버 outline — 아이콘 영역만 감싸는 둥근 사각 */}
+      {/* 선택/호버 outline — 박스(아이콘 + 라벨) 전체 둘러쌈 */}
       {(selected || hovered) && (
         <Rect
-          x={2}
+          x={LABEL_X + 2}
           y={2}
-          width={NODE_W - 4}
-          height={NODE_H - 4}
+          width={LABEL_W - 4}
+          height={BOX_H - 4}
           stroke={selected ? '#2563eb' : '#9ca3af'}
           strokeWidth={selected ? 2 : 1}
-          cornerRadius={10}
+          cornerRadius={8}
           dash={selected ? undefined : [4, 4]}
           listening={false}
         />

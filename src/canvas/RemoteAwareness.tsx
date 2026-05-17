@@ -2,7 +2,14 @@ import { Fragment } from 'react'
 import { Group, Line, Rect, Text } from 'react-konva'
 import type { AwarenessState } from '@/collab/awareness'
 import type { Edge, Group as DGroup, Node } from '@/types/domain'
-import { NODE_H, NODE_W, anchorPoint, nearestAnchor } from './geometry'
+import {
+  BOX_H,
+  BOX_X_OFFSET,
+  LABEL_W,
+  anchorPoint,
+  boxCenter,
+  nearestAnchor,
+} from './geometry'
 
 interface Props {
   states: Map<number, AwarenessState>
@@ -77,13 +84,13 @@ export function RemoteAwareness({ states, nodesById, edgesById, groupsById }: Pr
                 return (
                   <Rect
                     key={`s-${clientId}-${key}`}
-                    x={n.x - 4}
-                    y={n.y - 4}
-                    width={NODE_W + 8}
-                    height={NODE_H + 8}
+                    x={n.x + BOX_X_OFFSET - 2}
+                    y={n.y - 2}
+                    width={LABEL_W + 4}
+                    height={BOX_H + 4}
                     stroke={color}
                     strokeWidth={2}
-                    cornerRadius={12}
+                    cornerRadius={10}
                     dash={[5, 4]}
                     listening={false}
                   />
@@ -113,12 +120,12 @@ export function RemoteAwareness({ states, nodesById, edgesById, groupsById }: Pr
                 const from = nodesById.get(e.from)
                 const to = nodesById.get(e.to)
                 if (!from || !to) return null
-                const fa =
-                  e.fromAnchor ?? nearestAnchor(from.x, from.y, NODE_W, NODE_H, to.x + NODE_W / 2, to.y + NODE_H / 2)
-                const ta =
-                  e.toAnchor ?? nearestAnchor(to.x, to.y, NODE_W, NODE_H, from.x + NODE_W / 2, from.y + NODE_H / 2)
-                const a = anchorPoint(from.x, from.y, NODE_W, NODE_H, fa)
-                const b = anchorPoint(to.x, to.y, NODE_W, NODE_H, ta)
+                const toC = boxCenter(to.x, to.y)
+                const fromC = boxCenter(from.x, from.y)
+                const fa = e.fromAnchor ?? nearestAnchor(from.x, from.y, toC.x, toC.y)
+                const ta = e.toAnchor ?? nearestAnchor(to.x, to.y, fromC.x, fromC.y)
+                const a = anchorPoint(from.x, from.y, fa)
+                const b = anchorPoint(to.x, to.y, ta)
                 return (
                   <Line
                     key={`s-${clientId}-${key}`}

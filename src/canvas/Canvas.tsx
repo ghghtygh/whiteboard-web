@@ -19,6 +19,7 @@ import {
   NODE_H,
   NODE_W,
   anchorPoint,
+  boxCenter,
   dropJitter,
   nearestAnchor,
   snap,
@@ -430,7 +431,7 @@ export function Canvas({ doc }: Props) {
             (() => {
               const from = nodesById.get(pendingEdge.fromId)
               if (!from) return null
-              const a = anchorPoint(from.x, from.y, NODE_W, NODE_H, pendingEdge.fromAnchor)
+              const a = anchorPoint(from.x, from.y, pendingEdge.fromAnchor)
               return (
                 <Arrow
                   points={[a.x, a.y, pendingEdge.x, pendingEdge.y]}
@@ -457,16 +458,14 @@ export function Canvas({ doc }: Props) {
               onDragMove={(x, y) => doc && moveNode(doc, n.id, snap(x), snap(y))}
               onDragEnd={(x, y) => doc && moveNode(doc, n.id, snap(x), snap(y))}
               onAnchorDown={(anchor) => {
-                const a = anchorPoint(n.x, n.y, NODE_W, NODE_H, anchor)
+                const a = anchorPoint(n.x, n.y, anchor)
                 setPendingEdge({ fromId: n.id, fromAnchor: anchor, x: a.x, y: a.y })
               }}
               onAnchorUp={() => {
                 if (pendingEdge && pendingEdge.fromId !== n.id && doc) {
-                  const toCenter = { x: n.x + NODE_W / 2, y: n.y + NODE_H / 2 }
                   const from = nodesById.get(pendingEdge.fromId)
-                  const guessTo =
-                    from && nearestAnchor(n.x, n.y, NODE_W, NODE_H, from.x + NODE_W / 2, from.y + NODE_H / 2)
-                  void toCenter
+                  const fromC = from ? boxCenter(from.x, from.y) : null
+                  const guessTo = fromC ? nearestAnchor(n.x, n.y, fromC.x, fromC.y) : null
                   createEdge(doc, pendingEdge.fromId, n.id, pendingEdge.fromAnchor, guessTo ?? null)
                   setPendingEdge(null)
                 }
