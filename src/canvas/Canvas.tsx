@@ -89,6 +89,9 @@ export function Canvas({ doc }: Props) {
   const setTool = useToolStore((s) => s.set)
   const gridVisible = useGridStore((s) => s.visible)
   const snapEnabled = useSnapStore((s) => s.enabled)
+  // Alt 누르고 있는 동안 스냅 모드를 일시 반전 (ON↔OFF)
+  const [altDown, setAltDown] = useState(false)
+  const snapEffective = snapEnabled !== altDown
 
   const nodes = useNodesSnapshot(doc)
   const edges = useEdgesSnapshot(doc)
@@ -136,6 +139,24 @@ export function Canvas({ doc }: Props) {
       if (awareness) setLocalCursor(awareness, null)
     }
   }, [awareness])
+
+  // Alt 키 트래킹 (window 단위). 윈도우 포커스 잃으면 해제.
+  useEffect(() => {
+    function update(e: KeyboardEvent) {
+      setAltDown(e.altKey)
+    }
+    function blur() {
+      setAltDown(false)
+    }
+    window.addEventListener('keydown', update)
+    window.addEventListener('keyup', update)
+    window.addEventListener('blur', blur)
+    return () => {
+      window.removeEventListener('keydown', update)
+      window.removeEventListener('keyup', update)
+      window.removeEventListener('blur', blur)
+    }
+  }, [])
 
   // 사이즈 추적 — 로컬 state + 미니맵용 store 동시 업데이트
   useEffect(() => {
@@ -317,7 +338,7 @@ export function Canvas({ doc }: Props) {
     const sy = e.clientY - rect.top
     let x = (sx - vx) / scale + dropJitter()
     let y = (sy - vy) / scale + dropJitter()
-    if (snapEnabled) {
+    if (snapEffective) {
       x = coarseSnap(x - NODE_W / 2) + NODE_W / 2
       y = coarseSnap(y - NODE_H / 2) + NODE_H / 2
     }
@@ -403,7 +424,7 @@ export function Canvas({ doc }: Props) {
             fill="#fafbfc"
           />
           {/* 그리드 가이드 — 약하게. 툴바에서 토글 */}
-          {gridVisible && <GridLines step={snapEnabled ? COARSE_GRID : 200} />}
+          {gridVisible && <GridLines step={snapEffective ? COARSE_GRID : 200} />}
 
           {/* 그룹 (가장 아래) */}
           {groups.map((g) => (
@@ -465,10 +486,10 @@ export function Canvas({ doc }: Props) {
               onSelect={(additive) => toggleSel('node', n.id, additive)}
               onHover={(h) => setHoveredNode(h ? n.id : (cur) => (cur === n.id ? null : cur))}
               onDragMove={(x, y) =>
-                doc && moveNode(doc, n.id, snapEnabled ? coarseSnap(x) : snap(x), snapEnabled ? coarseSnap(y) : snap(y))
+                doc && moveNode(doc, n.id, snapEffective ? coarseSnap(x) : snap(x), snapEffective ? coarseSnap(y) : snap(y))
               }
               onDragEnd={(x, y) =>
-                doc && moveNode(doc, n.id, snapEnabled ? coarseSnap(x) : snap(x), snapEnabled ? coarseSnap(y) : snap(y))
+                doc && moveNode(doc, n.id, snapEffective ? coarseSnap(x) : snap(x), snapEffective ? coarseSnap(y) : snap(y))
               }
               onAnchorDown={(anchor) => {
                 const a = anchorPoint(n.x, n.y, anchor, getNodeBox(n))
