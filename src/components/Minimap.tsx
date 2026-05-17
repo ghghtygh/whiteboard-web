@@ -1,7 +1,7 @@
 import { useMemo, useRef } from 'react'
 import { useViewportStore } from '@/store/viewport'
 import { useCanvasContext } from '@/canvas/useCanvasContext'
-import { useNodesSnapshot, useGroupsSnapshot } from '@/canvas/hooks'
+import { useNodesSnapshot, useGroupsSnapshot, useEdgesSnapshot } from '@/canvas/hooks'
 import { NODE_H, NODE_W } from '@/canvas/geometry'
 import { catalogColor } from '@/local/catalogSeed'
 
@@ -21,7 +21,11 @@ export function Minimap() {
   const { doc } = useCanvasContext()
   const nodes = useNodesSnapshot(doc)
   const groups = useGroupsSnapshot(doc)
+  const edges = useEdgesSnapshot(doc)
   const svgRef = useRef<SVGSVGElement>(null)
+
+  // 엣지를 미니맵에서 그릴 때 노드 중심 좌표가 필요
+  const nodesById = useMemo(() => new Map(nodes.map((n) => [n.id, n])), [nodes])
 
   const scale = useViewportStore((s) => s.scale)
   const vx = useViewportStore((s) => s.x)
@@ -68,19 +72,31 @@ export function Minimap() {
     return (y - bounds.yMin) * bounds.scale
   }
 
-  // 클릭 시 그 위치로 팬 (중앙 정렬)
-  function onClick(e: React.MouseEvent<SVGSVGElement>) {
+  // 포인터 위치를 캔버스 중앙으로 정렬
+  function panToPointer(clientX: number, clientY: number) {
     if (!svgRef.current || cw === 0 || ch === 0) return
     const rect = svgRef.current.getBoundingClientRect()
-    const mx = e.clientX - rect.left
-    const my = e.clientY - rect.top
-    // 미니맵 픽셀 → 월드
+    const mx = clientX - rect.left
+    const my = clientY - rect.top
     const worldX = bounds.xMin + mx / bounds.scale
     const worldY = bounds.yMin + my / bounds.scale
-    // 캔버스의 중앙을 worldX/Y 로 정렬
-    const nextVx = cw / 2 - worldX * scale
-    const nextVy = ch / 2 - worldY * scale
-    setPosition(nextVx, nextVy)
+    setPosition(cw / 2 - worldX * scale, ch / 2 - worldY * scale)
+  }
+
+  // 드래그 라이브 팬 — pointer capture 로 SVG 밖으로 나가도 계속 따라옴
+  const draggingRef = useRef(false)
+  function onPointerDown(e: React.PointerEvent<SVGSVGElement>) {
+    draggingRef.current = true
+    svgRef.current?.setPointerCapture(e.pointerId)
+    panToPointer(e.clientX, e.clientY)
+  }
+  function onPointerMove(e: React.PointerEvent<SVGSVGElement>) {
+    if (!draggingRef.current) return
+    panToPointer(e.clientX, e.clientY)
+  }
+  function onPointerUp(e: React.PointerEvent<SVGSVGElement>) {
+    draggingRef.current = false
+    svgRef.current?.releasePointerCapture(e.pointerId)
   }
 
   return (
@@ -90,12 +106,34 @@ export function Minimap() {
         width={MM_W}
         height={MM_H}
         viewBox={`0 0 ${MM_W} ${MM_H}`}
-        onClick={onClick}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
         role="img"
-        aria-label="미니맵 — 클릭으로 이동"
+        aria-label="미니맵 — 클릭/드래그로 이동"
       >
         {/* 배경 */}
         <rect x={0} y={0} width={MM_W} height={MM_H} fill="#fafbfc" />
+
+        {/* 엣지 (노드 보다 아래) — 중심-중심 연결 */}
+        {edges.map((e) => {
+          const from = nodesById.get(e.from)
+          const to = nodesById.get(e.to)
+          if (!from || !to) return null
+          return (
+            <line
+              key={`e-${e.id}`}
+              x1={toMmX(from.x + NODE_W / 2)}
+              y1={toMmY(from.y + NODE_H / 2)}
+              x2={toMmX(to.x + NODE_W / 2)}
+              y2={toMmY(to.y + NODE_H / 2)}
+              stroke="#6b7280"
+              strokeWidth={0.8}
+              opacity={0.6}
+            />
+          )
+        })}
 
         {/* 그룹 */}
         {groups.map((g) => (
@@ -148,7 +186,8 @@ export function Minimap() {
           user-select: none;
           line-height: 0;
         }
-        .minimap svg { display: block; cursor: pointer; border-radius: 3px; }
+        .minimap svg { display: block; cursor: grab; border-radius: 3px; touch-action: none; }
+        .minimap svg:active { cursor: grabbing; }
       `}</style>
     </div>
   )
