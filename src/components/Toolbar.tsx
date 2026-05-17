@@ -67,7 +67,7 @@ export function Toolbar() {
       </button>
       <button
         className="ico txt"
-        title="격자 정렬 — 노드를 120px 격자에 자동 스냅 (Alt 누르면 일시 반전)"
+        title="격자 정렬 — 노드를 40px 격자에 자동 스냅 (Alt 누르면 일시 반전)"
         data-active={snapEnabled}
         onClick={onToggleSnap}
       >

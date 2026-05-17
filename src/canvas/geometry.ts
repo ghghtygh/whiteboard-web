@@ -2,8 +2,9 @@ import type { Anchor, Node } from '@/types/domain'
 
 // 스펙 §7.2 그리드 스냅 8px
 export const GRID = 8
-// 격자 스냅 모드 — 정렬 활성화 시 노드 좌상단을 이 단위로 맞춤. 8의 배수.
-export const COARSE_GRID = 120
+// 격자 스냅 모드 — 정렬 활성화 시 노드 좌상단을 이 단위로 맞춤.
+// 노드 박스 폭(NODE_W=80)의 절반 — 박스 하나가 2 셀을 차지하는 바둑판 그리드.
+export const COARSE_GRID = 40
 export const NODE_W = 80
 export const NODE_H = 80
 export const ANCHOR_R = 6
