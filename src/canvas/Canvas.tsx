@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Stage, Layer, Rect, Text, Arrow, Line } from 'react-konva'
 import type Konva from 'konva'
-import { useViewportStore } from '@/store/viewport'
+import { useViewportStore, clampScale } from '@/store/viewport'
 import type { BoardDoc } from '@/collab/doc'
 import type { Anchor, Node as DomainNode } from '@/types/domain'
 import { useEdgesSnapshot, useGroupsSnapshot, useNodesSnapshot } from './hooks'
@@ -203,7 +203,7 @@ export function Canvas({ doc }: Props) {
     return () => window.removeEventListener('keydown', onKey)
   }, [doc, undoManager, selNodes, selEdges, selGroups, clearSel])
 
-  // 휠 줌
+  // 휠 줌 — scale 클램프 후 position 도 같은 값으로 정렬해 한계에서 드리프트 방지
   const onWheel = useCallback(
     (e: Konva.KonvaEventObject<WheelEvent>) => {
       e.evt.preventDefault()
@@ -212,7 +212,10 @@ export function Canvas({ doc }: Props) {
       const pointer = stage.getPointerPosition()
       if (!pointer) return
       const direction = e.evt.deltaY > 0 ? -1 : 1
-      const next = direction > 0 ? scale * 1.05 : scale / 1.05
+      const rawNext = direction > 0 ? scale * 1.05 : scale / 1.05
+      const next = clampScale(rawNext)
+      // 한계 도달 시 setScale 만 noop 되고 position 만 움직이는 걸 방지
+      if (next === scale) return
       const mouseTo = {
         x: (pointer.x - vx) / scale,
         y: (pointer.y - vy) / scale,
