@@ -2,12 +2,15 @@ import { useEffect, useState } from 'react'
 import { useToolStore } from '@/canvas/tool'
 import { useCanvasContext } from '@/canvas/useCanvasContext'
 import { useGridStore } from '@/canvas/gridStore'
+import { useSnapStore } from '@/canvas/snapStore'
 
 export function Toolbar() {
   const tool = useToolStore((s) => s.tool)
   const toggleGroup = useToolStore((s) => s.toggleGroup)
   const gridVisible = useGridStore((s) => s.visible)
   const toggleGrid = useGridStore((s) => s.toggle)
+  const snapEnabled = useSnapStore((s) => s.enabled)
+  const toggleSnap = useSnapStore((s) => s.toggle)
   const { undoManager } = useCanvasContext()
 
   const [, setTick] = useState(0)
@@ -44,6 +47,14 @@ export function Toolbar() {
       </button>
       <button className="ico txt" title="격자 표시" data-active={gridVisible} onClick={toggleGrid}>
         격자
+      </button>
+      <button
+        className="ico txt"
+        title="격자 정렬 — 노드를 120px 격자에 자동 스냅"
+        data-active={snapEnabled}
+        onClick={toggleSnap}
+      >
+        정렬
       </button>
 
       <style>{`

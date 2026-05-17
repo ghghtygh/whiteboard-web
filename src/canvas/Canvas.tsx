@@ -7,6 +7,7 @@ import type { Anchor, Node as DomainNode } from '@/types/domain'
 import { useEdgesSnapshot, useGroupsSnapshot, useNodesSnapshot } from './hooks'
 import { useCanvasContext } from './useCanvasContext'
 import { useGridStore } from './gridStore'
+import { useSnapStore } from './snapStore'
 import { setLocalCursor, setLocalSelection, useRemoteAwareness } from '@/collab/awareness'
 import { RemoteAwareness } from './RemoteAwareness'
 import { useSelection } from './selection'
@@ -16,10 +17,12 @@ import { EdgeShape } from './EdgeShape'
 import { GroupShape } from './GroupShape'
 import { LabelEditor } from './LabelEditor'
 import {
+  COARSE_GRID,
   NODE_H,
   NODE_W,
   anchorPoint,
   boxCenter,
+  coarseSnap,
   dropJitter,
   getNodeBox,
   nearestAnchor,
@@ -85,6 +88,7 @@ export function Canvas({ doc }: Props) {
   const tool = useToolStore((s) => s.tool)
   const setTool = useToolStore((s) => s.set)
   const gridVisible = useGridStore((s) => s.visible)
+  const snapEnabled = useSnapStore((s) => s.enabled)
 
   const nodes = useNodesSnapshot(doc)
   const edges = useEdgesSnapshot(doc)
@@ -301,7 +305,7 @@ export function Canvas({ doc }: Props) {
     }
   }
 
-  // 사이드바 드롭
+  // 사이드바 드롭 — 정렬 모드면 좌상단을 COARSE_GRID 에 스냅하고 중앙 좌표로 환산해 전달
   const onDrop = (e: React.DragEvent) => {
     e.preventDefault()
     const type = e.dataTransfer.getData('application/x-whiteboard-component')
@@ -311,8 +315,12 @@ export function Canvas({ doc }: Props) {
     const rect = stage.container().getBoundingClientRect()
     const sx = e.clientX - rect.left
     const sy = e.clientY - rect.top
-    const x = (sx - vx) / scale + dropJitter()
-    const y = (sy - vy) / scale + dropJitter()
+    let x = (sx - vx) / scale + dropJitter()
+    let y = (sy - vy) / scale + dropJitter()
+    if (snapEnabled) {
+      x = coarseSnap(x - NODE_W / 2) + NODE_W / 2
+      y = coarseSnap(y - NODE_H / 2) + NODE_H / 2
+    }
     const ct = LOCAL_CATALOG.find((c) => c.type === type)
     const id = createNode(doc, type, x, y, ct?.version ?? 1)
     localRecents.push(type)
@@ -395,7 +403,7 @@ export function Canvas({ doc }: Props) {
             fill="#fafbfc"
           />
           {/* 그리드 가이드 — 약하게. 툴바에서 토글 */}
-          {gridVisible && <GridLines />}
+          {gridVisible && <GridLines step={snapEnabled ? COARSE_GRID : 200} />}
 
           {/* 그룹 (가장 아래) */}
           {groups.map((g) => (
@@ -456,8 +464,12 @@ export function Canvas({ doc }: Props) {
               hovered={hoveredNode === n.id}
               onSelect={(additive) => toggleSel('node', n.id, additive)}
               onHover={(h) => setHoveredNode(h ? n.id : (cur) => (cur === n.id ? null : cur))}
-              onDragMove={(x, y) => doc && moveNode(doc, n.id, snap(x), snap(y))}
-              onDragEnd={(x, y) => doc && moveNode(doc, n.id, snap(x), snap(y))}
+              onDragMove={(x, y) =>
+                doc && moveNode(doc, n.id, snapEnabled ? coarseSnap(x) : snap(x), snapEnabled ? coarseSnap(y) : snap(y))
+              }
+              onDragEnd={(x, y) =>
+                doc && moveNode(doc, n.id, snapEnabled ? coarseSnap(x) : snap(x), snapEnabled ? coarseSnap(y) : snap(y))
+              }
               onAnchorDown={(anchor) => {
                 const a = anchorPoint(n.x, n.y, anchor, getNodeBox(n))
                 setPendingEdge({ fromId: n.id, fromAnchor: anchor, x: a.x, y: a.y })
@@ -551,11 +563,12 @@ export function Canvas({ doc }: Props) {
   )
 }
 
-// 간단한 그리드 라인 — 1000x1000 영역에 200px 간격 보조선
-function GridLines() {
+// 보조 격자 라인. step 만 받음 — 200 (기본) 또는 COARSE_GRID(120, 정렬 모드).
+function GridLines({ step = 200 }: { step?: number }) {
   const lines: number[][] = []
-  for (let x = -2000; x <= 2000; x += 200) lines.push([x, -2000, x, 2000])
-  for (let y = -2000; y <= 2000; y += 200) lines.push([-2000, y, 2000, y])
+  const range = 2400
+  for (let x = -range; x <= range; x += step) lines.push([x, -range, x, range])
+  for (let y = -range; y <= range; y += step) lines.push([-range, y, range, y])
   return (
     <>
       {lines.map((pts, i) => (

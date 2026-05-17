@@ -2,6 +2,8 @@ import type { Anchor, Node } from '@/types/domain'
 
 // 스펙 §7.2 그리드 스냅 8px
 export const GRID = 8
+// 격자 스냅 모드 — 정렬 활성화 시 노드 좌상단을 이 단위로 맞춤. 8의 배수.
+export const COARSE_GRID = 120
 export const NODE_W = 80
 export const NODE_H = 80
 export const ANCHOR_R = 6
@@ -13,6 +15,10 @@ export const LABEL_MAX_LINES = 2 // 길면 wrap, 그 이상이면 ellipsis
 
 export function snap(v: number): number {
   return Math.round(v / GRID) * GRID
+}
+
+export function coarseSnap(v: number): number {
+  return Math.round(v / COARSE_GRID) * COARSE_GRID
 }
 
 // 스펙 §7.2 동시 드롭 충돌 회피 ±10px jitter
