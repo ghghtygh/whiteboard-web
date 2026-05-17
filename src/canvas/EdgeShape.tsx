@@ -1,6 +1,6 @@
 import { Arrow, Group, Line, Rect, Text } from 'react-konva'
 import type { Edge, Node } from '@/types/domain'
-import { anchorPoint, boxCenter, nearestAnchor } from './geometry'
+import { anchorPoint, boxCenter, getNodeBox, nearestAnchor } from './geometry'
 
 interface Props {
   edge: Edge
@@ -18,12 +18,14 @@ function dash(style: Edge['style']): number[] | undefined {
 }
 
 export function EdgeShape({ edge, from, to, selected, onSelect, onLabelEdit }: Props) {
-  const toC = boxCenter(to.x, to.y)
-  const fromC = boxCenter(from.x, from.y)
-  const fromAnchor = edge.fromAnchor ?? nearestAnchor(from.x, from.y, toC.x, toC.y)
-  const toAnchor = edge.toAnchor ?? nearestAnchor(to.x, to.y, fromC.x, fromC.y)
-  const a = anchorPoint(from.x, from.y, fromAnchor)
-  const b = anchorPoint(to.x, to.y, toAnchor)
+  const fromDims = getNodeBox(from)
+  const toDims = getNodeBox(to)
+  const toC = boxCenter(to.x, to.y, toDims)
+  const fromC = boxCenter(from.x, from.y, fromDims)
+  const fromAnchor = edge.fromAnchor ?? nearestAnchor(from.x, from.y, fromDims, toC.x, toC.y)
+  const toAnchor = edge.toAnchor ?? nearestAnchor(to.x, to.y, toDims, fromC.x, fromC.y)
+  const a = anchorPoint(from.x, from.y, fromAnchor, fromDims)
+  const b = anchorPoint(to.x, to.y, toAnchor, toDims)
 
   const stroke = selected ? '#2563eb' : '#6b7280'
   const strokeWidth = selected ? 2.5 : 1.5

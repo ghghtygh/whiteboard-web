@@ -2,7 +2,16 @@ import { Group, Rect, Text, Circle, Image as KImage } from 'react-konva'
 import useImage from 'use-image'
 import type Konva from 'konva'
 import type { Anchor, Node } from '@/types/domain'
-import { ANCHOR_R, BOX_H, BOX_X_OFFSET, LABEL_W, LABEL_GAP, LABEL_H, LABEL_LINE_H, NODE_H, NODE_W } from './geometry'
+import {
+  ANCHOR_R,
+  LABEL_GAP,
+  LABEL_LINE_H,
+  NODE_H,
+  NODE_W,
+  computeBoxDims,
+  nodeDisplayText,
+  type BoxDims,
+} from './geometry'
 import { catalogColor } from '@/local/catalogSeed'
 import { iconDataUrl, hasIcon } from './icons'
 
@@ -23,22 +32,16 @@ const ANCHORS: Anchor[] = ['top', 'right', 'bottom', 'left']
 const ICON_INSET = 8
 const ICON_SIZE = NODE_W - ICON_INSET * 2 // 64
 
-// 라벨 영역 — 노드 박스의 가로 = 라벨 가로. (NODE_W - LABEL_W)/2 는 음수
-const LABEL_X = BOX_X_OFFSET
-
-// 앵커 = 박스(아이콘+라벨) 외곽 중점. geometry.anchorPoint 와 동일.
-function anchorXY(anchor: Anchor): { x: number; y: number } {
-  const left = BOX_X_OFFSET
-  const right = LABEL_X + LABEL_W
+function anchorXY(anchor: Anchor, dims: BoxDims): { x: number; y: number } {
   switch (anchor) {
     case 'top':
       return { x: NODE_W / 2, y: 0 }
     case 'right':
-      return { x: right, y: BOX_H / 2 }
+      return { x: dims.xOffset + dims.width, y: dims.height / 2 }
     case 'bottom':
-      return { x: NODE_W / 2, y: BOX_H }
+      return { x: NODE_W / 2, y: dims.height }
     case 'left':
-      return { x: left, y: BOX_H / 2 }
+      return { x: dims.xOffset, y: dims.height / 2 }
   }
 }
 
@@ -55,6 +58,10 @@ export function NodeShape(props: Props) {
   const [iconImg] = useImage(url ?? '', 'anonymous')
   const showIcon = hasIcon(node.type) && !!iconImg
   const fallbackColor = catalogColor(node.type)
+
+  const text = nodeDisplayText(node)
+  const dims = computeBoxDims(text)
+  const labelH = dims.height - NODE_H - LABEL_GAP
 
   return (
     <Group
@@ -83,22 +90,22 @@ export function NodeShape(props: Props) {
         props.onDragEnd(e.target.x(), e.target.y())
       }
     >
-      {/* 히트 영역 — 아이콘 + 라벨 전체를 클릭 가능하게 */}
+      {/* 히트 영역 — 박스 전체 */}
       <Rect
-        x={LABEL_X}
+        x={dims.xOffset}
         y={0}
-        width={LABEL_W}
-        height={NODE_H + LABEL_GAP + LABEL_H}
+        width={dims.width}
+        height={dims.height}
         fill="transparent"
       />
 
-      {/* 선택/호버 outline — 박스(아이콘 + 라벨) 전체 둘러쌈 */}
+      {/* 선택/호버 outline — 박스 전체 둘러쌈 */}
       {(selected || hovered) && (
         <Rect
-          x={LABEL_X + 2}
+          x={dims.xOffset + 2}
           y={2}
-          width={LABEL_W - 4}
-          height={BOX_H - 4}
+          width={dims.width - 4}
+          height={dims.height - 4}
           stroke={selected ? '#2563eb' : '#9ca3af'}
           strokeWidth={selected ? 2 : 1}
           cornerRadius={8}
@@ -144,13 +151,13 @@ export function NodeShape(props: Props) {
         </>
       )}
 
-      {/* 라벨 (멀티라인) */}
+      {/* 라벨 (1–2 줄, 박스 가로에 맞춰 wrap) */}
       <Text
-        x={LABEL_X}
+        x={dims.xOffset}
         y={NODE_H + LABEL_GAP}
-        width={LABEL_W}
-        height={LABEL_H}
-        text={node.label || node.type}
+        width={dims.width}
+        height={labelH}
+        text={text}
         fontSize={12}
         lineHeight={LABEL_LINE_H / 12}
         fill={node.label ? '#1f2328' : '#6b7280'}
@@ -164,7 +171,7 @@ export function NodeShape(props: Props) {
       {/* 호버 시 4방향 앵커 */}
       {hovered &&
         ANCHORS.map((a) => {
-          const p = anchorXY(a)
+          const p = anchorXY(a, dims)
           return (
             <Circle
               key={a}

@@ -21,6 +21,7 @@ import {
   anchorPoint,
   boxCenter,
   dropJitter,
+  getNodeBox,
   nearestAnchor,
   snap,
 } from './geometry'
@@ -330,11 +331,11 @@ export function Canvas({ doc }: Props) {
     if (editing.kind === 'node') {
       const n = nodes.find((x) => x.id === editing.id)
       if (!n) return null
-      // 라벨 영역: 노드 아래 가로 140px (LABEL_X = -30)
+      const d = getNodeBox(n)
       return {
-        x: rect.left + (n.x - 30) * scale + vx,
-        y: rect.top + (n.y + NODE_H + 4) * scale + vy,
-        w: 140 * scale,
+        x: rect.left + (n.x + d.xOffset) * scale + vx,
+        y: rect.top + (n.y + NODE_H + 2) * scale + vy,
+        w: d.width * scale,
       }
     }
     if (editing.kind === 'edge') {
@@ -431,7 +432,7 @@ export function Canvas({ doc }: Props) {
             (() => {
               const from = nodesById.get(pendingEdge.fromId)
               if (!from) return null
-              const a = anchorPoint(from.x, from.y, pendingEdge.fromAnchor)
+              const a = anchorPoint(from.x, from.y, pendingEdge.fromAnchor, getNodeBox(from))
               return (
                 <Arrow
                   points={[a.x, a.y, pendingEdge.x, pendingEdge.y]}
@@ -458,14 +459,16 @@ export function Canvas({ doc }: Props) {
               onDragMove={(x, y) => doc && moveNode(doc, n.id, snap(x), snap(y))}
               onDragEnd={(x, y) => doc && moveNode(doc, n.id, snap(x), snap(y))}
               onAnchorDown={(anchor) => {
-                const a = anchorPoint(n.x, n.y, anchor)
+                const a = anchorPoint(n.x, n.y, anchor, getNodeBox(n))
                 setPendingEdge({ fromId: n.id, fromAnchor: anchor, x: a.x, y: a.y })
               }}
               onAnchorUp={() => {
                 if (pendingEdge && pendingEdge.fromId !== n.id && doc) {
                   const from = nodesById.get(pendingEdge.fromId)
-                  const fromC = from ? boxCenter(from.x, from.y) : null
-                  const guessTo = fromC ? nearestAnchor(n.x, n.y, fromC.x, fromC.y) : null
+                  const fromC = from ? boxCenter(from.x, from.y, getNodeBox(from)) : null
+                  const guessTo = fromC
+                    ? nearestAnchor(n.x, n.y, getNodeBox(n), fromC.x, fromC.y)
+                    : null
                   createEdge(doc, pendingEdge.fromId, n.id, pendingEdge.fromAnchor, guessTo ?? null)
                   setPendingEdge(null)
                 }
