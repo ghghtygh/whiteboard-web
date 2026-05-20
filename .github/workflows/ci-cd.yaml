@@ -1,0 +1,73 @@
+name: CI/CD - Build & Deploy
+
+on:
+  push:
+    branches: [main]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha,prefix=
+            type=raw,value=latest
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # 프로덕션은 로컬 전용 모드 — 두 변수 모두 비워둔다.
+          # 백엔드/실시간 동기화를 켜고 싶으면 repo Variables 에 VITE_REMOTE_MODE / VITE_SYNC_WS_URL 설정.
+          build-args: |
+            VITE_REMOTE_MODE=${{ vars.VITE_REMOTE_MODE }}
+            VITE_SYNC_WS_URL=${{ vars.VITE_SYNC_WS_URL }}
+
+  update-manifest:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout k8s-manifests
+        uses: actions/checkout@v4
+        with:
+          repository: ghghtygh/k8s-manifests
+          token: ${{ secrets.K8S_MANIFESTS_PAT }}
+
+      - name: Update image tag
+        run: |
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+          sed -i "s|image: ghcr.io/ghghtygh/whiteboard-web:.*|image: ghcr.io/ghghtygh/whiteboard-web:${SHORT_SHA}|" apps/whiteboard-web/deployment.yaml
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+          git add .
+          git diff --staged --quiet || git commit -m "chore: update whiteboard-web image to ${SHORT_SHA}"
+          git push
