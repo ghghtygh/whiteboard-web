@@ -66,6 +66,11 @@ export function SignupPage() {
         .auth-card label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--color-muted); }
         .auth-card .error { color: var(--color-danger); margin: 0; font-size: 13px; }
         .auth-card .muted { color: var(--color-muted); font-size: 13px; margin: 4px 0 0; }
+
+        @media (max-width: 480px) {
+          .auth-shell { padding: 16px; }
+          .auth-card { padding: 24px 20px; }
+        }
       `}</style>
     </div>
   )

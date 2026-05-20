@@ -48,6 +48,16 @@ export function ZoomOverlay() {
           min-width: 48px;
         }
         .zoom-overlay .zoom-pct:hover { color: var(--color-text); }
+
+        /* 모바일 — 터치 영역 확대 + 위치 살짝 위로 (safe-area 고려) */
+        @media (max-width: 768px) {
+          .zoom-overlay {
+            right: 12px;
+            bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+          }
+          .zoom-overlay button { width: 38px; height: 38px; font-size: 18px; }
+          .zoom-overlay .zoom-pct { min-width: 52px; font-size: 13px; }
+        }
       `}</style>
     </div>
   )

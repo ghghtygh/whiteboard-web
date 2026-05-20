@@ -69,7 +69,7 @@ export function BoardListPage() {
 
       <style>{`
         .page { padding: 24px; max-width: 1080px; margin: 0 auto; }
-        .topbar { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+        .topbar { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
         .topbar h1 { margin: 0; font-size: 20px; }
         .spacer { flex: 1; }
         .muted { color: var(--color-muted); font-size: 13px; }
@@ -81,6 +81,15 @@ export function BoardListPage() {
                 display: flex; flex-direction: column; gap: 8px; box-shadow: var(--shadow-sm); }
         .card-title { font-size: 16px; font-weight: 600; color: var(--color-text); }
         .empty { grid-column: 1 / -1; color: var(--color-muted); text-align: center; padding: 48px; }
+
+        @media (max-width: 640px) {
+          .page { padding: 16px; }
+          .topbar { gap: 8px; margin-bottom: 16px; }
+          .topbar h1 { font-size: 18px; flex: 1 1 100%; }
+          .spacer { display: none; }
+          .muted { flex: 1 1 100%; }
+          .grid { grid-template-columns: 1fr; gap: 12px; }
+        }
       `}</style>
     </div>
   )

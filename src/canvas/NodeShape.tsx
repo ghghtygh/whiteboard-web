@@ -86,6 +86,7 @@ export function NodeShape(props: Props) {
         if (stage) stage.container().style.cursor = ''
       }}
       onMouseUp={props.onAnchorUp}
+      onTouchEnd={props.onAnchorUp}
       onDragMove={(e: Konva.KonvaEventObject<DragEvent>) => {
         const x = e.target.x()
         const y = e.target.y()
@@ -184,32 +185,46 @@ export function NodeShape(props: Props) {
         listening={false}
       />
 
-      {/* 호버 시 4방향 앵커 */}
-      {hovered &&
+      {/* 호버 또는 선택 시 4방향 앵커. 터치 기기에서는 hover 가 없으므로 selected 가 핸들 노출 트리거. */}
+      {(hovered || selected) &&
         ANCHORS.map((a) => {
           const p = anchorXY(a, dims)
           return (
-            <Circle
-              key={a}
-              x={p.x}
-              y={p.y}
-              radius={ANCHOR_R}
-              fill="#2563eb"
-              stroke="white"
-              strokeWidth={2}
-              onMouseDown={(e) => {
-                e.cancelBubble = true
-                props.onAnchorDown(a)
-              }}
-              onMouseEnter={(e) => {
-                const stage = e.target.getStage()
-                if (stage) stage.container().style.cursor = 'crosshair'
-              }}
-              onMouseLeave={(e) => {
-                const stage = e.target.getStage()
-                if (stage) stage.container().style.cursor = ''
-              }}
-            />
+            <Group key={a}>
+              {/* 터치 친화적 투명 히트박스 — 시각적 점은 작게 두고 잡히는 영역만 키움 */}
+              <Circle
+                x={p.x}
+                y={p.y}
+                radius={ANCHOR_R * 3}
+                fill="transparent"
+                onMouseDown={(e) => {
+                  e.cancelBubble = true
+                  props.onAnchorDown(a)
+                }}
+                onTouchStart={(e) => {
+                  e.cancelBubble = true
+                  e.evt.preventDefault?.()
+                  props.onAnchorDown(a)
+                }}
+                onMouseEnter={(e) => {
+                  const stage = e.target.getStage()
+                  if (stage) stage.container().style.cursor = 'crosshair'
+                }}
+                onMouseLeave={(e) => {
+                  const stage = e.target.getStage()
+                  if (stage) stage.container().style.cursor = ''
+                }}
+              />
+              <Circle
+                x={p.x}
+                y={p.y}
+                radius={ANCHOR_R}
+                fill="#2563eb"
+                stroke="white"
+                strokeWidth={2}
+                listening={false}
+              />
+            </Group>
           )
         })}
     </Group>

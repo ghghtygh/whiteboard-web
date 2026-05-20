@@ -188,6 +188,11 @@ export function Minimap() {
         }
         .minimap svg { display: block; cursor: grab; border-radius: 3px; touch-action: none; }
         .minimap svg:active { cursor: grabbing; }
+
+        /* 모바일 — 화면 차지가 커서 미니맵은 숨김 */
+        @media (max-width: 768px) {
+          .minimap { display: none; }
+        }
       `}</style>
     </div>
   )

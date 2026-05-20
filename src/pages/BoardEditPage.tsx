@@ -21,6 +21,8 @@ export function BoardEditPage() {
   const [board, setBoard] = useState<Board | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [shareOpen, setShareOpen] = useState(false)
+  // 모바일에서 사이드바 drawer. 데스크탑에선 항상 보이므로 무시됨.
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   const collab = useBoardCollab(boardId ?? null)
   const undoManager = useUndoManager(collab.doc)
   const clearSel = useSelection((s) => s.clear)
@@ -58,6 +60,14 @@ export function BoardEditPage() {
     >
       <div className="board-shell">
         <header className="board-topbar">
+          <button
+            className="menu-btn"
+            onClick={() => setSidebarOpen(true)}
+            aria-label="컴포넌트 메뉴 열기"
+            title="컴포넌트"
+          >
+            ☰
+          </button>
           <Link to="/boards" className="back" title="보드 목록">←</Link>
           <button className="title-btn" onClick={onRename}>
             {board?.title ?? '…'}
@@ -87,7 +97,7 @@ export function BoardEditPage() {
         )}
 
         <div className="board-body">
-          <Sidebar />
+          <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
           <main className="board-main">
             <div className="canvas-host">
               {error ? <p className="error">{error}</p> : <Canvas boardId={boardId ?? ''} doc={collab.doc} />}
@@ -105,7 +115,10 @@ export function BoardEditPage() {
           .board-shell { display: flex; flex-direction: column; height: 100%; }
           .board-topbar { display: flex; align-items: center; gap: 8px;
                           padding: 4px 12px; border-bottom: 1px solid var(--color-border);
-                          background: var(--color-panel); min-height: 38px; }
+                          background: var(--color-panel); min-height: 38px;
+                          flex-wrap: wrap; }
+          .menu-btn { display: none; background: none; border: 1px solid var(--color-border);
+                      border-radius: 4px; padding: 4px 8px; font-size: 16px; line-height: 1; }
           .back { font-size: 16px; color: var(--color-text); text-decoration: none; padding: 0 4px; }
           .back:hover { color: var(--color-accent); }
           .title-btn { background: none; border: none; font-size: 14px; font-weight: 600;
@@ -124,6 +137,18 @@ export function BoardEditPage() {
           .board-main { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
           .canvas-host { flex: 1; position: relative; background: #fafbfc; min-height: 0; }
           .error { color: var(--color-danger); padding: 16px; }
+
+          /* 모바일: 사이드바를 drawer 로 떼고, 햄버거 노출, 상단바 압축 */
+          @media (max-width: 768px) {
+            .board-topbar { padding: 6px 8px; gap: 6px; min-height: 44px; }
+            .menu-btn { display: inline-flex; align-items: center; justify-content: center;
+                        width: 32px; height: 32px; padding: 0; }
+            .vsep { display: none; }
+            .title-btn { font-size: 13px; max-width: 120px; }
+            .share-btn { padding: 4px 8px; }
+            .status { font-size: 10px; padding: 0 2px; }
+            .board-body { grid-template-columns: 1fr; }
+          }
         `}</style>
       </div>
     </CanvasContextProvider>

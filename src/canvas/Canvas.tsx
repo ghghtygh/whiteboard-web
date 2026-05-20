@@ -274,8 +274,8 @@ export function Canvas({ doc }: Props) {
     setPosition(e.target.x(), e.target.y())
   }
 
-  // 빈 영역 클릭 → 선택 해제 (도구가 select일 때만)
-  const onStageMouseDown = (e: Konva.KonvaEventObject<MouseEvent>) => {
+  // 빈 영역 클릭/터치 → 선택 해제 (도구가 select일 때만)
+  const onStageMouseDown = (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
     const stage = e.target.getStage()
     if (!stage) return
     const isStageBg = e.target === stage || e.target.attrs.name === 'bg'
@@ -421,6 +421,11 @@ export function Canvas({ doc }: Props) {
         onMouseMove={onStageMouseMove}
         onMouseUp={onStageMouseUp}
         onMouseLeave={() => awareness && setLocalCursor(awareness, null)}
+        // 터치 — Konva 의 pointer position 이 마우스/터치를 통합해주므로 같은 핸들러 재사용.
+        // pendingEdge / pendingGroup 좌표 갱신과 노드 위 release 처리는 mouse 핸들러와 동일.
+        onTouchStart={onStageMouseDown}
+        onTouchMove={onStageMouseMove}
+        onTouchEnd={onStageMouseUp}
       >
         <Layer>
           <Rect
@@ -582,7 +587,7 @@ export function Canvas({ doc }: Props) {
       )}
 
       <style>{`
-        .canvas-root { position: absolute; inset: 0; overflow: hidden; }
+        .canvas-root { position: absolute; inset: 0; overflow: hidden; touch-action: none; }
         .canvas-root[data-tool="group"] { cursor: crosshair; }
       `}</style>
     </div>

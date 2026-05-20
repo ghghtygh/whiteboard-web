@@ -123,11 +123,13 @@ export function ShareModal({ boardId, syncConnected, onClose }: Props) {
           .share-backdrop {
             position: fixed; inset: 0; background: rgba(0,0,0,0.35);
             display: grid; place-items: center; z-index: 100;
+            padding: 16px;
           }
           .share-modal {
             background: white; border-radius: 8px; box-shadow: var(--shadow-md);
-            padding: 20px 24px; min-width: 460px; max-width: 540px;
+            padding: 20px 24px; min-width: 460px; max-width: 540px; width: 100%;
             display: flex; flex-direction: column; gap: 20px;
+            max-height: calc(100vh - 32px); overflow-y: auto;
           }
           .share-head { display: flex; align-items: center; }
           .share-head h2 { margin: 0; font-size: 16px; }
@@ -136,7 +138,7 @@ export function ShareModal({ boardId, syncConnected, onClose }: Props) {
           .lbl { display: block; font-size: 12px; font-weight: 600;
                  color: var(--color-muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.04em; }
           .row { display: flex; gap: 8px; align-items: center; }
-          .row input { flex: 1; }
+          .row input { flex: 1; min-width: 0; }
           .row select { padding: 6px 8px; border: 1px solid var(--color-border); border-radius: 4px; }
           .hint { font-size: 12px; margin: 8px 0 0; line-height: 1.5; }
           .hint[data-tone="ok"]   { color: #16a34a; }
@@ -149,6 +151,17 @@ export function ShareModal({ boardId, syncConnected, onClose }: Props) {
           .invites .em { flex: 1; }
           .invites .role { font-size: 11px; color: var(--color-muted); }
           .invites .link { background: none; border: none; color: var(--color-danger); cursor: pointer; padding: 0; font-size: 12px; }
+
+          @media (max-width: 640px) {
+            .share-backdrop { padding: 0; align-items: stretch; }
+            .share-modal {
+              min-width: 0; max-width: none; width: 100%;
+              border-radius: 0; max-height: 100vh; height: 100%;
+              padding: 16px;
+            }
+            .row { flex-wrap: wrap; }
+            .row input, .row select { flex: 1 1 100%; }
+          }
         `}</style>
       </div>
     </div>

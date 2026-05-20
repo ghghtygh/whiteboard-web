@@ -28,6 +28,12 @@ body,
   margin: 0;
 }
 
+body {
+  /* iOS 에서 캔버스 드래그/줌 도중 페이지 자체가 bounce 되는 것 방지 */
+  overscroll-behavior: contain;
+  -webkit-text-size-adjust: 100%;
+}
+
 a {
   color: var(--color-accent);
   text-decoration: none;

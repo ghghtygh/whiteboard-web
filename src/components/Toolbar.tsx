@@ -58,7 +58,7 @@ export function Toolbar() {
       </button>
 
       <style>{`
-        .toolbar { display: inline-flex; align-items: center; gap: 2px; }
+        .toolbar { display: inline-flex; align-items: center; gap: 2px; flex-wrap: wrap; }
         .toolbar .ico {
           width: 28px; height: 28px; padding: 0; font-size: 15px; line-height: 1;
           display: inline-flex; align-items: center; justify-content: center;
@@ -72,6 +72,12 @@ export function Toolbar() {
           background: var(--color-accent); color: white;
         }
         .toolbar .sep { width: 1px; height: 16px; background: var(--color-border); margin: 0 4px; }
+
+        /* 모바일 — 터치 영역 확대 + 텍스트 라벨 압축 */
+        @media (max-width: 768px) {
+          .toolbar .ico { width: 36px; height: 36px; font-size: 17px; }
+          .toolbar .ico.txt { padding: 0 8px; min-height: 36px; }
+        }
       `}</style>
     </div>
   )
