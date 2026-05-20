@@ -93,6 +93,14 @@ export function Canvas({ doc }: Props) {
   const [altDown, setAltDown] = useState(false)
   const snapEffective = snapEnabled !== altDown
 
+  const snapPos = useCallback(
+    (x: number, y: number) => ({
+      x: snapEffective ? coarseSnap(x) : snap(x),
+      y: snapEffective ? coarseSnap(y) : snap(y),
+    }),
+    [snapEffective],
+  )
+
   const nodes = useNodesSnapshot(doc)
   const edges = useEdgesSnapshot(doc)
   const groups = useGroupsSnapshot(doc)
@@ -485,12 +493,9 @@ export function Canvas({ doc }: Props) {
               hovered={hoveredNode === n.id}
               onSelect={(additive) => toggleSel('node', n.id, additive)}
               onHover={(h) => setHoveredNode(h ? n.id : (cur) => (cur === n.id ? null : cur))}
-              onDragMove={(x, y) =>
-                doc && moveNode(doc, n.id, snapEffective ? coarseSnap(x) : snap(x), snapEffective ? coarseSnap(y) : snap(y))
-              }
-              onDragEnd={(x, y) =>
-                doc && moveNode(doc, n.id, snapEffective ? coarseSnap(x) : snap(x), snapEffective ? coarseSnap(y) : snap(y))
-              }
+              snapPos={snapPos}
+              onDragMove={(x, y) => doc && moveNode(doc, n.id, x, y)}
+              onDragEnd={(x, y) => doc && moveNode(doc, n.id, x, y)}
               onAnchorDown={(anchor) => {
                 const a = anchorPoint(n.x, n.y, anchor, getNodeBox(n))
                 setPendingEdge({ fromId: n.id, fromAnchor: anchor, x: a.x, y: a.y })

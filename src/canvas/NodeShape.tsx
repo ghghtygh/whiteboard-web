@@ -11,6 +11,7 @@ import {
   computeBoxDims,
   nodeDisplayText,
   type BoxDims,
+  type Point,
 } from './geometry'
 import { catalogColor } from '@/local/catalogSeed'
 import { iconDataUrl, hasIcon } from './icons'
@@ -19,6 +20,8 @@ interface Props {
   node: Node
   selected: boolean
   hovered: boolean
+  // 드래그 중인 위치를 격자로 보정. Canvas 가 정렬 모드/Alt 상태에 따라 다른 함수 전달.
+  snapPos: (x: number, y: number) => Point
   onSelect: (additive: boolean) => void
   onDragMove: (x: number, y: number) => void
   onDragEnd: (x: number, y: number) => void
@@ -83,12 +86,25 @@ export function NodeShape(props: Props) {
         if (stage) stage.container().style.cursor = ''
       }}
       onMouseUp={props.onAnchorUp}
-      onDragMove={(e: Konva.KonvaEventObject<DragEvent>) =>
-        props.onDragMove(e.target.x(), e.target.y())
-      }
-      onDragEnd={(e: Konva.KonvaEventObject<DragEvent>) =>
-        props.onDragEnd(e.target.x(), e.target.y())
-      }
+      onDragMove={(e: Konva.KonvaEventObject<DragEvent>) => {
+        const x = e.target.x()
+        const y = e.target.y()
+        const sp = props.snapPos(x, y)
+        // Konva 가 마우스 위치로 옮긴 직후, 시각 위치를 격자에 잡아 lock
+        if (sp.x !== x || sp.y !== y) {
+          e.target.position({ x: sp.x, y: sp.y })
+        }
+        props.onDragMove(sp.x, sp.y)
+      }}
+      onDragEnd={(e: Konva.KonvaEventObject<DragEvent>) => {
+        const x = e.target.x()
+        const y = e.target.y()
+        const sp = props.snapPos(x, y)
+        if (sp.x !== x || sp.y !== y) {
+          e.target.position({ x: sp.x, y: sp.y })
+        }
+        props.onDragEnd(sp.x, sp.y)
+      }}
     >
       {/* 히트 영역 — 박스 전체 */}
       <Rect

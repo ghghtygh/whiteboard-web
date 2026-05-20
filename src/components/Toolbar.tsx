@@ -3,7 +3,6 @@ import { useToolStore } from '@/canvas/tool'
 import { useCanvasContext } from '@/canvas/useCanvasContext'
 import { useGridStore } from '@/canvas/gridStore'
 import { useSnapStore } from '@/canvas/snapStore'
-import { coarseSnap } from '@/canvas/geometry'
 
 export function Toolbar() {
   const tool = useToolStore((s) => s.tool)
@@ -12,23 +11,7 @@ export function Toolbar() {
   const toggleGrid = useGridStore((s) => s.toggle)
   const snapEnabled = useSnapStore((s) => s.enabled)
   const toggleSnap = useSnapStore((s) => s.toggle)
-  const { doc, undoManager } = useCanvasContext()
-
-  // 정렬 OFF→ON 전환 시 기존 노드 위치를 일괄로 격자에 맞춤.
-  // ON→OFF 는 그대로 둠 (원위치 복원 데이터가 없으니).
-  function onToggleSnap() {
-    if (!snapEnabled && doc) {
-      doc.ydoc.transact(() => {
-        doc.nodes.forEach((m) => {
-          const x = m.get('x') as number
-          const y = m.get('y') as number
-          m.set('x', coarseSnap(x))
-          m.set('y', coarseSnap(y))
-        })
-      })
-    }
-    toggleSnap()
-  }
+  const { undoManager } = useCanvasContext()
 
   const [, setTick] = useState(0)
   useEffect(() => {
@@ -67,9 +50,9 @@ export function Toolbar() {
       </button>
       <button
         className="ico txt"
-        title="격자 정렬 — 노드를 40px 격자에 자동 스냅 (Alt 누르면 일시 반전)"
+        title="격자 정렬 — 신규 드롭/드래그를 40px 격자에 자동 스냅 (Alt 누르면 일시 반전)"
         data-active={snapEnabled}
-        onClick={onToggleSnap}
+        onClick={toggleSnap}
       >
         정렬
       </button>
