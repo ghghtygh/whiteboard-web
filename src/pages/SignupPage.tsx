@@ -18,7 +18,7 @@ export function SignupPage() {
       await signup({ email, name, password })
       navigate('/login', { replace: true })
     } catch (err) {
-      setError(err instanceof Error ? err.message : '가입 실패')
+      setError(err instanceof Error ? err.message : 'Sign up failed')
     } finally {
       setLoading(false)
     }
@@ -27,17 +27,17 @@ export function SignupPage() {
   return (
     <div className="auth-shell">
       <form className="auth-card" onSubmit={onSubmit}>
-        <h1>회원가입</h1>
+        <h1>Sign up</h1>
         <label>
-          이메일
+          Email
           <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoFocus />
         </label>
         <label>
-          이름
+          Name
           <input value={name} onChange={(e) => setName(e.target.value)} required />
         </label>
         <label>
-          비밀번호
+          Password
           <input
             type="password"
             value={password}
@@ -48,10 +48,10 @@ export function SignupPage() {
         </label>
         {error && <p className="error">{error}</p>}
         <button type="submit" className="primary" disabled={loading}>
-          {loading ? '확인 중…' : '가입하기'}
+          {loading ? 'Submitting…' : 'Create account'}
         </button>
         <p className="muted">
-          이미 계정이 있으신가요? <Link to="/login">로그인</Link>
+          Already have an account? <Link to="/login">Sign in</Link>
         </p>
       </form>
       <style>{`

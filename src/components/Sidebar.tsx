@@ -13,15 +13,15 @@ import { COARSE_GRID, NODE_H, NODE_W, coarseSnap, dropJitter } from '@/canvas/ge
 
 const CATEGORY_LABELS: Record<string, string> = {
   'ci-cd': 'CI / CD',
-  database: '데이터베이스',
-  framework: '프레임워크',
-  messaging: '메시징',
-  infrastructure: '인프라',
-  cloud: '클라우드',
-  observability: '모니터링',
-  auth: '인증',
-  storage: '스토리지',
-  etc: '기타',
+  database: 'Database',
+  framework: 'Framework',
+  messaging: 'Messaging',
+  infrastructure: 'Infrastructure',
+  cloud: 'Cloud',
+  observability: 'Observability',
+  auth: 'Auth',
+  storage: 'Storage',
+  etc: 'Other',
 }
 
 interface TouchDragState {
@@ -304,7 +304,7 @@ export function Sidebar({ open = false, onClose }: SidebarProps = {}) {
       <aside className="sidebar" data-open={open}>
         <div className="search">
           <input
-            placeholder="컴포넌트 검색"
+            placeholder="Search components"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
@@ -312,20 +312,20 @@ export function Sidebar({ open = false, onClose }: SidebarProps = {}) {
             type="button"
             className="close-btn"
             onClick={onClose}
-            aria-label="메뉴 닫기"
-            title="닫기"
+            aria-label="Close menu"
+            title="Close"
           >
             ×
           </button>
         </div>
 
         <div className="list">
-          {loading && <p className="muted">불러오는 중…</p>}
+          {loading && <p className="muted">Loading…</p>}
           {error && <p className="error">{error}</p>}
 
           {recents.length > 0 && (
             <section>
-              <h3>최근 사용</h3>
+              <h3>Recently used</h3>
               <ul>
                 {recents.map((c) => (
                   <ComponentRow
@@ -369,7 +369,7 @@ export function Sidebar({ open = false, onClose }: SidebarProps = {}) {
           })}
 
           {!loading && items.length === 0 && !error && (
-            <p className="muted">카탈로그 비어 있음</p>
+            <p className="muted">Catalog is empty</p>
           )}
         </div>
 

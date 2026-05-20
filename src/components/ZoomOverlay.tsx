@@ -10,13 +10,13 @@ export function ZoomOverlay() {
 
   return (
     <div className="zoom-overlay">
-      <button title="줌 아웃" disabled={atMin} onClick={() => setScale(scale / 1.1)}>
+      <button title="Zoom out" disabled={atMin} onClick={() => setScale(scale / 1.1)}>
         −
       </button>
-      <button title="100% 로 리셋" onClick={reset} className="zoom-pct">
+      <button title="Reset to 100%" onClick={reset} className="zoom-pct">
         {Math.round(scale * 100)}%
       </button>
-      <button title="줌 인" disabled={atMax} onClick={() => setScale(scale * 1.1)}>
+      <button title="Zoom in" disabled={atMax} onClick={() => setScale(scale * 1.1)}>
         +
       </button>
 

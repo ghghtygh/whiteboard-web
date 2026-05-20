@@ -31,7 +31,7 @@ export const useAuthStore = create<AuthState>()(
         const user: User = {
           id: nanoid(8),
           email: 'guest@local',
-          name: '게스트',
+          name: 'Guest',
         }
         set({ token: 'local-guest', refreshToken: 'local-guest', user })
       },

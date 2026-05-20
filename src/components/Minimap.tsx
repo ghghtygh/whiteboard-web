@@ -111,7 +111,7 @@ export function Minimap() {
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
         role="img"
-        aria-label="미니맵 — 클릭/드래그로 이동"
+        aria-label="Minimap — click or drag to pan"
       >
         {/* 배경 */}
         <rect x={0} y={0} width={MM_W} height={MM_H} fill="#fafbfc" />

@@ -33,7 +33,7 @@ export const localBoards = {
     const now = new Date().toISOString()
     const board: Board = {
       id: nanoid(12),
-      title: title.trim() || '새 보드',
+      title: title.trim() || 'New board',
       ownerId: OWNER_ID,
       createdAt: now,
       updatedAt: now,
@@ -84,6 +84,6 @@ export const localBoards = {
     if (last) return last
     const all = this.list()
     if (all.length > 0) return all[0]!.id
-    return this.create('무제 화이트보드').id
+    return this.create('Untitled whiteboard').id
   },
 }

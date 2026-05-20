@@ -22,7 +22,7 @@ export const useCatalogStore = create<CatalogState>((set, get) => ({
       const items = await fetchCatalog()
       set({ items, loaded: true })
     } catch (err) {
-      set({ error: err instanceof Error ? err.message : '카탈로그 로드 실패' })
+      set({ error: err instanceof Error ? err.message : 'Failed to load catalog' })
     } finally {
       set({ loading: false })
     }
