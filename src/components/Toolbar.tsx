@@ -3,6 +3,8 @@ import { useToolStore } from '@/canvas/tool'
 import { useCanvasContext } from '@/canvas/useCanvasContext'
 import { useGridStore } from '@/canvas/gridStore'
 import { useSnapStore } from '@/canvas/snapStore'
+import { useSelection } from '@/canvas/selection'
+import { deleteNodes, deleteEdges, deleteGroups } from '@/canvas/ops'
 
 export function Toolbar() {
   const tool = useToolStore((s) => s.tool)
@@ -11,7 +13,21 @@ export function Toolbar() {
   const toggleGrid = useGridStore((s) => s.toggle)
   const snapEnabled = useSnapStore((s) => s.enabled)
   const toggleSnap = useSnapStore((s) => s.toggle)
-  const { undoManager } = useCanvasContext()
+  const { undoManager, doc } = useCanvasContext()
+
+  const selNodes = useSelection((s) => s.nodes)
+  const selEdges = useSelection((s) => s.edges)
+  const selGroups = useSelection((s) => s.groups)
+  const clearSel = useSelection((s) => s.clear)
+  const hasSelection = selNodes.size > 0 || selEdges.size > 0 || selGroups.size > 0
+
+  function handleDelete() {
+    if (!doc) return
+    if (selNodes.size) deleteNodes(doc, [...selNodes])
+    if (selEdges.size) deleteEdges(doc, [...selEdges])
+    if (selGroups.size) deleteGroups(doc, [...selGroups])
+    clearSel()
+  }
 
   const [, setTick] = useState(0)
   useEffect(() => {
@@ -36,6 +52,14 @@ export function Toolbar() {
       <button className="ico" title="다시 실행 (⌘⇧Z)" disabled={!canRedo} onClick={() => undoManager?.redo()}>
         ↷
       </button>
+      {hasSelection && (
+        <>
+          <span className="sep" />
+          <button className="ico del" title="선택 삭제 (Delete)" onClick={handleDelete}>
+            🗑
+          </button>
+        </>
+      )}
       <span className="sep" />
       <button
         className="ico txt"
@@ -72,6 +96,7 @@ export function Toolbar() {
           background: var(--color-accent); color: white;
         }
         .toolbar .sep { width: 1px; height: 16px; background: var(--color-border); margin: 0 4px; }
+        .toolbar .del:hover:not(:disabled) { background: #fee2e2; color: #dc2626; }
 
         /* 모바일 — 터치 영역 확대 + 텍스트 라벨 압축 */
         @media (max-width: 768px) {
