@@ -490,35 +490,42 @@ export function Canvas({ doc }: Props) {
             })()}
 
           {/* 노드 */}
-          {nodes.map((n) => (
-            <NodeShape
-              key={n.id}
-              node={n}
-              selected={selNodes.has(n.id)}
-              hovered={hoveredNode === n.id}
-              onSelect={(additive) => toggleSel('node', n.id, additive)}
-              onHover={(h) => setHoveredNode(h ? n.id : (cur) => (cur === n.id ? null : cur))}
-              snapPos={snapPos}
-              onDragMove={(x, y) => doc && moveNode(doc, n.id, x, y)}
-              onDragEnd={(x, y) => doc && moveNode(doc, n.id, x, y)}
-              onAnchorDown={(anchor) => {
-                const a = anchorPoint(n.x, n.y, anchor, getNodeBox(n))
-                setPendingEdge({ fromId: n.id, fromAnchor: anchor, x: a.x, y: a.y })
-              }}
-              onAnchorUp={() => {
-                if (pendingEdge && pendingEdge.fromId !== n.id && doc) {
-                  const from = nodesById.get(pendingEdge.fromId)
-                  const fromC = from ? boxCenter(from.x, from.y, getNodeBox(from)) : null
-                  const guessTo = fromC
-                    ? nearestAnchor(n.x, n.y, getNodeBox(n), fromC.x, fromC.y)
-                    : null
-                  createEdge(doc, pendingEdge.fromId, n.id, pendingEdge.fromAnchor, guessTo ?? null)
-                  setPendingEdge(null)
-                }
-              }}
-              onLabelEdit={() => setEditing({ kind: 'node', id: n.id })}
-            />
-          ))}
+          {nodes.map((n) => {
+            const isPendingTarget = !!pendingEdge && hoveredNode === n.id && pendingEdge.fromId !== n.id
+            const pendingEdgeAnchor = isPendingTarget
+              ? nearestAnchor(n.x, n.y, getNodeBox(n), pendingEdge.x, pendingEdge.y)
+              : undefined
+            return (
+              <NodeShape
+                key={n.id}
+                node={n}
+                selected={selNodes.has(n.id)}
+                hovered={hoveredNode === n.id}
+                pendingEdgeAnchor={pendingEdgeAnchor}
+                onSelect={(additive) => toggleSel('node', n.id, additive)}
+                onHover={(h) => setHoveredNode(h ? n.id : (cur) => (cur === n.id ? null : cur))}
+                snapPos={snapPos}
+                onDragMove={(x, y) => doc && moveNode(doc, n.id, x, y)}
+                onDragEnd={(x, y) => doc && moveNode(doc, n.id, x, y)}
+                onAnchorDown={(anchor) => {
+                  const a = anchorPoint(n.x, n.y, anchor, getNodeBox(n))
+                  setPendingEdge({ fromId: n.id, fromAnchor: anchor, x: a.x, y: a.y })
+                }}
+                onAnchorUp={() => {
+                  if (pendingEdge && pendingEdge.fromId !== n.id && doc) {
+                    const from = nodesById.get(pendingEdge.fromId)
+                    const fromC = from ? boxCenter(from.x, from.y, getNodeBox(from)) : null
+                    const guessTo = fromC
+                      ? nearestAnchor(n.x, n.y, getNodeBox(n), fromC.x, fromC.y)
+                      : null
+                    createEdge(doc, pendingEdge.fromId, n.id, pendingEdge.fromAnchor, guessTo ?? null)
+                    setPendingEdge(null)
+                  }
+                }}
+                onLabelEdit={() => setEditing({ kind: 'node', id: n.id })}
+              />
+            )
+          })}
 
           {/* pendingGroup */}
           {pendingGroup && (

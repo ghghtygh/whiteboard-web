@@ -20,6 +20,8 @@ interface Props {
   node: Node
   selected: boolean
   hovered: boolean
+  // pendingEdge 드래그 중 이 노드가 연결 대상일 때 연결될 앵커 방향
+  pendingEdgeAnchor?: Anchor
   // 드래그 중인 위치를 격자로 보정. Canvas 가 정렬 모드/Alt 상태에 따라 다른 함수 전달.
   snapPos: (x: number, y: number) => Point
   onSelect: (additive: boolean) => void
@@ -56,7 +58,7 @@ function initials(text: string, type: string): string {
 }
 
 export function NodeShape(props: Props) {
-  const { node, selected, hovered } = props
+  const { node, selected, hovered, pendingEdgeAnchor } = props
   const url = iconDataUrl(node.type)
   const [iconImg] = useImage(url ?? '', 'anonymous')
   const showIcon = hasIcon(node.type) && !!iconImg
@@ -117,16 +119,16 @@ export function NodeShape(props: Props) {
       />
 
       {/* 선택/호버 outline — 박스 전체 둘러쌈 */}
-      {(selected || hovered) && (
+      {(selected || hovered || pendingEdgeAnchor) && (
         <Rect
           x={dims.xOffset + 2}
           y={2}
           width={dims.width - 4}
           height={dims.height - 4}
-          stroke={selected ? '#2563eb' : '#9ca3af'}
-          strokeWidth={selected ? 2 : 1}
+          stroke={pendingEdgeAnchor ? '#16a34a' : selected ? '#2563eb' : '#9ca3af'}
+          strokeWidth={pendingEdgeAnchor ? 2.5 : selected ? 2 : 1}
           cornerRadius={8}
-          dash={selected ? undefined : [4, 4]}
+          dash={selected || pendingEdgeAnchor ? undefined : [4, 4]}
           listening={false}
         />
       )}
@@ -227,6 +229,31 @@ export function NodeShape(props: Props) {
             </Group>
           )
         })}
+
+      {/* pendingEdge 드래그 중 연결될 앵커만 녹색 강조 */}
+      {pendingEdgeAnchor && (() => {
+        const p = anchorXY(pendingEdgeAnchor, dims)
+        return (
+          <Group>
+            <Circle
+              x={p.x}
+              y={p.y}
+              radius={ANCHOR_R * 2.2}
+              fill="rgba(22, 163, 74, 0.15)"
+              listening={false}
+            />
+            <Circle
+              x={p.x}
+              y={p.y}
+              radius={ANCHOR_R * 1.4}
+              fill="#16a34a"
+              stroke="white"
+              strokeWidth={2}
+              listening={false}
+            />
+          </Group>
+        )
+      })()}
     </Group>
   )
 }
