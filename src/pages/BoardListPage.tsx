@@ -18,7 +18,7 @@ export function BoardListPage() {
       setBoards(await listBoards())
       setError(null)
     } catch (err) {
-      setError(err instanceof Error ? err.message : '목록 로드 실패')
+      setError(err instanceof Error ? err.message : 'Failed to load boards')
     } finally {
       setLoading(false)
     }
@@ -29,14 +29,14 @@ export function BoardListPage() {
   }, [])
 
   async function onCreate() {
-    const title = window.prompt('새 보드 제목', '새 보드')
+    const title = window.prompt('New board title', 'New board')
     if (!title) return
     const board = await createBoard(title)
     navigate(`/boards/${board.id}`)
   }
 
   async function onDelete(id: string) {
-    if (!window.confirm('정말 삭제하시겠습니까?')) return
+    if (!window.confirm('Are you sure you want to delete this board?')) return
     await deleteBoard(id)
     await refresh()
   }
@@ -44,24 +44,24 @@ export function BoardListPage() {
   return (
     <div className="page">
       <header className="topbar">
-        <h1>내 보드</h1>
+        <h1>My Boards</h1>
         <div className="spacer" />
         <span className="muted">{user?.name ?? user?.email}</span>
-        <button onClick={() => { logout(); navigate('/login') }}>로그아웃</button>
-        <button className="primary" onClick={onCreate}>새 보드</button>
+        <button onClick={() => { logout(); navigate('/login') }}>Sign out</button>
+        <button className="primary" onClick={onCreate}>New board</button>
       </header>
 
-      {loading && <p>불러오는 중…</p>}
+      {loading && <p>Loading…</p>}
       {error && <p className="error">{error}</p>}
 
       {!loading && !error && (
         <ul className="grid">
-          {boards.length === 0 && <li className="empty">아직 보드가 없습니다. “새 보드”로 시작해 보세요.</li>}
+          {boards.length === 0 && <li className="empty">No boards yet. Click “New board” to get started.</li>}
           {boards.map((b) => (
             <li key={b.id} className="card">
               <Link to={`/boards/${b.id}`} className="card-title">{b.title}</Link>
-              <p className="muted">업데이트 {new Date(b.updatedAt).toLocaleString('ko-KR')}</p>
-              <button className="danger" onClick={() => onDelete(b.id)}>삭제</button>
+              <p className="muted">Updated {new Date(b.updatedAt).toLocaleString('en-US')}</p>
+              <button className="danger" onClick={() => onDelete(b.id)}>Delete</button>
             </li>
           ))}
         </ul>

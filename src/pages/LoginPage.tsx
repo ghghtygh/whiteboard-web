@@ -20,7 +20,7 @@ export function LoginPage() {
       setAuth(tokens, user)
       navigate('/boards', { replace: true })
     } catch (err) {
-      setError(err instanceof Error ? err.message : '로그인 실패')
+      setError(err instanceof Error ? err.message : 'Login failed')
     } finally {
       setLoading(false)
     }
@@ -29,9 +29,9 @@ export function LoginPage() {
   return (
     <div className="auth-shell">
       <form className="auth-card" onSubmit={onSubmit}>
-        <h1>로그인</h1>
+        <h1>Sign in</h1>
         <label>
-          이메일
+          Email
           <input
             type="email"
             value={email}
@@ -41,7 +41,7 @@ export function LoginPage() {
           />
         </label>
         <label>
-          비밀번호
+          Password
           <input
             type="password"
             value={password}
@@ -51,10 +51,10 @@ export function LoginPage() {
         </label>
         {error && <p className="error">{error}</p>}
         <button type="submit" className="primary" disabled={loading}>
-          {loading ? '확인 중…' : '로그인'}
+          {loading ? 'Signing in…' : 'Sign in'}
         </button>
         <p className="muted">
-          계정이 없으신가요? <Link to="/signup">회원가입</Link>
+          Don't have an account? <Link to="/signup">Sign up</Link>
         </p>
       </form>
       <style>{`

@@ -20,7 +20,7 @@ export async function getBoard(id: string): Promise<Board> {
     const board = localBoards.get(id)
     if (!board) {
       // 처음 직접 URL로 접근하는 경우 자동 생성해 UX를 부드럽게 한다.
-      return localBoards.create('새 보드')
+      return localBoards.create('New board')
     }
     return board
   }

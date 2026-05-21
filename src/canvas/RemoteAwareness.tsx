@@ -17,7 +17,7 @@ const CURSOR_POINTS = [0, 0, 0, 16, 4, 12, 6.5, 18, 9.5, 17, 7, 11, 13, 11]
 function RemoteCursor({ state }: { state: AwarenessState }) {
   if (!state.cursor) return null
   const { x, y } = state.cursor
-  const name = state.user.name || '익명'
+  const name = state.user.name || 'Anonymous'
   const color = state.user.color
   // 라벨 폭 — 문자당 약 7px + padding
   const labelWidth = Math.min(160, Math.max(24, name.length * 7 + 12))

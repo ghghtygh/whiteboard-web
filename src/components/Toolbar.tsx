@@ -46,16 +46,16 @@ export function Toolbar() {
 
   return (
     <div className="toolbar">
-      <button className="ico" title="실행 취소 (⌘Z)" disabled={!canUndo} onClick={() => undoManager?.undo()}>
+      <button className="ico" title="Undo (⌘Z)" disabled={!canUndo} onClick={() => undoManager?.undo()}>
         ↶
       </button>
-      <button className="ico" title="다시 실행 (⌘⇧Z)" disabled={!canRedo} onClick={() => undoManager?.redo()}>
+      <button className="ico" title="Redo (⌘⇧Z)" disabled={!canRedo} onClick={() => undoManager?.redo()}>
         ↷
       </button>
       {hasSelection && (
         <>
           <span className="sep" />
-          <button className="ico del" title="선택 삭제 (Delete)" onClick={handleDelete}>
+          <button className="ico del" title="Delete selection (Delete)" onClick={handleDelete}>
             🗑
           </button>
         </>
@@ -63,22 +63,22 @@ export function Toolbar() {
       <span className="sep" />
       <button
         className="ico txt"
-        title="그룹 만들기 — 빈 영역 드래그"
+        title="Create group — drag on empty area"
         data-active={tool === 'group'}
         onClick={toggleGroup}
       >
-        그룹
+        Group
       </button>
-      <button className="ico txt" title="격자 표시" data-active={gridVisible} onClick={toggleGrid}>
-        격자
+      <button className="ico txt" title="Show grid" data-active={gridVisible} onClick={toggleGrid}>
+        Grid
       </button>
       <button
         className="ico txt"
-        title="격자 정렬 — 신규 드롭/드래그를 40px 격자에 자동 스냅 (Alt 누르면 일시 반전)"
+        title="Snap to grid — auto-snap new drops/drags to a 40px grid (hold Alt to invert)"
         data-active={snapEnabled}
         onClick={toggleSnap}
       >
-        정렬
+        Snap
       </button>
 
       <style>{`

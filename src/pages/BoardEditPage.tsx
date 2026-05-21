@@ -42,13 +42,13 @@ export function BoardEditPage() {
     if (IS_LOCAL_MODE) localBoards.markOpened(boardId)
     getBoard(boardId)
       .then(setBoard)
-      .catch((err) => setError(err instanceof Error ? err.message : '보드 로드 실패'))
+      .catch((err) => setError(err instanceof Error ? err.message : 'Failed to load board'))
     return () => clearSel()
   }, [boardId, clearSel])
 
   async function onRename() {
     if (!board) return
-    const next = window.prompt('보드 제목', board.title)
+    const next = window.prompt('Board title', board.title)
     if (!next || next === board.title) return
     const updated = await renameBoard(board.id, next)
     setBoard(updated)
@@ -63,12 +63,12 @@ export function BoardEditPage() {
           <button
             className="menu-btn"
             onClick={() => setSidebarOpen(true)}
-            aria-label="컴포넌트 메뉴 열기"
-            title="컴포넌트"
+            aria-label="Open components menu"
+            title="Components"
           >
             ☰
           </button>
-          <Link to="/boards" className="back" title="보드 목록">←</Link>
+          <Link to="/boards" className="back" title="Board list">←</Link>
           <button className="title-btn" onClick={onRename}>
             {board?.title ?? '…'}
           </button>
@@ -76,14 +76,14 @@ export function BoardEditPage() {
           <Toolbar />
           <div className="spacer" />
           <PresenceBadges awareness={collab.provider?.awareness ?? null} />
-          <button className="share-btn" onClick={() => setShareOpen(true)}>공유</button>
+          <button className="share-btn" onClick={() => setShareOpen(true)}>Share</button>
           <span className="status" data-online={collab.syncEnabled ? collab.syncConnected : collab.ready}>
             {collab.syncEnabled
               ? collab.syncConnected
-                ? '동기화 중'
-                : '연결 중…'
+                ? 'Syncing'
+                : 'Connecting…'
               : collab.ready
-                ? '로컬'
+                ? 'Local'
                 : '…'}
           </span>
         </header>
