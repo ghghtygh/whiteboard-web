@@ -306,7 +306,20 @@ export function Canvas({ doc }: Props) {
       }
     }
 
-    if (pendingEdge) setPendingEdge({ ...pendingEdge, x: p.x, y: p.y })
+    if (pendingEdge) {
+      setPendingEdge({ ...pendingEdge, x: p.x, y: p.y })
+      // 터치는 onMouseEnter가 없으므로 pendingEdge 드래그 중 포인터 위치로 hoveredNode 직접 갱신
+      const hit = nodes.find((n) => {
+        const box = getNodeBox(n)
+        return (
+          p.x >= n.x + box.xOffset &&
+          p.x <= n.x + box.xOffset + box.width &&
+          p.y >= n.y &&
+          p.y <= n.y + box.height
+        )
+      })
+      setHoveredNode(hit?.id ?? null)
+    }
     if (pendingGroup) {
       setPendingGroup({
         ...pendingGroup,
