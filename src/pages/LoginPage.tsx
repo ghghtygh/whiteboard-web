@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { login } from '@/api/auth'
 import { useAuthStore } from '@/store/auth'
+import { SocialLoginButtons } from '@/components/SocialLoginButtons'
 
 export function LoginPage() {
   const navigate = useNavigate()
@@ -53,6 +54,7 @@ export function LoginPage() {
         <button type="submit" className="primary" disabled={loading}>
           {loading ? 'Signing in…' : 'Sign in'}
         </button>
+        <SocialLoginButtons />
         <p className="muted">
           Don't have an account? <Link to="/signup">Sign up</Link>
         </p>

@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { signup } from '@/api/auth'
+import { SocialLoginButtons } from '@/components/SocialLoginButtons'
 
 export function SignupPage() {
   const navigate = useNavigate()
@@ -50,6 +51,7 @@ export function SignupPage() {
         <button type="submit" className="primary" disabled={loading}>
           {loading ? 'Submitting…' : 'Create account'}
         </button>
+        <SocialLoginButtons />
         <p className="muted">
           Already have an account? <Link to="/login">Sign in</Link>
         </p>
