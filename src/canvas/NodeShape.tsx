@@ -125,7 +125,7 @@ export function NodeShape(props: Props) {
           y={2}
           width={dims.width - 4}
           height={dims.height - 4}
-          stroke={pendingEdgeAnchor ? '#16a34a' : selected ? '#2563eb' : '#9ca3af'}
+          stroke={pendingEdgeAnchor ? '#16a34a' : selected ? '#5d5bef' : '#c6cedb'}
           strokeWidth={pendingEdgeAnchor ? 2.5 : selected ? 2 : 1}
           cornerRadius={8}
           dash={selected || pendingEdgeAnchor ? undefined : [4, 4]}
@@ -221,7 +221,7 @@ export function NodeShape(props: Props) {
                 x={p.x}
                 y={p.y}
                 radius={ANCHOR_R}
-                fill="#2563eb"
+                fill="#5d5bef"
                 stroke="white"
                 strokeWidth={2}
                 listening={false}

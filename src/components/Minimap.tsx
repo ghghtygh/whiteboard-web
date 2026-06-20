@@ -114,7 +114,7 @@ export function Minimap() {
         aria-label="Minimap — click or drag to pan"
       >
         {/* 배경 */}
-        <rect x={0} y={0} width={MM_W} height={MM_H} fill="#fafbfc" />
+        <rect x={0} y={0} width={MM_W} height={MM_H} fill="#f6f8fb" />
 
         {/* 엣지 (노드 보다 아래) — 중심-중심 연결 */}
         {edges.map((e) => {
@@ -128,7 +128,7 @@ export function Minimap() {
               y1={toMmY(from.y + NODE_H / 2)}
               x2={toMmX(to.x + NODE_W / 2)}
               y2={toMmY(to.y + NODE_H / 2)}
-              stroke="#6b7280"
+              stroke="#6a7689"
               strokeWidth={0.8}
               opacity={0.6}
             />
@@ -143,8 +143,8 @@ export function Minimap() {
             y={toMmY(g.y)}
             width={g.width * bounds.scale}
             height={g.height * bounds.scale}
-            fill="rgba(34, 197, 160, 0.08)"
-            stroke="#22c5a0"
+            fill="rgba(93, 91, 239, 0.06)"
+            stroke="#a3a7ff"
             strokeWidth={1}
           />
         ))}
@@ -168,25 +168,24 @@ export function Minimap() {
           y={toMmY(vpY)}
           width={vpW * bounds.scale}
           height={vpH * bounds.scale}
-          fill="rgba(37, 99, 235, 0.10)"
-          stroke="#2563eb"
+          fill="rgba(93, 91, 239, 0.10)"
+          stroke="#5d5bef"
           strokeWidth={1.5}
         />
       </svg>
 
       <style>{`
         .minimap {
-          position: absolute; right: 16px; top: 16px;
-          background: white;
-          border: 1px solid var(--color-border);
-          border-radius: 6px;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-          padding: 4px;
+          position: absolute; right: 16px; bottom: 16px;
+          background: var(--surface-raised);
+          border-radius: var(--radius-lg);
+          box-shadow: var(--shadow-float);
+          padding: 5px;
           z-index: 5;
           user-select: none;
           line-height: 0;
         }
-        .minimap svg { display: block; cursor: grab; border-radius: 3px; touch-action: none; }
+        .minimap svg { display: block; cursor: grab; border-radius: var(--radius-md); touch-action: none; }
         .minimap svg:active { cursor: grabbing; }
 
         /* 모바일 — 화면 차지가 커서 미니맵은 숨김 */

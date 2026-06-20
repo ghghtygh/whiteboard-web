@@ -5,7 +5,7 @@ import { createBoardDoc, type BoardDoc } from './doc'
 import { connectBoard } from './provider'
 import { bootstrapAwareness } from './awareness'
 import { useAuthStore } from '@/store/auth'
-import { SYNC_ENABLED } from '@/local/mode'
+import { SYNC_AVAILABLE, useSyncStore } from '@/store/sync'
 
 export interface BoardCollab {
   doc: BoardDoc | null
@@ -22,6 +22,10 @@ export interface BoardCollab {
 // 같은 URL을 들고 두 명이 접속하면 자동으로 실시간 협업이 동작한다.
 export function useBoardCollab(boardId: string | null): BoardCollab {
   const user = useAuthStore((s) => s.user)
+  // 사용자가 동기화를 켰는지 (URL 이 있을 때만 유효). 토글하면 effect 가 재실행돼
+  // WebSocketProvider 가 붙거나 떨어진다.
+  const syncOn = useSyncStore((s) => s.enabled)
+  const syncEnabled = SYNC_AVAILABLE && syncOn
   const [doc, setDoc] = useState<BoardDoc | null>(null)
   const [provider, setProvider] = useState<WebsocketProvider | null>(null)
   const [syncConnected, setSyncConnected] = useState(false)
@@ -35,10 +39,10 @@ export function useBoardCollab(boardId: string | null): BoardCollab {
     const idb = new IndexeddbPersistence(`whiteboard.board.${boardId}`, next.ydoc)
     idb.once('synced', () => setReady(true))
 
-    // 2) WebSocket 동기화 — SYNC_ENABLED 일 때만.
+    // 2) WebSocket 동기화 — URL 이 있고 사용자가 켰을 때만.
     let prov: WebsocketProvider | null = null
     let cleanup: (() => void) | null = null
-    if (SYNC_ENABLED) {
+    if (syncEnabled) {
       prov = connectBoard(boardId, next)
       bootstrapAwareness(prov, user)
       const onStatus = (e: { status: string }) => setSyncConnected(e.status === 'connected')
@@ -59,7 +63,7 @@ export function useBoardCollab(boardId: string | null): BoardCollab {
       setReady(false)
       setSyncConnected(false)
     }
-  }, [boardId, user])
+  }, [boardId, user, syncEnabled])
 
-  return { doc, provider, syncConnected, ready, syncEnabled: SYNC_ENABLED }
+  return { doc, provider, syncConnected, ready, syncEnabled }
 }

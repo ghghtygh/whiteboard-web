@@ -14,6 +14,7 @@ import { useBoardCollab } from '@/collab/useBoardCollab'
 import { useUndoManager } from '@/canvas/hooks'
 import { CanvasContextProvider } from '@/canvas/CanvasContext'
 import { useSelection } from '@/canvas/selection'
+import { SYNC_AVAILABLE, useSyncStore } from '@/store/sync'
 import type { Board } from '@/types/domain'
 
 export function BoardEditPage() {
@@ -26,6 +27,8 @@ export function BoardEditPage() {
   const collab = useBoardCollab(boardId ?? null)
   const undoManager = useUndoManager(collab.doc)
   const clearSel = useSelection((s) => s.clear)
+  const syncOn = useSyncStore((s) => s.enabled)
+  const toggleSync = useSyncStore((s) => s.toggle)
 
   useEffect(() => {
     if (!import.meta.env.DEV) return
@@ -68,7 +71,7 @@ export function BoardEditPage() {
           >
             ☰
           </button>
-          <Link to="/boards" className="back" title="Board list">←</Link>
+          <Link to="/boards" className="back" title="보드 목록">←</Link>
           <button className="title-btn" onClick={onRename}>
             {board?.title ?? '…'}
           </button>
@@ -76,16 +79,25 @@ export function BoardEditPage() {
           <Toolbar />
           <div className="spacer" />
           <PresenceBadges awareness={collab.provider?.awareness ?? null} />
-          <button className="share-btn" onClick={() => setShareOpen(true)}>Share</button>
-          <span className="status" data-online={collab.syncEnabled ? collab.syncConnected : collab.ready}>
-            {collab.syncEnabled
-              ? collab.syncConnected
-                ? 'Syncing'
-                : 'Connecting…'
-              : collab.ready
-                ? 'Local'
-                : '…'}
-          </span>
+          <button className="share-btn primary" onClick={() => setShareOpen(true)}>공유</button>
+          {SYNC_AVAILABLE ? (
+            <button
+              type="button"
+              className="status status-btn"
+              data-online={syncOn && collab.syncConnected}
+              data-on={syncOn}
+              title={syncOn ? '실시간 동기화 켜짐 — 눌러서 끄기' : '실시간 동기화 꺼짐 — 눌러서 켜기'}
+              onClick={toggleSync}
+            >
+              <span className="dot" />
+              {syncOn ? (collab.syncConnected ? '동기화 중' : '연결 중…') : '동기화 꺼짐'}
+            </button>
+          ) : (
+            <span className="status" data-online={collab.ready} title="동기화 서버가 설정되지 않아 로컬에만 저장됩니다">
+              <span className="dot" />
+              {collab.ready ? '로컬' : '…'}
+            </span>
+          )}
         </header>
 
         {shareOpen && boardId && (
@@ -114,29 +126,47 @@ export function BoardEditPage() {
         <style>{`
           .board-shell { display: flex; flex-direction: column; height: 100%; }
           .board-topbar { display: flex; align-items: center; gap: 8px;
-                          padding: 4px 12px; border-bottom: 1px solid var(--color-border);
-                          background: var(--color-panel); min-height: 38px;
+                          padding: 0 14px; border-bottom: 1px solid var(--border-subtle);
+                          background: var(--surface-panel); min-height: var(--topbar-h);
                           flex-wrap: wrap; }
-          .menu-btn { display: none; background: none; border: 1px solid var(--color-border);
-                      border-radius: 4px; padding: 4px 8px; font-size: 16px; line-height: 1; }
-          .back { font-size: 16px; color: var(--color-text); text-decoration: none; padding: 0 4px; }
-          .back:hover { color: var(--color-accent); }
-          .title-btn { background: none; border: none; font-size: 14px; font-weight: 600;
-                       padding: 4px 6px; cursor: pointer; max-width: 200px;
+          .menu-btn { display: none; background: var(--surface-panel);
+                      border: 1px solid var(--border-subtle);
+                      border-radius: var(--radius-sm); padding: 4px 8px; font-size: 16px; line-height: 1; }
+          .back { font-size: 17px; color: var(--text-muted); text-decoration: none; padding: 2px 6px;
+                  border-radius: var(--radius-sm); }
+          .back:hover { color: var(--primary); background: var(--surface-hover); text-decoration: none; }
+          .title-btn { background: none; border: none; font: var(--font-body-strong);
+                       padding: 5px 8px; cursor: pointer; max-width: 220px;
                        white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-          .title-btn:hover { background: #f1f3f5; border-radius: 4px; }
-          .vsep { width: 1px; height: 18px; background: var(--color-border); margin: 0 4px; }
+          .title-btn:hover { background: var(--surface-hover); border-radius: var(--radius-sm); }
+          .vsep { width: 1px; height: 18px; background: var(--border-subtle); margin: 0 4px; }
           .spacer { flex: 1; }
-          .share-btn { font-size: 12px; padding: 4px 12px;
-                       background: var(--color-accent); color: white;
-                       border-color: var(--color-accent); border-radius: 4px; }
-          .share-btn:hover { background: var(--color-accent-hover); }
-          .status { font-size: 11px; color: var(--color-muted); padding: 0 4px; }
-          .status[data-online="true"] { color: #16a34a; }
-          .board-body { flex: 1; display: grid; grid-template-columns: 220px 1fr; min-height: 0; }
+          .share-btn { font-size: var(--text-sm); padding: 6px 14px; border-radius: var(--radius-md); }
+          .status { display: inline-flex; align-items: center; gap: 6px;
+                    font: var(--font-mono-sm); color: var(--text-muted); padding: 4px 8px;
+                    text-transform: none; }
+          .status .dot { width: 7px; height: 7px; border-radius: 50%;
+                         background: var(--text-faint); flex: none;
+                         transition: background var(--dur-fast) var(--ease-out); }
+          /* 토글 버튼 버전 — 버튼 기본 테두리/배경 제거 */
+          .status-btn { background: transparent; border: 1px solid transparent;
+                        border-radius: var(--radius-md); cursor: pointer; }
+          .status-btn:hover { background: var(--surface-hover); border-color: var(--border-subtle); }
+          /* 동기화 ON 이지만 아직 연결 안 됨 (연결 중…) → 앰버 */
+          .status[data-on="true"] { color: var(--warning); }
+          .status[data-on="true"] .dot { background: var(--warning); }
+          /* 연결 완료 → 그린 펄스 */
+          .status[data-online="true"] { color: var(--success); }
+          .status[data-online="true"] .dot { background: var(--success);
+                         box-shadow: 0 0 0 3px var(--success-soft);
+                         animation: status-pulse 1.8s var(--ease-in-out) infinite; }
+          @keyframes status-pulse { 50% { opacity: 0.45; } }
+          .board-body { flex: 1; display: grid;
+                        grid-template-columns: var(--sidebar-w) 1fr; min-height: 0; }
           .board-main { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
-          .canvas-host { flex: 1; position: relative; background: #fafbfc; min-height: 0; }
-          .error { color: var(--color-danger); padding: 16px; }
+          .canvas-host { flex: 1; position: relative; min-height: 0;
+                         background: var(--surface-canvas); }
+          .error { color: var(--danger); padding: 16px; }
 
           /* 모바일: 사이드바를 drawer 로 떼고, 햄버거 노출, 상단바 압축 */
           @media (max-width: 768px) {

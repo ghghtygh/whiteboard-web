@@ -304,7 +304,7 @@ export function Sidebar({ open = false, onClose }: SidebarProps = {}) {
       <aside className="sidebar" data-open={open}>
         <div className="search">
           <input
-            placeholder="Search components"
+            placeholder="컴포넌트 검색"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
@@ -320,12 +320,12 @@ export function Sidebar({ open = false, onClose }: SidebarProps = {}) {
         </div>
 
         <div className="list">
-          {loading && <p className="muted">Loading…</p>}
+          {loading && <p className="muted">불러오는 중…</p>}
           {error && <p className="error">{error}</p>}
 
           {recents.length > 0 && (
             <section>
-              <h3>Recently used</h3>
+              <h3>최근 사용</h3>
               <ul>
                 {recents.map((c) => (
                   <ComponentRow
@@ -369,36 +369,39 @@ export function Sidebar({ open = false, onClose }: SidebarProps = {}) {
           })}
 
           {!loading && items.length === 0 && !error && (
-            <p className="muted">Catalog is empty</p>
+            <p className="muted">카탈로그가 비어 있습니다</p>
           )}
         </div>
 
         <style>{`
           .sidebar { display: flex; flex-direction: column;
-                     border-right: 1px solid var(--color-border);
-                     background: var(--color-panel); min-height: 0; }
-          .search { padding: 12px; border-bottom: 1px solid var(--color-border);
+                     border-right: 1px solid var(--border-subtle);
+                     background: var(--surface-panel); min-height: 0; }
+          .search { padding: 12px; border-bottom: 1px solid var(--border-subtle);
                     display: flex; align-items: center; gap: 8px; }
           .search input { flex: 1; min-width: 0; }
           .close-btn { display: none; background: none; border: none;
                        font-size: 24px; line-height: 1; padding: 0 4px;
-                       color: var(--color-muted); cursor: pointer; }
+                       color: var(--text-muted); cursor: pointer; }
           .list { flex: 1; overflow-y: auto; padding: 8px 12px; }
-          .list h3 { font-size: 12px; text-transform: uppercase; color: var(--color-muted);
-                     margin: 12px 0 6px; letter-spacing: 0.04em;
+          .list h3 { font: var(--weight-semibold) var(--text-2xs)/1 var(--font-sans);
+                     text-transform: uppercase; color: var(--text-muted);
+                     margin: 14px 0 6px; letter-spacing: var(--tracking-caps);
                      display: flex; align-items: center; gap: 4px; user-select: none; }
-          .list h3 .count { margin-left: auto; color: #9ca3af; font-weight: normal; }
-          .list ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 2px; }
-          .list li { display: flex; align-items: center; gap: 8px; padding: 6px 8px;
-                     border-radius: var(--radius-sm); cursor: grab; font-size: 13px; }
-          .list li:hover { background: #f1f3f5; }
+          .list h3 .count { margin-left: auto; color: var(--text-faint); font-weight: 400;
+                            font-family: var(--font-mono); letter-spacing: 0; }
+          .list ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 1px; }
+          .list li { display: flex; align-items: center; gap: 9px; padding: 7px 9px;
+                     border-radius: var(--radius-md); cursor: grab; font-size: var(--text-sm);
+                     transition: background var(--dur-fast) var(--ease-out); }
+          .list li:hover { background: var(--surface-hover); }
           .badge { display: inline-flex; align-items: center; justify-content: center;
-                   width: 22px; height: 22px; border-radius: 4px;
+                   width: 22px; height: 22px; border-radius: var(--radius-xs);
                    color: white; font-size: 10px; font-weight: 700; flex-shrink: 0; }
           .icon { width: 20px; height: 20px; flex-shrink: 0; object-fit: contain; }
           .name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-          .muted { color: var(--color-muted); font-size: 13px; }
-          .error { color: var(--color-danger); font-size: 13px; }
+          .muted { color: var(--text-muted); font-size: var(--text-sm); }
+          .error { color: var(--danger); font-size: var(--text-sm); }
           .sidebar-backdrop { display: none; }
 
           /* 터치 드래그 고스트 */
@@ -406,15 +409,15 @@ export function Sidebar({ open = false, onClose }: SidebarProps = {}) {
             position: fixed;
             pointer-events: none;
             z-index: 200;
-            background: white;
-            border: 1.5px solid #2563eb;
-            border-radius: 8px;
+            background: var(--surface-panel);
+            border: 1.5px solid #5d5bef;
+            border-radius: var(--radius-lg);
             padding: 6px 10px;
             display: flex;
             align-items: center;
             gap: 6px;
-            font-size: 13px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+            font-size: var(--text-sm);
+            box-shadow: var(--shadow-lg);
             transform: translate(-50%, calc(-100% - 14px));
             white-space: nowrap;
             opacity: 0.95;

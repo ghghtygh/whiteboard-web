@@ -2,6 +2,7 @@ import { createBrowserRouter } from 'react-router-dom'
 import { RequireAuth } from '@/App'
 import { LoginPage } from '@/pages/LoginPage'
 import { SignupPage } from '@/pages/SignupPage'
+import { OAuthCallbackPage } from '@/pages/OAuthCallbackPage'
 import { BoardListPage } from '@/pages/BoardListPage'
 import { BoardEditPage } from '@/pages/BoardEditPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
@@ -10,6 +11,7 @@ import { LandingRedirect } from '@/pages/LandingRedirect'
 export const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
   { path: '/signup', element: <SignupPage /> },
+  { path: '/oauth/callback', element: <OAuthCallbackPage /> },
   {
     element: <RequireAuth />,
     children: [

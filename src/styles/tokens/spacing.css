@@ -1,0 +1,64 @@
+/* ============================================================
+   Whiteboard Design System — Spacing, Radius, Elevation, Motion
+   4px base grid. The canvas itself snaps to an 8/40px grid
+   (see --grid-snap), kept distinct from UI spacing.
+   ============================================================ */
+
+:root {
+  /* ---------- Spacing scale (4px base) ---------- */
+  --space-0:  0;
+  --space-1:  2px;
+  --space-2:  4px;
+  --space-3:  6px;
+  --space-4:  8px;
+  --space-5:  12px;
+  --space-6:  16px;
+  --space-7:  20px;
+  --space-8:  24px;
+  --space-9:  32px;
+  --space-10: 40px;
+  --space-11: 48px;
+  --space-12: 64px;
+  --space-14: 80px;
+  --space-16: 96px;
+
+  /* Canvas grid units (Excalidraw-style snap) */
+  --grid-fine:  8px;
+  --grid-snap:  40px;
+
+  /* ---------- Radius ---------- */
+  --radius-xs:   4px;
+  --radius-sm:   6px;
+  --radius-md:   8px;
+  --radius-lg:   12px;
+  --radius-xl:   16px;
+  --radius-2xl:  20px;
+  --radius-pill: 999px;
+
+  /* ---------- Elevation · cool-tinted shadows ---------- */
+  --shadow-xs:  0 1px 2px rgba(18, 28, 45, 0.06);
+  --shadow-sm:  0 1px 3px rgba(18, 28, 45, 0.08), 0 1px 2px rgba(18, 28, 45, 0.05);
+  --shadow-md:  0 4px 12px rgba(18, 28, 45, 0.10), 0 2px 4px rgba(18, 28, 45, 0.06);
+  --shadow-lg:  0 12px 28px rgba(18, 28, 45, 0.14), 0 4px 8px rgba(18, 28, 45, 0.07);
+  --shadow-xl:  0 24px 56px rgba(18, 28, 45, 0.20), 0 8px 16px rgba(18, 28, 45, 0.10);
+  /* Floating canvas chrome (toolbar/minimap) — crisper, ringed */
+  --shadow-float: 0 6px 20px rgba(18, 28, 45, 0.12), 0 0 0 1px rgba(18, 28, 45, 0.05);
+
+  /* Focus ring */
+  --ring-width: 3px;
+  --focus-ring: 0 0 0 var(--ring-width) var(--ring-primary);
+
+  /* ---------- Motion ---------- */
+  --ease-out:    cubic-bezier(0.22, 1, 0.36, 1);   /* @kind other */
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);   /* @kind other */
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);/* @kind other */
+  --dur-fast:   120ms;  /* @kind other */
+  --dur-base:   180ms;  /* @kind other */
+  --dur-slow:   260ms;  /* @kind other */
+
+  /* ---------- Layout constants ---------- */
+  --sidebar-w:    248px;
+  --topbar-h:     48px;
+  --toolbar-h:    44px;
+  --container-max:1120px;
+}

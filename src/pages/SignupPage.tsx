@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { signup } from '@/api/auth'
+import { SocialLoginButtons } from '@/components/SocialLoginButtons'
+import { authStyles } from './authStyles'
 
 export function SignupPage() {
   const navigate = useNavigate()
@@ -25,53 +27,55 @@ export function SignupPage() {
   }
 
   return (
-    <div className="auth-shell">
-      <form className="auth-card" onSubmit={onSubmit}>
-        <h1>Sign up</h1>
-        <label>
-          Email
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoFocus />
-        </label>
-        <label>
-          Name
-          <input value={name} onChange={(e) => setName(e.target.value)} required />
-        </label>
-        <label>
-          Password
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            minLength={8}
-          />
-        </label>
-        {error && <p className="error">{error}</p>}
-        <button type="submit" className="primary" disabled={loading}>
-          {loading ? 'Submitting…' : 'Create account'}
-        </button>
-        <p className="muted">
-          Already have an account? <Link to="/login">Sign in</Link>
-        </p>
-      </form>
-      <style>{`
-        .auth-shell { min-height: 100%; display: grid; place-items: center; padding: 24px; }
-        .auth-card {
-          background: var(--color-panel); border: 1px solid var(--color-border);
-          border-radius: var(--radius-md); box-shadow: var(--shadow-md);
-          padding: 32px; width: 100%; max-width: 360px;
-          display: flex; flex-direction: column; gap: 16px;
-        }
-        .auth-card h1 { margin: 0 0 8px; font-size: 20px; }
-        .auth-card label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--color-muted); }
-        .auth-card .error { color: var(--color-danger); margin: 0; font-size: 13px; }
-        .auth-card .muted { color: var(--color-muted); font-size: 13px; margin: 4px 0 0; }
+    <div className="auth-split">
+      <aside className="auth-brand">
+        <Link to="/boards" className="brand-mark" title="내 보드로">
+          <span className="brand-dot" />
+          Whiteboard
+        </Link>
+        <div className="brand-pitch">
+          <p className="eyebrow">SOFTWARE ARCHITECTURE, TOGETHER</p>
+          <h2>아키텍처를<br />그릴 준비 되셨나요?</h2>
+          <p className="brand-sub">
+            계정을 만들고 첫 다이어그램을 시작해 보세요. 팀 초대도 한 번의 링크로.
+          </p>
+        </div>
+        <span className="brand-foot">wb.gpglab.site</span>
+      </aside>
 
-        @media (max-width: 480px) {
-          .auth-shell { padding: 16px; }
-          .auth-card { padding: 24px 20px; }
-        }
-      `}</style>
+      <div className="auth-pane">
+        <form className="auth-card" onSubmit={onSubmit}>
+          <h1>회원가입</h1>
+          <p className="sub">몇 가지 정보만 입력하면 바로 시작할 수 있어요.</p>
+          <label>
+            이메일
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoFocus />
+          </label>
+          <label>
+            이름
+            <input value={name} onChange={(e) => setName(e.target.value)} required />
+          </label>
+          <label>
+            비밀번호
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength={8}
+            />
+          </label>
+          {error && <p className="error">{error}</p>}
+          <button type="submit" className="primary" disabled={loading}>
+            {loading ? '처리 중…' : '계정 만들기'}
+          </button>
+          <SocialLoginButtons />
+          <p className="muted">
+            이미 계정이 있으신가요? <Link to="/login">로그인</Link>
+          </p>
+        </form>
+      </div>
+      <style>{authStyles}</style>
     </div>
   )
 }

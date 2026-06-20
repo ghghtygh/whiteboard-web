@@ -28,6 +28,25 @@ import {
   nearestAnchor,
   snap,
 } from './geometry'
+
+/** 디자인 시스템 시그니처 표면 — 22px 간격의 라디얼 도트 그리드 타일.
+ *  Konva fillPatternImage 로 깔아 캔버스 팬/줌과 함께 움직인다. */
+const DOT_TILE = 22
+function makeDotTile(): HTMLCanvasElement | undefined {
+  if (typeof document === 'undefined') return undefined
+  const dpr = Math.max(1, Math.min(3, window.devicePixelRatio || 1))
+  const c = document.createElement('canvas')
+  c.width = DOT_TILE * dpr
+  c.height = DOT_TILE * dpr
+  const ctx = c.getContext('2d')
+  if (!ctx) return undefined
+  ctx.scale(dpr, dpr)
+  ctx.fillStyle = '#e4e9f0' // --canvas-grid
+  ctx.beginPath()
+  ctx.arc(1.2, 1.2, 1.2, 0, Math.PI * 2)
+  ctx.fill()
+  return c
+}
 import {
   createEdge,
   createGroup,
@@ -89,6 +108,11 @@ export function Canvas({ doc }: Props) {
   const setTool = useToolStore((s) => s.set)
   const gridVisible = useGridStore((s) => s.visible)
   const snapEnabled = useSnapStore((s) => s.enabled)
+  const dotTile = useMemo(makeDotTile, [])
+  const dotScale = useMemo(() => {
+    const dpr = Math.max(1, Math.min(3, (typeof window !== 'undefined' && window.devicePixelRatio) || 1))
+    return 1 / dpr
+  }, [])
   // Alt 누르고 있는 동안 스냅 모드를 일시 반전 (ON↔OFF)
   const [altDown, setAltDown] = useState(false)
   const snapEffective = snapEnabled !== altDown
@@ -447,7 +471,11 @@ export function Canvas({ doc }: Props) {
             y={-5000}
             width={10000}
             height={10000}
-            fill="#fafbfc"
+            fill="#f6f8fb"
+            fillPatternImage={dotTile as unknown as HTMLImageElement | undefined}
+            fillPatternRepeat="repeat"
+            fillPatternScale={{ x: dotScale, y: dotScale }}
+            fillPriority={dotTile ? 'pattern' : 'color'}
           />
           {/* 그리드 가이드 — 약하게. 툴바에서 토글 */}
           {gridVisible && <GridLines step={snapEffective ? COARSE_GRID : 200} />}
@@ -491,8 +519,8 @@ export function Canvas({ doc }: Props) {
               return (
                 <Arrow
                   points={[a.x, a.y, pendingEdge.x, pendingEdge.y]}
-                  stroke="#2563eb"
-                  fill="#2563eb"
+                  stroke="#5d5bef"
+                  fill="#5d5bef"
                   strokeWidth={2}
                   dash={[6, 4]}
                   pointerLength={8}
@@ -547,10 +575,10 @@ export function Canvas({ doc }: Props) {
               y={pendingGroup.y}
               width={pendingGroup.width}
               height={pendingGroup.height}
-              stroke="#2563eb"
+              stroke="#5d5bef"
               strokeWidth={1.5}
               dash={[6, 4]}
-              fill="rgba(37, 99, 235, 0.05)"
+              fill="rgba(93, 91, 239, 0.05)"
               listening={false}
             />
           )}
@@ -560,9 +588,9 @@ export function Canvas({ doc }: Props) {
             <Text
               x={20}
               y={20}
-              text="Drag a component from the left onto the board."
+              text="왼쪽에서 컴포넌트를 끌어다 보드에 놓아 보세요."
               fontSize={14}
-              fill="#9ca3af"
+              fill="#98a3b5"
               listening={false}
             />
           )}

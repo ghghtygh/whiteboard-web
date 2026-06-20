@@ -27,7 +27,7 @@ export function EdgeShape({ edge, from, to, selected, onSelect, onLabelEdit }: P
   const a = anchorPoint(from.x, from.y, fromAnchor, fromDims)
   const b = anchorPoint(to.x, to.y, toAnchor, toDims)
 
-  const stroke = selected ? '#2563eb' : '#6b7280'
+  const stroke = selected ? '#5d5bef' : '#6a7689'
   const strokeWidth = selected ? 2.5 : 1.5
 
   const arrowForward = edge.direction === 'forward' || edge.direction === 'both'

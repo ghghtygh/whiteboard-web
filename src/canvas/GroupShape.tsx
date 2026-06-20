@@ -40,10 +40,11 @@ export function GroupShape({ group, selected, onSelect, onDragEnd, onLabelEdit }
       <Rect
         width={group.width}
         height={group.height}
-        fill={group.color ?? 'rgba(255,255,255,0.4)'}
-        stroke={selected ? '#2563eb' : '#22c5a0'}
-        strokeWidth={selected ? 3 : 2}
-        cornerRadius={4}
+        fill={group.color ?? 'rgba(93, 91, 239, 0.05)'}
+        stroke={selected ? '#5d5bef' : '#a3a7ff'}
+        strokeWidth={selected ? 2.5 : 1.5}
+        dash={selected ? undefined : [6, 5]}
+        cornerRadius={12}
       />
       {group.label && (
         <Text
@@ -52,7 +53,8 @@ export function GroupShape({ group, selected, onSelect, onDragEnd, onLabelEdit }
           text={group.label}
           fontSize={13}
           fontStyle="bold"
-          fill="#1f2328"
+          fontFamily="JetBrains Mono, ui-monospace, monospace"
+          fill="#3d34c2"
         />
       )}
     </KGroup>
