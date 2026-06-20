@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { me } from '@/api/auth'
 import { useAuthStore } from '@/store/auth'
+import { authStyles } from './authStyles'
 
 /**
  * 소셜 로그인 콜백. 백엔드(OAuth2LoginSuccessHandler)가
@@ -48,7 +49,7 @@ export function OAuthCallbackPage() {
   }, [navigate, setTokens, setUser, logout])
 
   return (
-    <div className="auth-shell">
+    <div className="auth-pane callback-pane">
       <div className="auth-card">
         {error ? (
           <>
@@ -63,21 +64,10 @@ export function OAuthCallbackPage() {
           </>
         )}
       </div>
+      <style>{authStyles}</style>
       <style>{`
-        .auth-shell { min-height: 100%; display: grid; place-items: center; padding: 24px; }
-        .auth-card {
-          background: var(--color-panel); border: 1px solid var(--color-border);
-          border-radius: var(--radius-md); box-shadow: var(--shadow-md);
-          padding: 32px; width: 100%; max-width: 360px;
-          display: flex; flex-direction: column; gap: 16px;
-        }
-        .auth-card h1 { margin: 0 0 8px; font-size: 20px; }
-        .auth-card .error { color: var(--color-danger); margin: 0; font-size: 13px; }
-        .auth-card .muted { color: var(--color-muted); font-size: 13px; margin: 0; }
-        .auth-card .back {
-          display: inline-flex; align-items: center; justify-content: center;
-          height: 40px; text-decoration: none; border-radius: var(--radius-md);
-        }
+        .callback-pane { min-height: 100%; }
+        .callback-pane .auth-card .muted { text-align: left; }
       `}</style>
     </div>
   )

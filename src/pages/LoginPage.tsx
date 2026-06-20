@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { login } from '@/api/auth'
 import { useAuthStore } from '@/store/auth'
 import { SocialLoginButtons } from '@/components/SocialLoginButtons'
+import { authStyles } from './authStyles'
 
 export function LoginPage() {
   const navigate = useNavigate()
@@ -28,55 +29,56 @@ export function LoginPage() {
   }
 
   return (
-    <div className="auth-shell">
-      <form className="auth-card" onSubmit={onSubmit}>
-        <h1>Sign in</h1>
-        <label>
-          Email
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            autoFocus
-          />
-        </label>
-        <label>
-          Password
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </label>
-        {error && <p className="error">{error}</p>}
-        <button type="submit" className="primary" disabled={loading}>
-          {loading ? 'Signing in…' : 'Sign in'}
-        </button>
-        <SocialLoginButtons />
-        <p className="muted">
-          Don't have an account? <Link to="/signup">Sign up</Link>
-        </p>
-      </form>
-      <style>{`
-        .auth-shell { min-height: 100%; display: grid; place-items: center; padding: 24px; }
-        .auth-card {
-          background: var(--color-panel); border: 1px solid var(--color-border);
-          border-radius: var(--radius-md); box-shadow: var(--shadow-md);
-          padding: 32px; width: 100%; max-width: 360px;
-          display: flex; flex-direction: column; gap: 16px;
-        }
-        .auth-card h1 { margin: 0 0 8px; font-size: 20px; }
-        .auth-card label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--color-muted); }
-        .auth-card .error { color: var(--color-danger); margin: 0; font-size: 13px; }
-        .auth-card .muted { color: var(--color-muted); font-size: 13px; margin: 4px 0 0; }
+    <div className="auth-split">
+      <aside className="auth-brand">
+        <div className="brand-mark">
+          <span className="brand-dot" />
+          Whiteboard
+        </div>
+        <div className="brand-pitch">
+          <p className="eyebrow">SOFTWARE ARCHITECTURE, TOGETHER</p>
+          <h2>팀과 함께 그리는<br />소프트웨어 아키텍처</h2>
+          <p className="brand-sub">
+            기술 스택을 끌어다 놓고, 엣지로 잇고, 실시간으로 함께 편집하세요.
+          </p>
+        </div>
+        <span className="brand-foot">wb.gpglab.site</span>
+      </aside>
 
-        @media (max-width: 480px) {
-          .auth-shell { padding: 16px; }
-          .auth-card { padding: 24px 20px; }
-        }
-      `}</style>
+      <div className="auth-pane">
+        <form className="auth-card" onSubmit={onSubmit}>
+          <h1>로그인</h1>
+          <p className="sub">계정에 로그인하고 보드를 이어서 작업하세요.</p>
+          <label>
+            이메일
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              autoFocus
+            />
+          </label>
+          <label>
+            비밀번호
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </label>
+          {error && <p className="error">{error}</p>}
+          <button type="submit" className="primary" disabled={loading}>
+            {loading ? '로그인 중…' : '로그인'}
+          </button>
+          <SocialLoginButtons />
+          <p className="muted">
+            계정이 없으신가요? <Link to="/signup">회원가입</Link>
+          </p>
+        </form>
+      </div>
+      <style>{authStyles}</style>
     </div>
   )
 }
