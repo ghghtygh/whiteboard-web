@@ -1,6 +1,6 @@
 import { IS_LOCAL_MODE } from '@/local/mode'
 
-export type OAuthProvider = 'google' | 'github' | 'kakao'
+export type OAuthProvider = 'google' | 'github' | 'kakao' | 'naver'
 
 export interface OAuthProviderInfo {
   id: OAuthProvider
@@ -14,6 +14,7 @@ export const OAUTH_PROVIDERS: OAuthProviderInfo[] = [
   { id: 'google', label: 'Google', bg: '#ffffff', fg: '#1f1f1f', border: '#dadce0' },
   { id: 'github', label: 'GitHub', bg: '#181717', fg: '#ffffff' },
   { id: 'kakao', label: 'Kakao', bg: '#fee500', fg: '#191600' },
+  { id: 'naver', label: 'Naver', bg: '#03c75a', fg: '#ffffff' },
 ]
 
 // 백엔드 오리진. REST 는 Vite 프록시로 /api 를 상대 경로 호출하지만,
