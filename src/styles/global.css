@@ -1,23 +1,49 @@
+/* ============================================================
+   Whiteboard — 전역 스타일
+   신규 디자인 시스템(../whiteboard-design) 토큰을 채택한다.
+   crisp·modern dev-tool 룩: 쿨 슬레이트 + 인디고 + 시안.
+   ============================================================ */
+
+@import './tokens/fonts.css';
+@import './tokens/colors.css';
+@import './tokens/typography.css';
+@import './tokens/spacing.css';
+
 :root {
-  --color-bg: #f7f8fa;
-  --color-panel: #ffffff;
-  --color-border: #e3e6eb;
-  --color-text: #1f2328;
-  --color-muted: #6b7280;
-  --color-accent: #2563eb;
-  --color-accent-hover: #1d4ed8;
-  --color-danger: #dc2626;
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
-    'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
-  color: var(--color-text);
-  background: var(--color-bg);
+  /* ----------------------------------------------------------
+     레거시 별칭 — 기존 컴포넌트들이 참조하는 --color-* / --radius-*
+     / --shadow-* 변수를 디자인 시스템의 시맨틱 토큰으로 재매핑한다.
+     덕분에 컴포넌트 인라인 스타일을 일일이 고치지 않아도 전체가
+     새 팔레트/그림자/라운드로 갱신된다.
+     ---------------------------------------------------------- */
+  --color-bg: var(--surface-app);
+  --color-panel: var(--surface-panel);
+  --color-border: var(--border-subtle);
+  --color-border-strong: var(--border-strong);
+  --color-text: var(--text-body);
+  --color-muted: var(--text-muted);
+  --color-accent: var(--primary);
+  --color-accent-hover: var(--primary-hover);
+  --color-accent-press: var(--primary-press);
+  --color-danger: var(--danger);
+  --color-danger-hover: var(--danger-hover);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+
+  /* radius 별칭 (구: sm=4 / md=8) → DS 스케일 */
+  --radius-sm: var(--radius-xs); /* 4px */
+  /* --radius-md(8px) 은 DS spacing.css 와 동일하므로 그대로 사용 */
+
+  /* 그림자는 DS spacing.css 에서 정의된 --shadow-sm/md 를 그대로 사용 */
+
+  font-family: var(--font-sans);
+  color: var(--text-body);
+  background: var(--surface-app);
 }
 
-* {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
@@ -29,58 +55,173 @@ body,
 }
 
 body {
+  font: var(--font-body);
+  color: var(--text-body);
+  background: var(--surface-app);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
   /* iOS 에서 캔버스 드래그/줌 도중 페이지 자체가 bounce 되는 것 방지 */
   overscroll-behavior: contain;
   -webkit-text-size-adjust: 100%;
 }
 
+h1 {
+  font: var(--font-h1);
+  color: var(--text-strong);
+  letter-spacing: var(--tracking-tight);
+}
+h2 {
+  font: var(--font-h2);
+  color: var(--text-strong);
+  letter-spacing: var(--tracking-snug);
+}
+h3 {
+  font: var(--font-h3);
+  color: var(--text-strong);
+}
+
+code,
+kbd,
+samp {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+}
+
+::selection {
+  background: var(--primary-soft);
+  color: var(--primary-soft-text);
+}
+
 a {
-  color: var(--color-accent);
+  color: var(--text-link);
   text-decoration: none;
 }
 
 a:hover {
   text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
+/* ----------------------------------------------------------
+   버튼 — DS 룩: 8px 라운드, 스냅 모션, 명확한 hover/press/focus
+   ---------------------------------------------------------- */
 button {
-  font: inherit;
+  font: var(--font-body-strong);
   cursor: pointer;
-  border: 1px solid var(--color-border);
-  background: var(--color-panel);
-  border-radius: var(--radius-sm);
-  padding: 6px 12px;
-  color: var(--color-text);
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-panel);
+  border-radius: var(--radius-md);
+  padding: 7px 13px;
+  color: var(--text-body);
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+
+button:hover:not(:disabled) {
+  background: var(--surface-hover);
+  border-color: var(--border-strong);
+}
+
+button:active:not(:disabled) {
+  transform: translateY(0.5px) scale(0.985);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
 button.primary {
-  background: var(--color-accent);
-  color: white;
-  border-color: var(--color-accent);
+  background: var(--primary);
+  color: var(--text-on-primary);
+  border-color: var(--primary);
 }
 
-button.primary:hover {
-  background: var(--color-accent-hover);
-  border-color: var(--color-accent-hover);
+button.primary:hover:not(:disabled) {
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
+}
+
+button.primary:active:not(:disabled) {
+  background: var(--primary-press);
+  border-color: var(--primary-press);
 }
 
 button.danger {
-  background: var(--color-danger);
-  color: white;
-  border-color: var(--color-danger);
+  background: var(--danger);
+  color: #fff;
+  border-color: var(--danger);
 }
 
+button.danger:hover:not(:disabled) {
+  background: var(--danger-hover);
+  border-color: var(--danger-hover);
+}
+
+/* ----------------------------------------------------------
+   입력 — 8px 라운드, 인디고 포커스 링
+   ---------------------------------------------------------- */
 input,
-textarea {
-  font: inherit;
-  padding: 6px 10px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  background: var(--color-panel);
+textarea,
+select {
+  font: var(--font-body);
+  padding: 8px 11px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--surface-panel);
+  color: var(--text-body);
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-faint);
 }
 
 input:focus,
-textarea:focus {
+textarea:focus,
+select:focus {
   outline: none;
-  border-color: var(--color-accent);
+  border-color: var(--border-focus);
+  box-shadow: var(--focus-ring);
+}
+
+:focus-visible {
+  outline: none;
+}
+
+button:focus-visible,
+a:focus-visible {
+  box-shadow: var(--focus-ring);
+  border-radius: var(--radius-md);
+}
+
+/* 패널 내부 얇은 스크롤바 */
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--slate-300);
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--slate-400);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
 }
