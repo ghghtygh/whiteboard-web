@@ -11,8 +11,11 @@ COPY . .
 # 기본값 = 로컬 전용 모드 (백엔드/실시간 동기화 모두 OFF).
 ARG VITE_REMOTE_MODE=""
 ARG VITE_SYNC_WS_URL=""
+# OAuth 시작 URL 오리진. same-origin 운영이면 빈 값(상대경로)으로 둔다.
+ARG VITE_API_ORIGIN=""
 ENV VITE_REMOTE_MODE=${VITE_REMOTE_MODE}
 ENV VITE_SYNC_WS_URL=${VITE_SYNC_WS_URL}
+ENV VITE_API_ORIGIN=${VITE_API_ORIGIN}
 
 RUN npm run build
 
