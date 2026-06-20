@@ -2,12 +2,14 @@ import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { login } from '@/api/auth'
 import { useAuthStore } from '@/store/auth'
+import { IS_LOCAL_MODE } from '@/local/mode'
 import { SocialLoginButtons } from '@/components/SocialLoginButtons'
 import { authStyles } from './authStyles'
 
 export function LoginPage() {
   const navigate = useNavigate()
   const setAuth = useAuthStore((s) => s.setAuth)
+  const ensureGuest = useAuthStore((s) => s.ensureGuest)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -28,13 +30,19 @@ export function LoginPage() {
     }
   }
 
+  function onGuest() {
+    // 로컬 모드: 게스트 사용자를 시드하고 바로 보드로 진입.
+    ensureGuest()
+    navigate('/boards', { replace: true })
+  }
+
   return (
     <div className="auth-split">
       <aside className="auth-brand">
-        <div className="brand-mark">
+        <Link to="/" className="brand-mark" title="홈으로">
           <span className="brand-dot" />
           Whiteboard
-        </div>
+        </Link>
         <div className="brand-pitch">
           <p className="eyebrow">SOFTWARE ARCHITECTURE, TOGETHER</p>
           <h2>팀과 함께 그리는<br />소프트웨어 아키텍처</h2>
@@ -73,6 +81,11 @@ export function LoginPage() {
             {loading ? '로그인 중…' : '로그인'}
           </button>
           <SocialLoginButtons />
+          {IS_LOCAL_MODE && (
+            <button type="button" className="guest-btn" onClick={onGuest}>
+              게스트로 시작하기
+            </button>
+          )}
           <p className="muted">
             계정이 없으신가요? <Link to="/signup">회원가입</Link>
           </p>

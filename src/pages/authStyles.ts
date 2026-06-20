@@ -24,16 +24,22 @@ export const authStyles = `
     overflow: hidden;
   }
   .auth-brand .brand-mark {
+    align-self: flex-start;
     display: inline-flex; align-items: center; gap: 10px;
     font: var(--weight-extra) var(--text-xl)/1 var(--font-sans);
     letter-spacing: var(--tracking-tight);
+    color: #fff; text-decoration: none;
+    border-radius: var(--radius-md);
+    transition: opacity var(--dur-fast) var(--ease-out);
   }
+  .auth-brand .brand-mark:hover { text-decoration: none; opacity: 0.85; }
+  .auth-brand .brand-mark:focus-visible { box-shadow: 0 0 0 3px rgba(255,255,255,0.4); }
   .auth-brand .brand-dot {
     width: 14px; height: 14px; border-radius: 4px;
     background: #fff;
     box-shadow: 0 0 0 4px rgba(255,255,255,0.18);
   }
-  .auth-brand .brand-pitch { max-width: 30ch; }
+  .auth-brand .brand-pitch { max-width: 32ch; }
   .auth-brand .eyebrow {
     margin: 0 0 14px;
     font: var(--weight-semibold) var(--text-2xs)/1 var(--font-sans);
@@ -42,13 +48,21 @@ export const authStyles = `
   }
   .auth-brand h2 {
     margin: 0; color: #fff;
-    font: var(--weight-extra) var(--text-4xl)/var(--leading-tight) var(--font-sans);
+    font-family: var(--font-sans);
+    font-weight: var(--weight-extra);
+    /* 패널 폭에 맞춰 유연하게 — 좁아지면 자동 축소돼 어색한 줄바꿈을 막는다 */
+    font-size: clamp(26px, 3vw, 36px);
+    line-height: var(--leading-tight);
     letter-spacing: var(--tracking-tight);
+    /* 한글이 단어 중간에서 끊기지 않도록 (공백에서만 줄바꿈) */
+    word-break: keep-all;
+    text-wrap: balance;
   }
   .auth-brand .brand-sub {
     margin: 18px 0 0; max-width: 34ch;
     font: var(--weight-regular) var(--text-md)/var(--leading-relaxed) var(--font-sans);
     color: rgba(255,255,255,0.82);
+    word-break: keep-all;
   }
   .auth-brand .brand-foot {
     font: var(--font-mono-sm);
@@ -71,12 +85,19 @@ export const authStyles = `
     display: flex; flex-direction: column; gap: 14px;
   }
   .auth-card h1 { margin: 0; font: var(--font-h1); letter-spacing: var(--tracking-tight); }
-  .auth-card .sub { margin: -6px 0 6px; font-size: var(--text-sm); color: var(--text-muted); }
+  .auth-card .sub { margin: -6px 0 6px; font-size: var(--text-sm); color: var(--text-muted); word-break: keep-all; }
   .auth-card label {
     display: flex; flex-direction: column; gap: 6px;
     font: var(--font-label); color: var(--text-body);
   }
   .auth-card .primary { height: 42px; font-size: var(--text-base); border-radius: var(--radius-md); }
+  .auth-card .guest-btn {
+    height: 42px; width: 100%;
+    background: transparent; border: 1px solid var(--border-strong);
+    color: var(--text-body); border-radius: var(--radius-md);
+    font: var(--font-body-strong);
+  }
+  .auth-card .guest-btn:hover { background: var(--surface-hover); border-color: var(--border-strong); }
   .auth-card .error { color: var(--danger); margin: 0; font-size: var(--text-sm); }
   .auth-card .muted { color: var(--text-muted); font-size: var(--text-sm); margin: 4px 0 0; text-align: center; }
   .auth-card .back {

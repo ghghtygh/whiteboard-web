@@ -14,6 +14,7 @@ import { useBoardCollab } from '@/collab/useBoardCollab'
 import { useUndoManager } from '@/canvas/hooks'
 import { CanvasContextProvider } from '@/canvas/CanvasContext'
 import { useSelection } from '@/canvas/selection'
+import { SYNC_AVAILABLE, useSyncStore } from '@/store/sync'
 import type { Board } from '@/types/domain'
 
 export function BoardEditPage() {
@@ -26,6 +27,8 @@ export function BoardEditPage() {
   const collab = useBoardCollab(boardId ?? null)
   const undoManager = useUndoManager(collab.doc)
   const clearSel = useSelection((s) => s.clear)
+  const syncOn = useSyncStore((s) => s.enabled)
+  const toggleSync = useSyncStore((s) => s.toggle)
 
   useEffect(() => {
     if (!import.meta.env.DEV) return
@@ -77,16 +80,24 @@ export function BoardEditPage() {
           <div className="spacer" />
           <PresenceBadges awareness={collab.provider?.awareness ?? null} />
           <button className="share-btn primary" onClick={() => setShareOpen(true)}>공유</button>
-          <span className="status" data-online={collab.syncEnabled ? collab.syncConnected : collab.ready}>
-            <span className="dot" />
-            {collab.syncEnabled
-              ? collab.syncConnected
-                ? '동기화 중'
-                : '연결 중…'
-              : collab.ready
-                ? '로컬'
-                : '…'}
-          </span>
+          {SYNC_AVAILABLE ? (
+            <button
+              type="button"
+              className="status status-btn"
+              data-online={syncOn && collab.syncConnected}
+              data-on={syncOn}
+              title={syncOn ? '실시간 동기화 켜짐 — 눌러서 끄기' : '실시간 동기화 꺼짐 — 눌러서 켜기'}
+              onClick={toggleSync}
+            >
+              <span className="dot" />
+              {syncOn ? (collab.syncConnected ? '동기화 중' : '연결 중…') : '동기화 꺼짐'}
+            </button>
+          ) : (
+            <span className="status" data-online={collab.ready} title="동기화 서버가 설정되지 않아 로컬에만 저장됩니다">
+              <span className="dot" />
+              {collab.ready ? '로컬' : '…'}
+            </span>
+          )}
         </header>
 
         {shareOpen && boardId && (
@@ -132,10 +143,19 @@ export function BoardEditPage() {
           .spacer { flex: 1; }
           .share-btn { font-size: var(--text-sm); padding: 6px 14px; border-radius: var(--radius-md); }
           .status { display: inline-flex; align-items: center; gap: 6px;
-                    font: var(--font-mono-sm); color: var(--text-muted); padding: 0 6px;
+                    font: var(--font-mono-sm); color: var(--text-muted); padding: 4px 8px;
                     text-transform: none; }
           .status .dot { width: 7px; height: 7px; border-radius: 50%;
-                         background: var(--text-faint); flex: none; }
+                         background: var(--text-faint); flex: none;
+                         transition: background var(--dur-fast) var(--ease-out); }
+          /* 토글 버튼 버전 — 버튼 기본 테두리/배경 제거 */
+          .status-btn { background: transparent; border: 1px solid transparent;
+                        border-radius: var(--radius-md); cursor: pointer; }
+          .status-btn:hover { background: var(--surface-hover); border-color: var(--border-subtle); }
+          /* 동기화 ON 이지만 아직 연결 안 됨 (연결 중…) → 앰버 */
+          .status[data-on="true"] { color: var(--warning); }
+          .status[data-on="true"] .dot { background: var(--warning); }
+          /* 연결 완료 → 그린 펄스 */
           .status[data-online="true"] { color: var(--success); }
           .status[data-online="true"] .dot { background: var(--success);
                          box-shadow: 0 0 0 3px var(--success-soft);

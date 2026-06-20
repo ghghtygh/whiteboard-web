@@ -29,10 +29,10 @@ export function SignupPage() {
   return (
     <div className="auth-split">
       <aside className="auth-brand">
-        <div className="brand-mark">
+        <Link to="/" className="brand-mark" title="홈으로">
           <span className="brand-dot" />
           Whiteboard
-        </div>
+        </Link>
         <div className="brand-pitch">
           <p className="eyebrow">SOFTWARE ARCHITECTURE, TOGETHER</p>
           <h2>아키텍처를<br />그릴 준비 되셨나요?</h2>

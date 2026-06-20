@@ -66,6 +66,15 @@ body {
   -webkit-text-size-adjust: 100%;
 }
 
+/* 한글 UI — 제목/문단이 단어 중간에서 끊기지 않도록 (공백에서만 줄바꿈) */
+h1,
+h2,
+h3,
+h4,
+p {
+  word-break: keep-all;
+}
+
 h1 {
   font: var(--font-h1);
   color: var(--text-strong);

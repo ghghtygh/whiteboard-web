@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { localInvites, type PendingInvite } from '@/local/invitesStore'
-import { SYNC_ENABLED } from '@/local/mode'
+import { SYNC_AVAILABLE, useSyncStore } from '@/store/sync'
 import type { MemberRole } from '@/types/domain'
 
 interface Props {
@@ -10,6 +10,9 @@ interface Props {
 }
 
 export function ShareModal({ boardId, syncConnected, onClose }: Props) {
+  const syncOn = useSyncStore((s) => s.enabled)
+  // 실제로 동기화가 동작하는 상태 = 릴레이 URL 있음 + 사용자가 켬
+  const syncEnabled = SYNC_AVAILABLE && syncOn
   const shareUrl = useMemo(() => `${window.location.origin}/boards/${boardId}`, [boardId])
   const [copied, setCopied] = useState(false)
   const [email, setEmail] = useState('')
@@ -40,9 +43,9 @@ export function ShareModal({ boardId, syncConnected, onClose }: Props) {
     setInvites([next, ...invites])
     setEmail('')
     setFeedback(
-      SYNC_ENABLED
+      syncEnabled
         ? '초대를 저장했습니다. (백엔드가 준비되면 이메일이 발송됩니다.)'
-        : '초대를 저장했습니다. (실시간 동기화가 꺼져 있습니다 — VITE_SYNC_WS_URL 을 설정해 활성화하세요.)',
+        : '초대를 저장했습니다. (실시간 동기화가 꺼져 있어 아직 함께 편집할 수 없습니다.)',
     )
     setTimeout(() => setFeedback(null), 3000)
   }
@@ -75,12 +78,14 @@ export function ShareModal({ boardId, syncConnected, onClose }: Props) {
             <input id="share-url" readOnly value={shareUrl} onFocus={(e) => e.target.select()} />
             <button className="primary" onClick={copy}>{copied ? '복사됨' : '링크 복사'}</button>
           </div>
-          <p className="hint" data-tone={SYNC_ENABLED ? (syncConnected ? 'ok' : 'warn') : 'info'}>
-            {SYNC_ENABLED
+          <p className="hint" data-tone={syncEnabled ? (syncConnected ? 'ok' : 'warn') : 'info'}>
+            {syncEnabled
               ? syncConnected
                 ? '실시간 동기화 활성화 — 링크가 있는 누구나 함께 편집할 수 있습니다.'
                 : '동기화 서버에 연결 중…'
-              : '현재 로컬 전용 모드입니다. VITE_SYNC_WS_URL 을 설정하면 링크를 공유한 사용자와 실시간 공동 편집이 가능합니다.'}
+              : SYNC_AVAILABLE
+                ? '실시간 동기화가 꺼져 있습니다. 상단의 상태 표시를 눌러 켜면 링크를 공유한 사용자와 함께 편집할 수 있습니다.'
+                : '현재 로컬 전용 모드입니다. VITE_SYNC_WS_URL 을 설정하면 링크를 공유한 사용자와 실시간 공동 편집이 가능합니다.'}
           </p>
         </section>
 
