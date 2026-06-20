@@ -29,7 +29,7 @@ export function SignupPage() {
   return (
     <div className="auth-split">
       <aside className="auth-brand">
-        <Link to="/" className="brand-mark" title="홈으로">
+        <Link to="/boards" className="brand-mark" title="내 보드로">
           <span className="brand-dot" />
           Whiteboard
         </Link>
