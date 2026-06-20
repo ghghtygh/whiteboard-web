@@ -41,8 +41,8 @@ export function ShareModal({ boardId, syncConnected, onClose }: Props) {
     setEmail('')
     setFeedback(
       SYNC_ENABLED
-        ? 'Invite saved. (Emails will be sent once the backend is available.)'
-        : 'Invite saved. (Real-time sync is disabled — set VITE_SYNC_WS_URL to enable it.)',
+        ? '초대를 저장했습니다. (백엔드가 준비되면 이메일이 발송됩니다.)'
+        : '초대를 저장했습니다. (실시간 동기화가 꺼져 있습니다 — VITE_SYNC_WS_URL 을 설정해 활성화하세요.)',
     )
     setTimeout(() => setFeedback(null), 3000)
   }
@@ -65,27 +65,27 @@ export function ShareModal({ boardId, syncConnected, onClose }: Props) {
     <div className="share-backdrop" onClick={onClose}>
       <div className="share-modal" onClick={(e) => e.stopPropagation()}>
         <div className="share-head">
-          <h2>Share board</h2>
-          <button className="x" onClick={onClose} aria-label="Close">×</button>
+          <h2>보드 공유</h2>
+          <button className="x" onClick={onClose} aria-label="닫기">×</button>
         </div>
 
         <section>
-          <label className="lbl">Share link</label>
+          <label className="lbl">공유 링크</label>
           <div className="row">
             <input id="share-url" readOnly value={shareUrl} onFocus={(e) => e.target.select()} />
-            <button className="primary" onClick={copy}>{copied ? 'Copied' : 'Copy'}</button>
+            <button className="primary" onClick={copy}>{copied ? '복사됨' : '링크 복사'}</button>
           </div>
           <p className="hint" data-tone={SYNC_ENABLED ? (syncConnected ? 'ok' : 'warn') : 'info'}>
             {SYNC_ENABLED
               ? syncConnected
-                ? 'Real-time sync is active — anyone with this link can co-edit.'
-                : 'Connecting to the sync server…'
-              : 'Currently in local-only mode. Set VITE_SYNC_WS_URL to enable real-time co-editing for users sharing this link.'}
+                ? '실시간 동기화 활성화 — 링크가 있는 누구나 함께 편집할 수 있습니다.'
+                : '동기화 서버에 연결 중…'
+              : '현재 로컬 전용 모드입니다. VITE_SYNC_WS_URL 을 설정하면 링크를 공유한 사용자와 실시간 공동 편집이 가능합니다.'}
           </p>
         </section>
 
         <section>
-          <label className="lbl">Invite by email</label>
+          <label className="lbl">이메일로 초대</label>
           <form className="row" onSubmit={onInvite}>
             <input
               type="email"
@@ -95,24 +95,24 @@ export function ShareModal({ boardId, syncConnected, onClose }: Props) {
               required
             />
             <select value={role} onChange={(e) => setRole(e.target.value as MemberRole)}>
-              <option value="viewer">Viewer</option>
-              <option value="editor">Editor</option>
-              <option value="owner">Owner</option>
+              <option value="viewer">뷰어</option>
+              <option value="editor">편집자</option>
+              <option value="owner">소유자</option>
             </select>
-            <button className="primary" type="submit">Invite</button>
+            <button className="primary" type="submit">초대</button>
           </form>
           {feedback && <p className="feedback">{feedback}</p>}
         </section>
 
         {invites.length > 0 && (
           <section>
-            <label className="lbl">Pending invites ({invites.length})</label>
+            <label className="lbl">대기 중인 초대 ({invites.length})</label>
             <ul className="invites">
               {invites.map((inv) => (
                 <li key={inv.id}>
                   <span className="em">{inv.email}</span>
                   <span className="role">{inv.role}</span>
-                  <button className="link" onClick={() => onRevoke(inv.id)}>Revoke</button>
+                  <button className="link" onClick={() => onRevoke(inv.id)}>취소</button>
                 </li>
               ))}
             </ul>
@@ -121,36 +121,39 @@ export function ShareModal({ boardId, syncConnected, onClose }: Props) {
 
         <style>{`
           .share-backdrop {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.35);
+            position: fixed; inset: 0; background: var(--surface-overlay);
+            backdrop-filter: blur(2px);
             display: grid; place-items: center; z-index: 100;
             padding: 16px;
           }
           .share-modal {
-            background: white; border-radius: 8px; box-shadow: var(--shadow-md);
-            padding: 20px 24px; min-width: 460px; max-width: 540px; width: 100%;
+            background: var(--surface-panel); border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-xl);
+            padding: 24px; min-width: 460px; max-width: 540px; width: 100%;
             display: flex; flex-direction: column; gap: 20px;
             max-height: calc(100vh - 32px); overflow-y: auto;
           }
           .share-head { display: flex; align-items: center; }
-          .share-head h2 { margin: 0; font-size: 16px; }
+          .share-head h2 { margin: 0; font: var(--font-h2); }
           .share-head .x { margin-left: auto; background: none; border: none;
-                           font-size: 22px; cursor: pointer; color: var(--color-muted); padding: 0 6px; }
-          .lbl { display: block; font-size: 12px; font-weight: 600;
-                 color: var(--color-muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.04em; }
+                           font-size: 22px; cursor: pointer; color: var(--text-muted); padding: 0 6px; }
+          .lbl { display: block; font: var(--weight-semibold) var(--text-2xs)/1 var(--font-sans);
+                 color: var(--text-muted); margin-bottom: 7px;
+                 text-transform: uppercase; letter-spacing: var(--tracking-caps); }
           .row { display: flex; gap: 8px; align-items: center; }
           .row input { flex: 1; min-width: 0; }
-          .row select { padding: 6px 8px; border: 1px solid var(--color-border); border-radius: 4px; }
-          .hint { font-size: 12px; margin: 8px 0 0; line-height: 1.5; }
-          .hint[data-tone="ok"]   { color: #16a34a; }
-          .hint[data-tone="warn"] { color: #ca8a04; }
-          .hint[data-tone="info"] { color: var(--color-muted); }
-          .feedback { font-size: 12px; color: var(--color-muted); margin: 8px 0 0; }
+          .hint { font-size: var(--text-xs); margin: 8px 0 0; line-height: var(--leading-normal); }
+          .hint[data-tone="ok"]   { color: var(--success); }
+          .hint[data-tone="warn"] { color: var(--warning); }
+          .hint[data-tone="info"] { color: var(--text-muted); }
+          .feedback { font-size: var(--text-xs); color: var(--text-muted); margin: 8px 0 0; }
           .invites { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
-          .invites li { display: flex; align-items: center; gap: 12px; font-size: 13px;
-                        padding: 6px 8px; background: #fafbfc; border-radius: 4px; }
+          .invites li { display: flex; align-items: center; gap: 12px; font-size: var(--text-sm);
+                        padding: 8px 10px; background: var(--surface-sunken);
+                        border: 1px solid var(--border-subtle); border-radius: var(--radius-md); }
           .invites .em { flex: 1; }
-          .invites .role { font-size: 11px; color: var(--color-muted); }
-          .invites .link { background: none; border: none; color: var(--color-danger); cursor: pointer; padding: 0; font-size: 12px; }
+          .invites .role { font: var(--font-mono-sm); color: var(--accent-text); }
+          .invites .link { background: none; border: none; color: var(--danger); cursor: pointer; padding: 0; font-size: var(--text-xs); }
 
           @media (max-width: 640px) {
             .share-backdrop { padding: 0; align-items: stretch; }

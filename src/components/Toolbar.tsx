@@ -46,16 +46,16 @@ export function Toolbar() {
 
   return (
     <div className="toolbar">
-      <button className="ico" title="Undo (⌘Z)" disabled={!canUndo} onClick={() => undoManager?.undo()}>
+      <button className="ico" title="실행 취소 (⌘Z)" disabled={!canUndo} onClick={() => undoManager?.undo()}>
         ↶
       </button>
-      <button className="ico" title="Redo (⌘⇧Z)" disabled={!canRedo} onClick={() => undoManager?.redo()}>
+      <button className="ico" title="다시 실행 (⌘⇧Z)" disabled={!canRedo} onClick={() => undoManager?.redo()}>
         ↷
       </button>
       {hasSelection && (
         <>
           <span className="sep" />
-          <button className="ico del" title="Delete selection (Delete)" onClick={handleDelete}>
+          <button className="ico del" title="선택 삭제 (Delete)" onClick={handleDelete}>
             🗑
           </button>
         </>
@@ -63,40 +63,43 @@ export function Toolbar() {
       <span className="sep" />
       <button
         className="ico txt"
-        title="Create group — drag on empty area"
+        title="그룹 만들기 — 빈 영역을 드래그"
         data-active={tool === 'group'}
         onClick={toggleGroup}
       >
-        Group
+        그룹
       </button>
-      <button className="ico txt" title="Show grid" data-active={gridVisible} onClick={toggleGrid}>
-        Grid
+      <button className="ico txt" title="격자 보기" data-active={gridVisible} onClick={toggleGrid}>
+        격자
       </button>
       <button
         className="ico txt"
-        title="Snap to grid — auto-snap new drops/drags to a 40px grid (hold Alt to invert)"
+        title="격자 스냅 — 새 배치/드래그를 40px 격자에 맞춤 (Alt 누르면 반전)"
         data-active={snapEnabled}
         onClick={toggleSnap}
       >
-        Snap
+        스냅
       </button>
 
       <style>{`
         .toolbar { display: inline-flex; align-items: center; gap: 2px; flex-wrap: wrap; }
         .toolbar .ico {
-          width: 28px; height: 28px; padding: 0; font-size: 15px; line-height: 1;
+          width: 30px; height: 30px; padding: 0; font-size: 15px; line-height: 1;
           display: inline-flex; align-items: center; justify-content: center;
-          background: transparent; border: 1px solid transparent; border-radius: 4px;
-          color: var(--color-text); cursor: pointer;
+          background: transparent; border: 1px solid transparent; border-radius: var(--radius-sm);
+          color: var(--text-body); cursor: pointer;
+          transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
         }
-        .toolbar .ico.txt { width: auto; padding: 0 10px; font-size: 12px; }
-        .toolbar .ico:hover:not(:disabled) { background: #f1f3f5; }
+        .toolbar .ico.txt { width: auto; padding: 0 11px; font: var(--font-label); }
+        .toolbar .ico:hover:not(:disabled) { background: var(--surface-hover); }
+        .toolbar .ico:active:not(:disabled) { transform: scale(0.92); }
         .toolbar .ico:disabled { opacity: 0.35; cursor: default; }
         .toolbar .ico[data-active="true"] {
-          background: var(--color-accent); color: white;
+          background: var(--primary-soft); color: var(--primary-soft-text);
+          border-color: var(--indigo-200);
         }
-        .toolbar .sep { width: 1px; height: 16px; background: var(--color-border); margin: 0 4px; }
-        .toolbar .del:hover:not(:disabled) { background: #fee2e2; color: #dc2626; }
+        .toolbar .sep { width: 1px; height: 16px; background: var(--border-subtle); margin: 0 4px; }
+        .toolbar .del:hover:not(:disabled) { background: var(--danger-soft); color: var(--danger); }
 
         /* 모바일 — 터치 영역 확대 + 텍스트 라벨 압축 */
         @media (max-width: 768px) {

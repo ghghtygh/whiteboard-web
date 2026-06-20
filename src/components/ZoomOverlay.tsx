@@ -22,37 +22,38 @@ export function ZoomOverlay() {
 
       <style>{`
         .zoom-overlay {
-          position: absolute; right: 16px; bottom: 16px;
+          position: absolute; left: 16px; bottom: 16px;
           display: inline-flex; align-items: center;
-          background: white;
-          border: 1px solid var(--color-border);
-          border-radius: 6px;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-          padding: 2px;
+          background: var(--surface-raised);
+          border-radius: var(--radius-md);
+          box-shadow: var(--shadow-float);
+          padding: 3px;
           z-index: 5;
           user-select: none;
         }
         .zoom-overlay button {
-          width: 28px; height: 28px;
+          width: 30px; height: 30px;
           background: transparent; border: none; padding: 0;
-          color: var(--color-text);
+          color: var(--text-body);
           font-size: 16px; line-height: 1;
           display: inline-flex; align-items: center; justify-content: center;
-          border-radius: 4px; cursor: pointer;
+          border-radius: var(--radius-sm); cursor: pointer;
+          transition: background var(--dur-fast) var(--ease-out);
         }
-        .zoom-overlay button:hover:not(:disabled) { background: #f1f3f5; }
+        .zoom-overlay button:hover:not(:disabled) { background: var(--surface-hover); }
+        .zoom-overlay button:active:not(:disabled) { transform: scale(0.92); }
         .zoom-overlay button:disabled { opacity: 0.35; cursor: default; }
         .zoom-overlay .zoom-pct {
           width: auto; padding: 0 8px;
-          font-size: 12px; color: var(--color-muted);
+          font: var(--font-mono-sm); color: var(--text-muted);
           min-width: 48px;
         }
-        .zoom-overlay .zoom-pct:hover { color: var(--color-text); }
+        .zoom-overlay .zoom-pct:hover { color: var(--text-body); }
 
         /* 모바일 — 터치 영역 확대 + 위치 살짝 위로 (safe-area 고려) */
         @media (max-width: 768px) {
           .zoom-overlay {
-            right: 12px;
+            left: 12px;
             bottom: calc(12px + env(safe-area-inset-bottom, 0px));
           }
           .zoom-overlay button { width: 38px; height: 38px; font-size: 18px; }
