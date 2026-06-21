@@ -1,6 +1,7 @@
+import { useEffect, useRef } from 'react'
 import { Group, Rect, Text, Circle, Image as KImage } from 'react-konva'
 import useImage from 'use-image'
-import type Konva from 'konva'
+import Konva from 'konva'
 import type { Anchor, Node } from '@/types/domain'
 import {
   ANCHOR_R,
@@ -69,11 +70,25 @@ export function NodeShape(props: Props) {
   const dims = computeBoxDims(text)
   const labelH = dims.height - NODE_H - LABEL_GAP
 
+  // Excalidraw 식 협업: 자기 드래그는 로컬 즉시(낙관적), 다른 peer 가 옮긴 위치는
+  // Tween 으로 부드럽게 따라간다. 위치 prop 은 초기값만 고정(매번 주면 점프해 보간이 무효).
+  const groupRef = useRef<Konva.Group>(null)
+  const draggingRef = useRef(false)
+  const initRef = useRef({ x: node.x, y: node.y })
+  useEffect(() => {
+    if (draggingRef.current) return // 드래그 중인 내 노드는 원격 업데이트로 덮어쓰지 않는다
+    groupRef.current?.to({ x: node.x, y: node.y, duration: 0.1, easing: Konva.Easings.EaseOut })
+  }, [node.x, node.y])
+
   return (
     <Group
-      x={node.x}
-      y={node.y}
+      ref={groupRef}
+      x={initRef.current.x}
+      y={initRef.current.y}
       draggable
+      onDragStart={() => {
+        draggingRef.current = true
+      }}
       onClick={(e) => props.onSelect(e.evt.shiftKey)}
       onTap={() => props.onSelect(false)}
       onDblClick={props.onLabelEdit}
@@ -101,6 +116,7 @@ export function NodeShape(props: Props) {
         props.onDragMove(sp.x, sp.y)
       }}
       onDragEnd={(e: Konva.KonvaEventObject<DragEvent>) => {
+        draggingRef.current = false
         const x = e.target.x()
         const y = e.target.y()
         const sp = props.snapPos(x, y)
