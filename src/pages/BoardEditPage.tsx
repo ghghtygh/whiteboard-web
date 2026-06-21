@@ -12,6 +12,7 @@ import { ZoomOverlay } from '@/components/ZoomOverlay'
 import { Minimap } from '@/components/Minimap'
 import { Canvas } from '@/canvas/Canvas'
 import { useBoardCollab } from '@/collab/useBoardCollab'
+import { useStableConnected } from '@/collab/useStableConnected'
 import { useUndoManager } from '@/canvas/hooks'
 import { CanvasContextProvider } from '@/canvas/CanvasContext'
 import { useSelection } from '@/canvas/selection'
@@ -26,6 +27,8 @@ export function BoardEditPage() {
   // 모바일에서 사이드바 drawer. 데스크탑에선 항상 보이므로 무시됨.
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const collab = useBoardCollab(boardId ?? null)
+  // 짧은 재연결 깜빡임을 막기 위해 안정화한 연결 상태.
+  const syncConnected = useStableConnected(collab.syncConnected)
   const undoManager = useUndoManager(collab.doc)
   const clearSel = useSelection((s) => s.clear)
   const syncOn = useSyncStore((s) => s.enabled)
@@ -99,13 +102,13 @@ export function BoardEditPage() {
             <button
               type="button"
               className="status status-btn"
-              data-online={syncOn && collab.syncConnected}
+              data-online={syncOn && syncConnected}
               data-on={syncOn}
               title={syncOn ? '실시간 동기화 켜짐 — 눌러서 끄기' : '실시간 동기화 꺼짐 — 눌러서 켜기'}
               onClick={toggleSync}
             >
               <span className="dot" />
-              {syncOn ? (collab.syncConnected ? '동기화 중' : '연결 중…') : '동기화 꺼짐'}
+              {syncOn ? (syncConnected ? '동기화 중' : '연결 중…') : '동기화 꺼짐'}
             </button>
           ) : (
             <span className="status" data-online={collab.ready} title="동기화 서버가 설정되지 않아 로컬에만 저장됩니다">
@@ -118,7 +121,7 @@ export function BoardEditPage() {
         {shareOpen && boardId && (
           <ShareModal
             boardId={boardId}
-            syncConnected={collab.syncConnected}
+            syncConnected={syncConnected}
             onClose={() => setShareOpen(false)}
           />
         )}
