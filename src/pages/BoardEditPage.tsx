@@ -2,7 +2,8 @@ import { useParams, Link } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { getBoard, renameBoard } from '@/api/boards'
 import { localBoards } from '@/local/boardsStore'
-import { IS_LOCAL_MODE } from '@/local/mode'
+import { isBackendActive } from '@/store/auth'
+import { ensureCollabSession } from '@/collab/session'
 import { Sidebar } from '@/components/Sidebar'
 import { Toolbar } from '@/components/Toolbar'
 import { ShareModal } from '@/components/ShareModal'
@@ -42,7 +43,7 @@ export function BoardEditPage() {
 
   useEffect(() => {
     if (!boardId) return
-    if (IS_LOCAL_MODE) localBoards.markOpened(boardId)
+    if (!isBackendActive()) localBoards.markOpened(boardId)
     getBoard(boardId)
       .then(setBoard)
       .catch((err) => setError(err instanceof Error ? err.message : 'Failed to load board'))
@@ -79,7 +80,21 @@ export function BoardEditPage() {
           <Toolbar />
           <div className="spacer" />
           <PresenceBadges awareness={collab.provider?.awareness ?? null} />
-          <button className="share-btn primary" onClick={() => setShareOpen(true)}>공유</button>
+          <button
+            className="share-btn primary"
+            onClick={async () => {
+              // 공유 시 협업 세션 보장(비회원이면 게스트 토큰 발급 + 동기화 ON).
+              // 실패해도 모달은 열어 로컬 안내를 보여준다.
+              try {
+                await ensureCollabSession()
+              } catch {
+                /* 게스트 토큰 발급 실패 — 모달은 그대로 연다 */
+              }
+              setShareOpen(true)
+            }}
+          >
+            공유
+          </button>
           {SYNC_AVAILABLE ? (
             <button
               type="button"

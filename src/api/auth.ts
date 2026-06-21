@@ -25,3 +25,9 @@ export async function me(): Promise<User> {
   const res = await apiClient.get<{ data: User }>('/auth/me')
   return unwrap(res.data)
 }
+
+/** 비회원 게스트 토큰 발급 — "공유하기" 시 실시간 협업 인증에 쓴다. */
+export async function guestLogin(): Promise<LoginResponse> {
+  const res = await apiClient.post<{ data: LoginResponse }>('/auth/guest')
+  return unwrap(res.data)
+}

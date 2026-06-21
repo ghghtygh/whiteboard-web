@@ -2,7 +2,6 @@ import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { login } from '@/api/auth'
 import { useAuthStore } from '@/store/auth'
-import { IS_LOCAL_MODE } from '@/local/mode'
 import { SocialLoginButtons } from '@/components/SocialLoginButtons'
 import { authStyles } from './authStyles'
 
@@ -31,9 +30,9 @@ export function LoginPage() {
   }
 
   function onGuest() {
-    // 로컬 모드: 게스트 사용자를 시드하고 바로 보드로 진입.
+    // 비회원: 게스트 사용자를 시드하고 로컬 보드로 바로 진입.
     ensureGuest()
-    navigate('/boards', { replace: true })
+    navigate('/', { replace: true })
   }
 
   return (
@@ -81,11 +80,9 @@ export function LoginPage() {
             {loading ? '로그인 중…' : '로그인'}
           </button>
           <SocialLoginButtons />
-          {IS_LOCAL_MODE && (
-            <button type="button" className="guest-btn" onClick={onGuest}>
-              게스트로 시작하기
-            </button>
-          )}
+          <button type="button" className="guest-btn" onClick={onGuest}>
+            비회원으로 시작하기
+          </button>
           <p className="muted">
             계정이 없으신가요? <Link to="/signup">회원가입</Link>
           </p>
