@@ -1,4 +1,5 @@
-import { Fragment } from 'react'
+import { Fragment, useEffect, useRef } from 'react'
+import Konva from 'konva'
 import { Group, Line, Rect, Text } from 'react-konva'
 import type { AwarenessState } from '@/collab/awareness'
 import type { Edge, Group as DGroup, Node } from '@/types/domain'
@@ -15,15 +16,25 @@ interface Props {
 const CURSOR_POINTS = [0, 0, 0, 16, 4, 12, 6.5, 18, 9.5, 17, 7, 11, 13, 11]
 
 function RemoteCursor({ state }: { state: AwarenessState }) {
-  if (!state.cursor) return null
-  const { x, y } = state.cursor
+  const groupRef = useRef<Konva.Group>(null)
+  const cursor = state.cursor
+  const cx = cursor?.x
+  const cy = cursor?.y
+  // 새 좌표(≈30fps)로 점프하지 않고 짧은 트윈으로 부드럽게 이동시킨다.
+  useEffect(() => {
+    const node = groupRef.current
+    if (!node || cx == null || cy == null) return
+    node.to({ x: cx, y: cy, duration: 0.09, easing: Konva.Easings.Linear })
+  }, [cx, cy])
+
+  if (!cursor) return null
   const name = state.user.name || 'Anonymous'
   const color = state.user.color
   // 라벨 폭 — 문자당 약 7px + padding
   const labelWidth = Math.min(160, Math.max(24, name.length * 7 + 12))
 
   return (
-    <Group x={x} y={y} listening={false}>
+    <Group ref={groupRef} x={cursor.x} y={cursor.y} listening={false}>
       <Line points={CURSOR_POINTS} closed fill={color} stroke="white" strokeWidth={1} />
       <Rect
         x={12}

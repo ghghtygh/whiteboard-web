@@ -44,7 +44,8 @@ export function useBoardCollab(boardId: string | null): BoardCollab {
     let cleanup: (() => void) | null = null
     if (syncEnabled) {
       prov = connectBoard(boardId, next)
-      bootstrapAwareness(prov, user)
+      // awareness(이름/색)는 아래 별도 effect 에서 설정한다 — user 가 바뀌어도
+      // 여기(연결)를 재실행하지 않아 원격 커서가 깜빡이지 않는다.
       const onStatus = (e: { status: string }) => setSyncConnected(e.status === 'connected')
       prov.on('status', onStatus)
       cleanup = () => prov?.off('status', onStatus)
@@ -63,7 +64,14 @@ export function useBoardCollab(boardId: string | null): BoardCollab {
       setReady(false)
       setSyncConnected(false)
     }
-  }, [boardId, user, syncEnabled])
+  }, [boardId, syncEnabled])
+
+  // 자기 awareness(이름/색)만 갱신 — provider 가 새로 생기거나 user 가 바뀔 때.
+  // 연결을 끊지 않으므로 user(토큰 갱신 등) 변경에도 원격 커서가 유지된다.
+  useEffect(() => {
+    if (!provider || !user) return
+    bootstrapAwareness(provider, user)
+  }, [provider, user])
 
   return { doc, provider, syncConnected, ready, syncEnabled }
 }
