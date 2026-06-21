@@ -20,21 +20,24 @@ function RemoteCursor({ state }: { state: AwarenessState }) {
   const cursor = state.cursor
   const cx = cursor?.x
   const cy = cursor?.y
-  // 새 좌표(≈30fps)로 점프하지 않고 짧은 트윈으로 부드럽게 이동시킨다.
+  // 초기 위치만 prop 으로 고정한다. 이후 좌표 변경은 Tween 으로만 이동시켜
+  // 점프 없이 부드럽게 따라오게 한다. (x={cursor.x} 로 매번 주면 즉시 점프해 Tween 이 무효가 됨)
+  const initRef = useRef<{ x: number; y: number } | null>(null)
+  if (cursor && !initRef.current) initRef.current = { x: cursor.x, y: cursor.y }
   useEffect(() => {
     const node = groupRef.current
     if (!node || cx == null || cy == null) return
-    node.to({ x: cx, y: cy, duration: 0.09, easing: Konva.Easings.Linear })
+    node.to({ x: cx, y: cy, duration: 0.08, easing: Konva.Easings.Linear })
   }, [cx, cy])
 
-  if (!cursor) return null
+  if (!cursor || !initRef.current) return null
   const name = state.user.name || 'Anonymous'
   const color = state.user.color
   // 라벨 폭 — 문자당 약 7px + padding
   const labelWidth = Math.min(160, Math.max(24, name.length * 7 + 12))
 
   return (
-    <Group ref={groupRef} x={cursor.x} y={cursor.y} listening={false}>
+    <Group ref={groupRef} x={initRef.current.x} y={initRef.current.y} listening={false}>
       <Line points={CURSOR_POINTS} closed fill={color} stroke="white" strokeWidth={1} />
       <Rect
         x={12}
