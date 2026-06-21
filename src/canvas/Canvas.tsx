@@ -165,6 +165,9 @@ export function Canvas({ doc }: Props) {
 
   // 커서 throttle (33ms ≈ 30fps)
   const lastCursorAtRef = useRef(0)
+  // 노드 드래그 동기화 throttle — 매 프레임 Yjs update 를 보내면 WS 가 폭주해
+  // 연결이 끊기고 동기화가 밀린다. 33ms(≈30fps)로 제한하고 끝에 최종 위치를 보낸다.
+  const lastNodeMoveRef = useRef(0)
   // 컴포넌트 언마운트 시 awareness cursor 초기화
   useEffect(() => {
     return () => {
@@ -546,8 +549,19 @@ export function Canvas({ doc }: Props) {
                 onSelect={(additive) => toggleSel('node', n.id, additive)}
                 onHover={(h) => setHoveredNode(h ? n.id : (cur) => (cur === n.id ? null : cur))}
                 snapPos={snapPos}
-                onDragMove={(x, y) => doc && moveNode(doc, n.id, x, y)}
-                onDragEnd={(x, y) => doc && moveNode(doc, n.id, x, y)}
+                onDragMove={(x, y) => {
+                  if (!doc) return
+                  const now = performance.now()
+                  if (now - lastNodeMoveRef.current >= 33) {
+                    lastNodeMoveRef.current = now
+                    moveNode(doc, n.id, x, y)
+                  }
+                }}
+                onDragEnd={(x, y) => {
+                  // 드래그 종료 시 최종 위치는 throttle 없이 반드시 반영.
+                  lastNodeMoveRef.current = 0
+                  if (doc) moveNode(doc, n.id, x, y)
+                }}
                 onAnchorDown={(anchor) => {
                   const a = anchorPoint(n.x, n.y, anchor, getNodeBox(n))
                   setPendingEdge({ fromId: n.id, fromAnchor: anchor, x: a.x, y: a.y })
