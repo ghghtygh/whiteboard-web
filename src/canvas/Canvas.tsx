@@ -9,6 +9,7 @@ import { useCanvasContext } from './useCanvasContext'
 import { useGridStore } from './gridStore'
 import { useSnapStore } from './snapStore'
 import { setLocalCursor, setLocalSelection, useRemoteAwareness } from '@/collab/awareness'
+import { useStableAwareness } from '@/collab/useStableAwareness'
 import { RemoteAwareness } from './RemoteAwareness'
 import { useSelection } from './selection'
 import { useToolStore } from './tool'
@@ -129,7 +130,8 @@ export function Canvas({ doc }: Props) {
   const edges = useEdgesSnapshot(doc)
   const groups = useGroupsSnapshot(doc)
   const { undoManager, awareness } = useCanvasContext()
-  const remoteAwareness = useRemoteAwareness(awareness)
+  // 잠깐 끊겨도 4초간 유지해 원격 커서/이름 깜빡임을 막는다.
+  const remoteAwareness = useStableAwareness(useRemoteAwareness(awareness))
 
   const selNodes = useSelection((s) => s.nodes)
   const selEdges = useSelection((s) => s.edges)
