@@ -19,8 +19,9 @@ export async function getBoard(id: string): Promise<Board> {
   if (!isBackendActive()) {
     const board = localBoards.get(id)
     if (!board) {
-      // 처음 직접 URL로 접근하는 경우 자동 생성해 UX를 부드럽게 한다.
-      return localBoards.create('New board')
+      // 모르는 id로 직접 접근(예: 공유 링크)은 목록에 유령 보드를 만들지 않고
+      // 임시 객체만 돌려준다. 이름 변경 등 명시적 행동을 할 때 비로소 저장된다.
+      return localBoards.transient(id)
     }
     return board
   }
@@ -30,9 +31,8 @@ export async function getBoard(id: string): Promise<Board> {
 
 export async function renameBoard(id: string, title: string): Promise<Board> {
   if (!isBackendActive()) {
-    const next = localBoards.rename(id, title)
-    if (!next) throw new Error('BOARD_NOT_FOUND')
-    return next
+    // 기존 보드면 rename, 임시 보드(아직 미저장)면 이때 처음 저장한다.
+    return localBoards.rename(id, title) ?? localBoards.upsert(id, title)
   }
   const res = await apiClient.patch<{ data: Board }>(`/boards/${id}`, { title })
   return unwrap(res.data)
