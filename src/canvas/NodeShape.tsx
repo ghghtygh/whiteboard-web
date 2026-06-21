@@ -4,6 +4,7 @@ import type Konva from 'konva'
 import type { Anchor, Node } from '@/types/domain'
 import {
   ANCHOR_R,
+  LABEL_FONT,
   LABEL_GAP,
   LABEL_LINE_H,
   NODE_H,
@@ -178,6 +179,7 @@ export function NodeShape(props: Props) {
         height={labelH}
         text={text}
         fontSize={12}
+        fontFamily={LABEL_FONT}
         lineHeight={LABEL_LINE_H / 12}
         fill={node.label ? '#1f2328' : '#6b7280'}
         align="center"
