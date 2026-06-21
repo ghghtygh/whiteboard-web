@@ -73,5 +73,17 @@ export function useBoardCollab(boardId: string | null): BoardCollab {
     bootstrapAwareness(provider, user)
   }, [provider, user])
 
+  // awareness heartbeat — 가만히 있어도(이벤트가 없어도) 자기 존재(커서/이름)를
+  // 주기적으로 재전송해 다른 peer 에게 계속 보이게 한다. 안 하면 ~30초 후 사라진다.
+  useEffect(() => {
+    if (!provider) return
+    const aw = provider.awareness
+    const iv = setInterval(() => {
+      const s = aw.getLocalState()
+      if (s) aw.setLocalState({ ...s }) // clock 증가 → 재broadcast
+    }, 10000)
+    return () => clearInterval(iv)
+  }, [provider])
+
   return { doc, provider, syncConnected, ready, syncEnabled }
 }

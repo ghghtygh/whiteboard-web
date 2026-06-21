@@ -552,7 +552,7 @@ export function Canvas({ doc }: Props) {
                 onDragMove={(x, y) => {
                   if (!doc) return
                   const now = performance.now()
-                  if (now - lastNodeMoveRef.current >= 33) {
+                  if (now - lastNodeMoveRef.current >= 16) {
                     lastNodeMoveRef.current = now
                     moveNode(doc, n.id, x, y)
                   }
