@@ -1,3 +1,4 @@
+import Konva from 'konva'
 import type { Anchor, Node } from '@/types/domain'
 
 // 스펙 §7.2 그리드 스냅 8px
@@ -13,6 +14,10 @@ export const LABEL_GAP = 2 // 아이콘과 라벨 사이 — 박스가 답답하
 export const LABEL_LINE_H = 14
 export const LABEL_BOTTOM_PAD = 4 // 라벨 아래 약간의 여유
 export const LABEL_MAX_LINES = 2 // 길면 wrap, 그 이상이면 ellipsis
+export const LABEL_FONT_SIZE = 12
+// 라벨 폰트를 명시 고정 — 미지정 시 OS 기본 폰트에 따라 글자 폭이 달라져
+// 박스 높이(줄 수)가 환경마다 달라진다. NodeShape 의 <Text> 와 반드시 동일하게 유지.
+export const LABEL_FONT = 'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
 
 export function snap(v: number): number {
   return Math.round(v / GRID) * GRID
@@ -40,25 +45,32 @@ export interface BoxDims {
   xOffset: number // 박스 좌측이 노드 origin 기준 얼마나 좌측 (가로 고정이라 항상 0)
 }
 
-function estimateTextWidth(text: string): number {
-  // 한글/CJK 는 라틴보다 폭이 큼
-  let total = 0
-  for (let i = 0; i < text.length; i++) {
-    const code = text.charCodeAt(i)
-    if (code >= 0xac00 && code <= 0xd7a3) total += 12 // 한글
-    else if (code > 0x2e80) total += 11 // 기타 CJK
-    else total += 7 // ASCII
+// NodeShape 라벨과 동일한 폰트·폭·wrap 설정의 오프스크린 Text 로 실제 줄 수를 측정한다.
+// (추정이 아니라 실측이라 같은 기기에서 박스 높이가 실제 렌더와 항상 일치한다.)
+let labelMeasurer: Konva.Text | null = null
+function countLabelLines(text: string): number {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return 1
+  if (!labelMeasurer) {
+    labelMeasurer = new Konva.Text({
+      fontSize: LABEL_FONT_SIZE,
+      fontFamily: LABEL_FONT,
+      lineHeight: LABEL_LINE_H / LABEL_FONT_SIZE,
+      wrap: 'word',
+      width: NODE_W,
+    })
   }
-  return total
+  labelMeasurer.text(text)
+  // Konva 가 wrap 계산해 채운 줄 배열의 길이 = 실제 줄 수.
+  const arr = (labelMeasurer as unknown as { textArr?: unknown[] }).textArr
+  const lines = arr?.length ?? 1
+  return Math.min(LABEL_MAX_LINES, Math.max(1, lines))
 }
 
 export function computeBoxDims(displayText: string): BoxDims {
   const text = (displayText || '').trim() || ' '
-  const width = NODE_W
-  const rawW = estimateTextWidth(text) + 8
-  const lines = Math.min(LABEL_MAX_LINES, Math.max(1, Math.ceil(rawW / width)))
+  const lines = countLabelLines(text)
   return {
-    width,
+    width: NODE_W,
     height: NODE_H + LABEL_GAP + lines * LABEL_LINE_H + LABEL_BOTTOM_PAD,
     xOffset: 0,
   }
