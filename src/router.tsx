@@ -1,5 +1,5 @@
 import { createBrowserRouter } from 'react-router-dom'
-import { RequireAuth } from '@/App'
+import { RequireAuth, RequireMember } from '@/App'
 import { LoginPage } from '@/pages/LoginPage'
 import { SignupPage } from '@/pages/SignupPage'
 import { OAuthCallbackPage } from '@/pages/OAuthCallbackPage'
@@ -16,9 +16,14 @@ export const router = createBrowserRouter([
     element: <RequireAuth />,
     children: [
       { path: '/', element: <LandingRedirect /> },
-      { path: '/boards', element: <BoardListPage /> },
+      // 공유 링크 — 비회원(게스트)도 협업 참여 가능.
       { path: '/boards/:boardId', element: <BoardEditPage /> },
     ],
+  },
+  {
+    // 보드 목록은 회원 전용 — 원격 모드의 비회원은 로그인 페이지로 이동.
+    element: <RequireMember />,
+    children: [{ path: '/boards', element: <BoardListPage /> }],
   },
   { path: '*', element: <NotFoundPage /> },
 ])

@@ -2,7 +2,8 @@ import { useParams, Link } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { getBoard, renameBoard } from '@/api/boards'
 import { localBoards } from '@/local/boardsStore'
-import { isBackendActive } from '@/store/auth'
+import { isBackendActive, useAuthStore } from '@/store/auth'
+import { IS_LOCAL_MODE } from '@/local/mode'
 import { ensureCollabSession } from '@/collab/session'
 import { Sidebar } from '@/components/Sidebar'
 import { Toolbar } from '@/components/Toolbar'
@@ -33,6 +34,9 @@ export function BoardEditPage() {
   const clearSel = useSelection((s) => s.clear)
   const syncOn = useSyncStore((s) => s.enabled)
   const toggleSync = useSyncStore((s) => s.toggle)
+  // 비회원(게스트)은 공유할 수 없다 — 원격 모드에서만 막는다(로컬 모드는 회원 개념이 없음).
+  const isGuest = useAuthStore((s) => s.isGuest)
+  const shareDisabled = !IS_LOCAL_MODE && isGuest
 
   useEffect(() => {
     if (!import.meta.env.DEV) return
@@ -85,6 +89,8 @@ export function BoardEditPage() {
           <PresenceBadges awareness={collab.provider?.awareness ?? null} />
           <button
             className="share-btn primary"
+            disabled={shareDisabled}
+            title={shareDisabled ? '로그인 후 공유할 수 있습니다.' : undefined}
             onClick={async () => {
               // 공유 시 협업 세션 보장(비회원이면 게스트 토큰 발급 + 동기화 ON).
               // 실패해도 모달은 열어 로컬 안내를 보여준다.
@@ -160,6 +166,7 @@ export function BoardEditPage() {
           .vsep { width: 1px; height: 18px; background: var(--border-subtle); margin: 0 4px; }
           .spacer { flex: 1; }
           .share-btn { font-size: var(--text-sm); padding: 6px 14px; border-radius: var(--radius-md); }
+          .share-btn:disabled { opacity: 0.45; cursor: not-allowed; filter: grayscale(0.3); }
           .status { display: inline-flex; align-items: center; gap: 6px;
                     font: var(--font-mono-sm); color: var(--text-muted); padding: 4px 8px;
                     text-transform: none; }
