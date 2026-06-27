@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Stage, Layer, Rect, Text, Arrow, Line } from 'react-konva'
-import type Konva from 'konva'
+import Konva from 'konva'
 import { useViewportStore, clampScale } from '@/store/viewport'
+
+// 마우스 드래그로 도형/스테이지를 옮기는 버튼을 좌클릭(0)으로 제한한다.
+// 기본값 [0, 1] 이면 휠(가운데, 1) 드래그가 노드를 옮겨버려 "휠클릭=화면 이동"과 충돌한다.
+Konva.dragButtons = [0]
 import type { BoardDoc } from '@/collab/doc'
 import type { Anchor, Node as DomainNode } from '@/types/domain'
 import { useEdgesSnapshot, useGroupsSnapshot, useNodesSnapshot } from './hooks'
@@ -11,7 +15,7 @@ import { useSnapStore } from './snapStore'
 import { setLocalCursor, setLocalSelection, useRemoteAwareness } from '@/collab/awareness'
 import { useStableAwareness } from '@/collab/useStableAwareness'
 import { RemoteAwareness } from './RemoteAwareness'
-import { useSelection } from './selection'
+import { useSelection, type Selectable } from './selection'
 import { useToolStore } from './tool'
 import { NodeShape } from './NodeShape'
 import { EdgeShape } from './EdgeShape'
@@ -57,6 +61,7 @@ import {
   deleteNodes,
   moveGroup,
   moveNode,
+  moveNodes,
   setEdgeDirection,
   setEdgeLabel,
   setEdgeStyle,
@@ -85,6 +90,17 @@ interface PendingGroup {
   y: number
   width: number
   height: number
+}
+
+// 드래그 러버밴드(마퀴) 다중 선택. group 박스와 좌표 형식은 같고 additive(Shift) 여부만 더 든다.
+interface PendingSelect {
+  startX: number
+  startY: number
+  x: number
+  y: number
+  width: number
+  height: number
+  additive: boolean
 }
 
 type EditingTarget =
@@ -143,7 +159,15 @@ export function Canvas({ doc }: Props) {
   const [hoveredNode, setHoveredNode] = useState<string | null>(null)
   const [pendingEdge, setPendingEdge] = useState<PendingEdge | null>(null)
   const [pendingGroup, setPendingGroup] = useState<PendingGroup | null>(null)
+  const [pendingSelect, setPendingSelect] = useState<PendingSelect | null>(null)
   const [editing, setEditing] = useState<EditingTarget>(null)
+
+  // 터치 한 손가락 팬 진행 상태 (시작 시점의 화면 포인터 + 뷰포트 위치 스냅샷).
+  const panRef = useRef<{ px: number; py: number; vx: number; vy: number } | null>(null)
+  // 다중 선택 드래그: 시작 시 선택된 노드들의 원위치 스냅샷. anchor = 실제로 잡고 끄는 노드.
+  const multiDragRef = useRef<
+    { anchorId: string; startX: number; startY: number; others: { id: string; x: number; y: number }[] } | null
+  >(null)
 
   const nodesById = useMemo(() => {
     const m = new Map<string, DomainNode>()
@@ -229,6 +253,13 @@ export function Canvas({ doc }: Props) {
         return
       }
 
+      // ⌘/Ctrl + A — 노드 전체 선택
+      if (meta && e.key.toLowerCase() === 'a') {
+        e.preventDefault()
+        if (nodes.length) setSel(nodes.map((n) => ({ kind: 'node' as const, id: n.id })))
+        return
+      }
+
       if (e.key === 'Delete' || e.key === 'Backspace') {
         const nIds = [...selNodes]
         const eIds = [...selEdges]
@@ -272,7 +303,7 @@ export function Canvas({ doc }: Props) {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [doc, undoManager, selNodes, selEdges, selGroups, clearSel])
+  }, [doc, undoManager, selNodes, selEdges, selGroups, clearSel, nodes, setSel])
 
   // 휠 줌 — scale 클램프 후 position 도 같은 값으로 정렬해 한계에서 드리프트 방지
   const onWheel = useCallback(
@@ -297,13 +328,56 @@ export function Canvas({ doc }: Props) {
     [scale, vx, vy, setScale, setPosition],
   )
 
-  // 스테이지 드래그 = 팬
-  const onStageDragEnd = (e: Konva.KonvaEventObject<DragEvent>) => {
-    if (e.target !== e.target.getStage()) return
-    setPosition(e.target.x(), e.target.y())
-  }
+  // 휠클릭(가운데 버튼) 드래그 = 화면 이동(팬). 노드 위에서 시작해도 동작하도록
+  // Konva 히트와 무관한 네이티브 리스너로 처리한다. 시작 시점의 뷰포트 위치를 store 에서
+  // 직접 읽어(stale 클로저 방지) 화면 픽셀 델타만큼 이동한다.
+  useEffect(() => {
+    const el = hostRef.current
+    if (!el) return
+    let active = false
+    let startX = 0
+    let startY = 0
+    let startVx = 0
+    let startVy = 0
+    const onDown = (e: MouseEvent) => {
+      if (e.button !== 1) return
+      e.preventDefault()
+      active = true
+      startX = e.clientX
+      startY = e.clientY
+      const vp = useViewportStore.getState()
+      startVx = vp.x
+      startVy = vp.y
+      el.style.cursor = 'grabbing'
+    }
+    const onMove = (e: MouseEvent) => {
+      if (!active) return
+      setPosition(startVx + (e.clientX - startX), startVy + (e.clientY - startY))
+    }
+    const onUp = () => {
+      if (!active) return
+      active = false
+      el.style.cursor = ''
+    }
+    // 가운데 버튼의 브라우저 기본 autoscroll 방지
+    const onAux = (e: MouseEvent) => {
+      if (e.button === 1) e.preventDefault()
+    }
+    el.addEventListener('mousedown', onDown)
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+    el.addEventListener('auxclick', onAux)
+    return () => {
+      el.removeEventListener('mousedown', onDown)
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+      el.removeEventListener('auxclick', onAux)
+    }
+  }, [setPosition])
 
-  // 빈 영역 클릭/터치 → 선택 해제 (도구가 select일 때만)
+  // 빈 영역에서 포인터 누름 (도구가 select일 때):
+  //  - 터치: 한 손가락 드래그 = 화면 이동(팬)
+  //  - 마우스 좌클릭: 러버밴드(마퀴) 다중 선택 시작 (가운데 버튼 팬은 네이티브 리스너가 처리)
   const onStageMouseDown = (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
     const stage = e.target.getStage()
     if (!stage) return
@@ -314,17 +388,58 @@ export function Canvas({ doc }: Props) {
       const p = stage.getRelativePointerPosition()
       if (!p) return
       setPendingGroup({ startX: p.x, startY: p.y, x: p.x, y: p.y, width: 0, height: 0 })
-    } else {
-      clearSel()
+      return
+    }
+
+    const isTouch = 'touches' in e.evt
+    if (isTouch) {
+      const sp = stage.getPointerPosition()
+      if (!sp) return
+      panRef.current = { px: sp.x, py: sp.y, vx, vy }
+      return
+    }
+    // 마우스 — 좌클릭만 마퀴 시작 (가운데/오른쪽은 무시)
+    if ((e.evt as MouseEvent).button === 0) {
+      const p = stage.getRelativePointerPosition()
+      if (!p) return
+      setPendingSelect({
+        startX: p.x,
+        startY: p.y,
+        x: p.x,
+        y: p.y,
+        width: 0,
+        height: 0,
+        additive: (e.evt as MouseEvent).shiftKey,
+      })
     }
   }
 
-  // 마우스 이동 — pendingEdge / pendingGroup 추적 + awareness 커서 송신
+  // 마우스 이동 — 팬 / 마퀴 / pendingEdge / pendingGroup 추적 + awareness 커서 송신
   const onStageMouseMove = () => {
     const stage = stageRef.current
     if (!stage) return
+
+    // 터치 한 손가락 팬 — 화면 픽셀 델타만큼 뷰포트 이동
+    if (panRef.current) {
+      const sp = stage.getPointerPosition()
+      if (sp) {
+        setPosition(panRef.current.vx + (sp.x - panRef.current.px), panRef.current.vy + (sp.y - panRef.current.py))
+      }
+      return
+    }
+
     const p = stage.getRelativePointerPosition()
     if (!p) return
+
+    if (pendingSelect) {
+      setPendingSelect({
+        ...pendingSelect,
+        x: Math.min(pendingSelect.startX, p.x),
+        y: Math.min(pendingSelect.startY, p.y),
+        width: Math.abs(p.x - pendingSelect.startX),
+        height: Math.abs(p.y - pendingSelect.startY),
+      })
+    }
 
     // awareness 커서 (캔버스 좌표) — 33ms throttle
     if (awareness) {
@@ -360,8 +475,41 @@ export function Canvas({ doc }: Props) {
     }
   }
 
-  // 마우스 업 — pendingEdge가 빈 영역에서 끝나면 취소, pendingGroup이 충분히 크면 생성
+  // 마우스 업 — 팬 종료 / 마퀴 선택 확정 / pendingEdge·pendingGroup 마감
   const onStageMouseUp = () => {
+    if (panRef.current) {
+      panRef.current = null
+      return
+    }
+    if (pendingSelect) {
+      const { x, y, width, height, additive } = pendingSelect
+      // 거의 안 움직였으면 단순 클릭 → 선택 해제 (Shift 면 유지)
+      if (width < 4 && height < 4) {
+        if (!additive) clearSel()
+      } else {
+        const picked = nodes.filter((n) => {
+          const box = getNodeBox(n)
+          const nx1 = n.x + box.xOffset
+          const ny1 = n.y
+          const nx2 = nx1 + box.width
+          const ny2 = ny1 + box.height
+          // 박스가 마퀴와 겹치면 선택
+          return nx1 <= x + width && nx2 >= x && ny1 <= y + height && ny2 >= y
+        })
+        const items: Selectable[] = []
+        if (additive) {
+          // 기존 선택 유지하고 노드만 합친다
+          selEdges.forEach((id) => items.push({ kind: 'edge', id }))
+          selGroups.forEach((id) => items.push({ kind: 'group', id }))
+        }
+        const nodeIds = new Set<string>(additive ? selNodes : [])
+        picked.forEach((n) => nodeIds.add(n.id))
+        nodeIds.forEach((id) => items.push({ kind: 'node', id }))
+        setSel(items)
+      }
+      setPendingSelect(null)
+      return
+    }
     if (pendingEdge) {
       // 노드 KGroup의 onMouseUp이 먼저 처리되므로, 여기 도달했다면 빈 영역에서 release
       setPendingEdge(null)
@@ -456,9 +604,7 @@ export function Canvas({ doc }: Props) {
         scaleY={scale}
         x={vx}
         y={vy}
-        draggable={tool === 'select' && !pendingEdge && !pendingGroup}
         onWheel={onWheel}
-        onDragEnd={onStageDragEnd}
         onMouseDown={onStageMouseDown}
         onMouseMove={onStageMouseMove}
         onMouseUp={onStageMouseUp}
@@ -551,18 +697,55 @@ export function Canvas({ doc }: Props) {
                 onSelect={(additive) => toggleSel('node', n.id, additive)}
                 onHover={(h) => setHoveredNode(h ? n.id : (cur) => (cur === n.id ? null : cur))}
                 snapPos={snapPos}
+                onDragStart={() => {
+                  // 선택된 노드를 2개 이상 든 채로 드래그하면 함께 옮긴다 — 시작 위치를 스냅샷.
+                  if (selNodes.has(n.id) && selNodes.size > 1) {
+                    const others = [...selNodes]
+                      .filter((id) => id !== n.id)
+                      .map((id) => {
+                        const nn = nodesById.get(id)
+                        return nn ? { id, x: nn.x, y: nn.y } : null
+                      })
+                      .filter((o): o is { id: string; x: number; y: number } => o !== null)
+                    multiDragRef.current = { anchorId: n.id, startX: n.x, startY: n.y, others }
+                  } else {
+                    multiDragRef.current = null
+                  }
+                }}
                 onDragMove={(x, y) => {
                   if (!doc) return
                   const now = performance.now()
-                  if (now - lastNodeMoveRef.current >= 16) {
-                    lastNodeMoveRef.current = now
+                  if (now - lastNodeMoveRef.current < 16) return
+                  lastNodeMoveRef.current = now
+                  const md = multiDragRef.current
+                  if (md && md.anchorId === n.id) {
+                    const dx = x - md.startX
+                    const dy = y - md.startY
+                    moveNodes(doc, [
+                      { id: n.id, x, y },
+                      ...md.others.map((o) => ({ id: o.id, x: o.x + dx, y: o.y + dy })),
+                    ])
+                  } else {
                     moveNode(doc, n.id, x, y)
                   }
                 }}
                 onDragEnd={(x, y) => {
                   // 드래그 종료 시 최종 위치는 throttle 없이 반드시 반영.
                   lastNodeMoveRef.current = 0
-                  if (doc) moveNode(doc, n.id, x, y)
+                  if (doc) {
+                    const md = multiDragRef.current
+                    if (md && md.anchorId === n.id) {
+                      const dx = x - md.startX
+                      const dy = y - md.startY
+                      moveNodes(doc, [
+                        { id: n.id, x, y },
+                        ...md.others.map((o) => ({ id: o.id, x: o.x + dx, y: o.y + dy })),
+                      ])
+                    } else {
+                      moveNode(doc, n.id, x, y)
+                    }
+                  }
+                  multiDragRef.current = null
                 }}
                 onAnchorDown={(anchor) => {
                   const a = anchorPoint(n.x, n.y, anchor, getNodeBox(n))
@@ -595,6 +778,21 @@ export function Canvas({ doc }: Props) {
               strokeWidth={1.5}
               dash={[6, 4]}
               fill="rgba(93, 91, 239, 0.05)"
+              listening={false}
+            />
+          )}
+
+          {/* 마퀴(러버밴드) 다중 선택 사각형 */}
+          {pendingSelect && (pendingSelect.width > 1 || pendingSelect.height > 1) && (
+            <Rect
+              x={pendingSelect.x}
+              y={pendingSelect.y}
+              width={pendingSelect.width}
+              height={pendingSelect.height}
+              stroke="#5d5bef"
+              strokeWidth={1}
+              dash={[4, 4]}
+              fill="rgba(93, 91, 239, 0.08)"
               listening={false}
             />
           )}

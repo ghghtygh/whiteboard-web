@@ -104,6 +104,31 @@ export function moveNode(
   }, origin)
 }
 
+/**
+ * 여러 노드를 한 트랜잭션으로 동시에 이동한다 (다중 선택 드래그).
+ * 한 트랜잭션이라 Undo 한 스텝 + Yjs update 한 번으로 묶여 동기화 부하도 작다.
+ */
+export function moveNodes(
+  doc: BoardDoc,
+  positions: { id: string; x: number; y: number }[],
+  origin?: unknown,
+): void {
+  doc.ydoc.transact(() => {
+    for (const p of positions) {
+      const map = doc.nodes.get(p.id)
+      if (!map) continue
+      map.set('x', snap(p.x))
+      map.set('y', snap(p.y))
+      const cx = (map.get('x') as number) + NODE_W / 2
+      const cy = (map.get('y') as number) + NODE_H / 2
+      const gid = containingGroup(doc, cx, cy)
+      if ((map.get('groupId') as string | null) !== gid) {
+        map.set('groupId', gid)
+      }
+    }
+  }, origin)
+}
+
 export function setNodeLabel(doc: BoardDoc, id: string, label: string, origin?: unknown): void {
   const map = doc.nodes.get(id)
   if (!map) return
