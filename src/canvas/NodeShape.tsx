@@ -27,6 +27,7 @@ interface Props {
   // 드래그 중인 위치를 격자로 보정. Canvas 가 정렬 모드/Alt 상태에 따라 다른 함수 전달.
   snapPos: (x: number, y: number) => Point
   onSelect: (additive: boolean) => void
+  onDragStart: () => void
   onDragMove: (x: number, y: number) => void
   onDragEnd: (x: number, y: number) => void
   onHover: (hovered: boolean) => void
@@ -88,6 +89,7 @@ export function NodeShape(props: Props) {
       draggable
       onDragStart={() => {
         draggingRef.current = true
+        props.onDragStart()
       }}
       onClick={(e) => props.onSelect(e.evt.shiftKey)}
       onTap={() => props.onSelect(false)}
