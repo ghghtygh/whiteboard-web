@@ -22,6 +22,8 @@ interface Props {
   node: Node
   selected: boolean
   hovered: boolean
+  // Space 팬 모드 등에서 노드 드래그를 잠시 막을 때 false.
+  draggable?: boolean
   // pendingEdge 드래그 중 이 노드가 연결 대상일 때 연결될 앵커 방향
   pendingEdgeAnchor?: Anchor
   // 드래그 중인 위치를 격자로 보정. Canvas 가 정렬 모드/Alt 상태에 따라 다른 함수 전달.
@@ -86,7 +88,7 @@ export function NodeShape(props: Props) {
       ref={groupRef}
       x={initRef.current.x}
       y={initRef.current.y}
-      draggable
+      draggable={props.draggable ?? true}
       onDragStart={() => {
         draggingRef.current = true
         props.onDragStart()
