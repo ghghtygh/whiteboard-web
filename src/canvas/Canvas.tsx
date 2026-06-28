@@ -63,6 +63,7 @@ import {
   moveNode,
   moveNodes,
   pasteElements,
+  type ClipboardData,
   setEdgeDirection,
   setEdgeLabel,
   setEdgeStyle,
@@ -168,8 +169,6 @@ export function Canvas({ doc }: Props) {
   const spaceDownRef = useRef(false)
   // 마지막 포인터 위치(캔버스 좌표) — 붙여넣기 기준점.
   const pointerRef = useRef<{ x: number; y: number } | null>(null)
-  // 앱 내부 복사/붙여넣기 클립보드.
-  const clipboardRef = useRef<import('./ops').ClipboardData | null>(null)
   // 터치 한 손가락 / Space 팬 진행 상태 (시작 시점의 화면 포인터 + 뷰포트 위치 스냅샷).
   const panRef = useRef<{ px: number; py: number; vx: number; vy: number } | null>(null)
   // 다중 선택 드래그: 시작 시 선택된 노드들의 원위치 스냅샷. anchor = 실제로 잡고 끄는 노드.
@@ -274,57 +273,11 @@ export function Canvas({ doc }: Props) {
     return () => ro.disconnect()
   }, [setCanvasSize])
 
-  // 키보드: Delete, ⌘Z/⌘⇧Z, ⌘A, ⌘C/⌘X/⌘V, 엣지 스타일/방향 토글
+  // 키보드: Delete, ⌘Z/⌘⇧Z, ⌘A, 엣지 스타일/방향 토글.
+  // (⌘C/⌘X/⌘V 는 시스템 클립보드 연동을 위해 별도의 copy/cut/paste 이벤트에서 처리한다 —
+  //  여기서 preventDefault 하면 브라우저가 그 이벤트를 만들어주지 않으므로 건드리지 않는다.)
   useEffect(() => {
     if (!doc) return
-
-    // 선택된 노드(+그 사이 엣지)를 클립보드에 담는다. 담을 게 있으면 true.
-    function copySelection(): boolean {
-      const picked = [...selNodes]
-        .map((id) => nodesById.get(id))
-        .filter((n): n is DomainNode => !!n)
-      if (picked.length === 0) return false
-      const minX = Math.min(...picked.map((n) => n.x))
-      const minY = Math.min(...picked.map((n) => n.y))
-      const maxX = Math.max(...picked.map((n) => n.x))
-      const maxY = Math.max(...picked.map((n) => n.y))
-      const sel = new Set(picked.map((n) => n.id))
-      clipboardRef.current = {
-        nodes: picked.map((n) => ({
-          tmpId: n.id,
-          type: n.type,
-          label: n.label,
-          x: n.x - minX,
-          y: n.y - minY,
-          catalogVersion: n.catalogVersion,
-        })),
-        edges: edges
-          .filter((ed) => sel.has(ed.from) && sel.has(ed.to))
-          .map((ed) => ({
-            from: ed.from,
-            to: ed.to,
-            fromAnchor: ed.fromAnchor,
-            toAnchor: ed.toAnchor,
-            style: ed.style,
-            direction: ed.direction,
-            label: ed.label,
-          })),
-        width: maxX - minX + NODE_W,
-        height: maxY - minY + NODE_H,
-      }
-      return true
-    }
-
-    function pasteClipboard() {
-      const clip = clipboardRef.current
-      if (!clip || !doc || clip.nodes.length === 0) return
-      // 포인터 위치에 묶음 중심을 맞춘다. 포인터 없으면 살짝 어긋나게.
-      const center = pointerRef.current
-      const baseX = center ? center.x - clip.width / 2 : 24
-      const baseY = center ? center.y - clip.height / 2 : 24
-      const newIds = pasteElements(doc, clip, baseX, baseY)
-      if (newIds.length) setSel(newIds.map((id) => ({ kind: 'node' as const, id })))
-    }
 
     function onKey(e: KeyboardEvent) {
       const target = e.target as HTMLElement | null
@@ -345,34 +298,6 @@ export function Canvas({ doc }: Props) {
       if (meta && e.key.toLowerCase() === 'a') {
         e.preventDefault()
         if (nodes.length) setSel(nodes.map((n) => ({ kind: 'node' as const, id: n.id })))
-        return
-      }
-
-      // ⌘/Ctrl + C — 복사
-      if (meta && e.key.toLowerCase() === 'c') {
-        if (copySelection()) e.preventDefault()
-        return
-      }
-
-      // ⌘/Ctrl + X — 잘라내기 (복사 후 선택 삭제)
-      if (meta && e.key.toLowerCase() === 'x') {
-        if (copySelection()) {
-          e.preventDefault()
-          const nIds = [...selNodes]
-          const eIds = [...selEdges]
-          const gIds = [...selGroups]
-          if (nIds.length) deleteNodes(doc!, nIds)
-          if (eIds.length) deleteEdges(doc!, eIds)
-          if (gIds.length) deleteGroups(doc!, gIds)
-          clearSel()
-        }
-        return
-      }
-
-      // ⌘/Ctrl + V — 붙여넣기
-      if (meta && e.key.toLowerCase() === 'v') {
-        e.preventDefault()
-        pasteClipboard()
         return
       }
 
@@ -419,7 +344,119 @@ export function Canvas({ doc }: Props) {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [doc, undoManager, selNodes, selEdges, selGroups, clearSel, nodes, edges, nodesById, setSel])
+  }, [doc, undoManager, selNodes, selEdges, selGroups, clearSel, nodes, setSel])
+
+  // 시스템 클립보드 연동 — 탭 간/외부 붙여넣기.
+  // 네이티브 copy/cut/paste 이벤트의 clipboardData 에 JSON 을 싣는다(권한 프롬프트 없이 동작).
+  // 텍스트 입력(라벨 편집 등)에 포커스가 있으면 기본 동작에 양보한다.
+  useEffect(() => {
+    if (!doc) return
+    const MARKER = 'whiteboard/clipboard@1'
+
+    function inEditable(): boolean {
+      const a = document.activeElement as HTMLElement | null
+      return !!a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA' || a.isContentEditable)
+    }
+
+    // 선택된 노드(+그 사이 엣지)를 클립보드 페이로드로 만든다. 없으면 null.
+    function buildClip(): ClipboardData | null {
+      const picked = [...selNodes]
+        .map((id) => nodesById.get(id))
+        .filter((n): n is DomainNode => !!n)
+      if (picked.length === 0) return null
+      const minX = Math.min(...picked.map((n) => n.x))
+      const minY = Math.min(...picked.map((n) => n.y))
+      const maxX = Math.max(...picked.map((n) => n.x))
+      const maxY = Math.max(...picked.map((n) => n.y))
+      const sel = new Set(picked.map((n) => n.id))
+      return {
+        nodes: picked.map((n) => ({
+          tmpId: n.id,
+          type: n.type,
+          label: n.label,
+          x: n.x - minX,
+          y: n.y - minY,
+          catalogVersion: n.catalogVersion,
+        })),
+        edges: edges
+          .filter((ed) => sel.has(ed.from) && sel.has(ed.to))
+          .map((ed) => ({
+            from: ed.from,
+            to: ed.to,
+            fromAnchor: ed.fromAnchor,
+            toAnchor: ed.toAnchor,
+            style: ed.style,
+            direction: ed.direction,
+            label: ed.label,
+          })),
+        width: maxX - minX + NODE_W,
+        height: maxY - minY + NODE_H,
+      }
+    }
+
+    function parseClip(text: string): ClipboardData | null {
+      try {
+        const obj = JSON.parse(text)
+        if (obj && obj.__wb === MARKER && Array.isArray(obj.nodes)) {
+          return { nodes: obj.nodes, edges: obj.edges ?? [], width: obj.width ?? 0, height: obj.height ?? 0 }
+        }
+      } catch {
+        /* 우리 포맷 아님 */
+      }
+      return null
+    }
+
+    function writeClip(e: ClipboardEvent, clip: ClipboardData): void {
+      e.clipboardData?.setData('text/plain', JSON.stringify({ __wb: MARKER, ...clip }))
+    }
+
+    function onCopy(e: ClipboardEvent) {
+      if (inEditable()) return
+      const clip = buildClip()
+      if (!clip) return
+      e.preventDefault()
+      writeClip(e, clip)
+    }
+
+    function onCut(e: ClipboardEvent) {
+      if (inEditable()) return
+      const clip = buildClip()
+      if (!clip) return
+      e.preventDefault()
+      writeClip(e, clip)
+      const nIds = [...selNodes]
+      const eIds = [...selEdges]
+      const gIds = [...selGroups]
+      if (nIds.length) deleteNodes(doc!, nIds)
+      if (eIds.length) deleteEdges(doc!, eIds)
+      if (gIds.length) deleteGroups(doc!, gIds)
+      clearSel()
+    }
+
+    function onPaste(e: ClipboardEvent) {
+      if (inEditable()) return
+      const text = e.clipboardData?.getData('text/plain')
+      if (!text) return
+      const clip = parseClip(text)
+      if (!clip || clip.nodes.length === 0) return
+      e.preventDefault()
+      // 포인터 위치에 묶음 중심을 맞춘다. 포인터 없으면(아직 캔버스 위로 안 옴) 살짝 어긋나게.
+      const center = pointerRef.current
+      const baseX = center ? center.x - clip.width / 2 : 24
+      const baseY = center ? center.y - clip.height / 2 : 24
+      const newIds = pasteElements(doc!, clip, baseX, baseY)
+      if (newIds.length) setSel(newIds.map((id) => ({ kind: 'node' as const, id })))
+    }
+
+    window.addEventListener('copy', onCopy)
+    window.addEventListener('cut', onCut)
+    window.addEventListener('paste', onPaste)
+    return () => {
+      window.removeEventListener('copy', onCopy)
+      window.removeEventListener('cut', onCut)
+      window.removeEventListener('paste', onPaste)
+    }
+  }, [doc, selNodes, selEdges, selGroups, nodesById, edges, clearSel, setSel])
 
   // 휠 동작 — Excalidraw 식.
   //  - 기본(트랙패드 두 손가락 스크롤/마우스 휠) → 화면 이동(팬)
