@@ -185,8 +185,9 @@ export function Canvas({ doc }: Props) {
   const spaceDownRef = useRef(false)
   // 마지막 포인터 위치(캔버스 좌표) — 붙여넣기 기준점.
   const pointerRef = useRef<{ x: number; y: number } | null>(null)
-  // paste 이벤트가 마지막으로 처리된 시각 — keydown readText 폴백 중복 방지용.
-  const lastPasteEventAtRef = useRef(0)
+  // 붙여넣기 중복 방지 — paste 이벤트와 keydown readText 두 경로가 같은 내용을 두 번
+  // 붙여넣지 않도록 (시그니처, 시각)으로 디듀프.
+  const lastPasteRef = useRef<{ sig: string; at: number }>({ sig: '', at: 0 })
   // 터치 한 손가락 / Space 팬 진행 상태 (시작 시점의 화면 포인터 + 뷰포트 위치 스냅샷).
   const panRef = useRef<{ px: number; py: number; vx: number; vy: number } | null>(null)
   // 다중 선택 드래그: 시작 시 선택된 노드들의 원위치 스냅샷. anchor = 실제로 잡고 끄는 노드.
@@ -292,9 +293,14 @@ export function Canvas({ doc }: Props) {
   }, [setCanvasSize])
 
   // 클립보드 페이로드를 포인터 위치(중심)에 붙여넣고 새 노드를 선택한다.
+  // 두 경로(paste 이벤트 / keydown readText)가 같은 내용을 두 번 넣지 않도록 디듀프.
   const applyPaste = useCallback(
     (clip: ClipboardData) => {
       if (!doc || clip.nodes.length === 0) return
+      const sig = clip.nodes.length + '|' + clip.nodes.map((n) => n.tmpId).join(',')
+      const now = Date.now()
+      if (lastPasteRef.current.sig === sig && now - lastPasteRef.current.at < 500) return
+      lastPasteRef.current = { sig, at: now }
       const c = pointerRef.current
       const baseX = c ? c.x - clip.width / 2 : 24
       const baseY = c ? c.y - clip.height / 2 : 24
@@ -349,9 +355,27 @@ export function Canvas({ doc }: Props) {
 
     function writeClipboard(clip: ClipboardData) {
       const text = JSON.stringify({ __wb: CLIPBOARD_MARKER, ...clip })
-      navigator.clipboard?.writeText(text).catch(() => {
-        /* 비보안 컨텍스트 등 — 조용히 무시 */
-      })
+      // 1순위: Async Clipboard API. 실패(비보안/미지원)하면 execCommand 폴백.
+      const fallback = () => {
+        try {
+          const ta = document.createElement('textarea')
+          ta.value = text
+          ta.style.position = 'fixed'
+          ta.style.top = '-1000px'
+          ta.style.opacity = '0'
+          document.body.appendChild(ta)
+          ta.select()
+          document.execCommand('copy')
+          document.body.removeChild(ta)
+        } catch {
+          /* 무시 */
+        }
+      }
+      if (navigator.clipboard?.writeText) {
+        navigator.clipboard.writeText(text).catch(fallback)
+      } else {
+        fallback()
+      }
     }
 
     function onKey(e: KeyboardEvent) {
@@ -369,10 +393,15 @@ export function Canvas({ doc }: Props) {
         return
       }
 
-      // ⌘/Ctrl + A — 노드 전체 선택
+      // ⌘/Ctrl + A — 전체 선택 (노드 + 엣지 + 그룹)
       if (meta && e.key.toLowerCase() === 'a') {
         e.preventDefault()
-        if (nodes.length) setSel(nodes.map((n) => ({ kind: 'node' as const, id: n.id })))
+        const all: Selectable[] = [
+          ...nodes.map((n) => ({ kind: 'node' as const, id: n.id })),
+          ...edges.map((ed) => ({ kind: 'edge' as const, id: ed.id })),
+          ...groups.map((g) => ({ kind: 'group' as const, id: g.id })),
+        ]
+        if (all.length) setSel(all)
         return
       }
 
@@ -403,22 +432,21 @@ export function Canvas({ doc }: Props) {
         return
       }
 
-      // ⌘/Ctrl + V — 붙여넣기. preventDefault 하지 않고 paste 이벤트에 우선 맡긴다.
-      // paste 이벤트가 발화하지 않는 환경을 위해 잠시 후 readText 폴백(이벤트가 처리했으면 건너뜀).
+      // ⌘/Ctrl + V — 붙여넣기. readText 를 keydown 안에서 '동기적으로' 호출해야
+      // 사용자 제스처가 유지돼 Chrome 이 막지 않는다(setTimeout 등으로 미루면 차단됨).
+      // paste 이벤트도 함께 발화하는 브라우저가 있어 applyPaste 가 디듀프한다.
       if (meta && e.key.toLowerCase() === 'v') {
-        const tStart = Date.now()
-        window.setTimeout(() => {
-          if (lastPasteEventAtRef.current >= tStart) return // paste 이벤트가 이미 처리함
+        if (navigator.clipboard?.readText) {
           navigator.clipboard
-            ?.readText()
+            .readText()
             .then((text) => {
               const clip = text ? parseClipboard(text) : null
               if (clip) applyPaste(clip)
             })
             .catch(() => {
-              /* readText 권한 거부/비보안 컨텍스트 — 무시 */
+              /* readText 미지원(Firefox)/거부 — paste 이벤트가 처리하도록 둔다 */
             })
-        }, 80)
+        }
         return
       }
 
@@ -465,7 +493,7 @@ export function Canvas({ doc }: Props) {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [doc, undoManager, selNodes, selEdges, selGroups, clearSel, nodes, edges, nodesById, setSel, applyPaste])
+  }, [doc, undoManager, selNodes, selEdges, selGroups, clearSel, nodes, edges, groups, nodesById, setSel, applyPaste])
 
   // 붙여넣기 — 네이티브 paste 이벤트의 clipboardData 를 읽는다(권한 프롬프트 없음).
   // 텍스트 입력(라벨 편집 등) 포커스 시에는 기본 붙여넣기에 양보한다.
@@ -481,8 +509,7 @@ export function Canvas({ doc }: Props) {
       const clip = text ? parseClipboard(text) : null
       if (!clip || clip.nodes.length === 0) return
       e.preventDefault()
-      lastPasteEventAtRef.current = Date.now()
-      applyPaste(clip)
+      applyPaste(clip) // 디듀프는 applyPaste 내부
     }
     window.addEventListener('paste', onPaste)
     return () => window.removeEventListener('paste', onPaste)
