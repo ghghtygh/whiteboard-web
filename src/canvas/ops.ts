@@ -129,6 +129,82 @@ export function moveNodes(
   }, origin)
 }
 
+// ── 복사/붙여넣기 클립보드 (앱 내부) ──
+export interface ClipboardNode {
+  tmpId: string
+  type: string
+  label: string
+  x: number // 선택 묶음 좌상단 기준 상대 오프셋
+  y: number
+  catalogVersion: number
+}
+export interface ClipboardEdge {
+  from: string // tmpId 참조
+  to: string
+  fromAnchor: Anchor | null
+  toAnchor: Anchor | null
+  style: EdgeStyle
+  direction: EdgeDirection
+  label: string | null
+}
+export interface ClipboardData {
+  nodes: ClipboardNode[]
+  edges: ClipboardEdge[]
+  width: number
+  height: number
+}
+
+/**
+ * 클립보드 내용을 (baseX, baseY) 좌상단 기준으로 새 id 로 붙여넣는다.
+ * 노드 사이의 엣지는 새 id 로 다시 연결한다. 한 트랜잭션 = 한 Undo 스텝.
+ * 생성된 노드 id 목록을 돌려준다 (붙여넣은 노드를 곧장 선택하기 위함).
+ */
+export function pasteElements(
+  doc: BoardDoc,
+  clip: ClipboardData,
+  baseX: number,
+  baseY: number,
+  origin?: unknown,
+): string[] {
+  const newIds: string[] = []
+  const idMap = new Map<string, string>()
+  doc.ydoc.transact(() => {
+    for (const cn of clip.nodes) {
+      const id = nanoid(10)
+      idMap.set(cn.tmpId, id)
+      const x = snap(baseX + cn.x)
+      const y = snap(baseY + cn.y)
+      const ymap = new Y.Map<unknown>()
+      ymap.set('id', id)
+      ymap.set('type', cn.type)
+      ymap.set('label', cn.label)
+      ymap.set('x', x)
+      ymap.set('y', y)
+      ymap.set('groupId', containingGroup(doc, x + NODE_W / 2, y + NODE_H / 2))
+      ymap.set('catalogVersion', cn.catalogVersion)
+      doc.nodes.set(id, ymap)
+      newIds.push(id)
+    }
+    for (const ce of clip.edges) {
+      const from = idMap.get(ce.from)
+      const to = idMap.get(ce.to)
+      if (!from || !to) continue
+      const id = nanoid(10)
+      const ymap = new Y.Map<unknown>()
+      ymap.set('id', id)
+      ymap.set('from', from)
+      ymap.set('to', to)
+      ymap.set('fromAnchor', ce.fromAnchor)
+      ymap.set('toAnchor', ce.toAnchor)
+      ymap.set('label', ce.label)
+      ymap.set('style', ce.style)
+      ymap.set('direction', ce.direction)
+      doc.edges.set(id, ymap)
+    }
+  }, origin)
+  return newIds
+}
+
 export function setNodeLabel(doc: BoardDoc, id: string, label: string, origin?: unknown): void {
   const map = doc.nodes.get(id)
   if (!map) return

@@ -62,6 +62,7 @@ import {
   moveGroup,
   moveNode,
   moveNodes,
+  pasteElements,
   setEdgeDirection,
   setEdgeLabel,
   setEdgeStyle,
@@ -162,7 +163,14 @@ export function Canvas({ doc }: Props) {
   const [pendingSelect, setPendingSelect] = useState<PendingSelect | null>(null)
   const [editing, setEditing] = useState<EditingTarget>(null)
 
-  // 터치 한 손가락 팬 진행 상태 (시작 시점의 화면 포인터 + 뷰포트 위치 스냅샷).
+  // Space 누름 = 핸드(팬) 모드 — 누른 채 드래그하면 화면 이동. 트랙패드에서도 잘 동작.
+  const [spaceDown, setSpaceDown] = useState(false)
+  const spaceDownRef = useRef(false)
+  // 마지막 포인터 위치(캔버스 좌표) — 붙여넣기 기준점.
+  const pointerRef = useRef<{ x: number; y: number } | null>(null)
+  // 앱 내부 복사/붙여넣기 클립보드.
+  const clipboardRef = useRef<import('./ops').ClipboardData | null>(null)
+  // 터치 한 손가락 / Space 팬 진행 상태 (시작 시점의 화면 포인터 + 뷰포트 위치 스냅샷).
   const panRef = useRef<{ px: number; py: number; vx: number; vy: number } | null>(null)
   // 다중 선택 드래그: 시작 시 선택된 노드들의 원위치 스냅샷. anchor = 실제로 잡고 끄는 노드.
   const multiDragRef = useRef<
@@ -219,6 +227,37 @@ export function Canvas({ doc }: Props) {
     }
   }, [])
 
+  // Space 키 트래킹 — 핸드(팬) 모드. 입력 중에는 무시, 페이지 스크롤 방지.
+  useEffect(() => {
+    function down(e: KeyboardEvent) {
+      if (e.code !== 'Space') return
+      const t = e.target as HTMLElement | null
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return
+      e.preventDefault()
+      if (!spaceDownRef.current) {
+        spaceDownRef.current = true
+        setSpaceDown(true)
+      }
+    }
+    function up(e: KeyboardEvent) {
+      if (e.code !== 'Space') return
+      spaceDownRef.current = false
+      setSpaceDown(false)
+    }
+    function blur() {
+      spaceDownRef.current = false
+      setSpaceDown(false)
+    }
+    window.addEventListener('keydown', down)
+    window.addEventListener('keyup', up)
+    window.addEventListener('blur', blur)
+    return () => {
+      window.removeEventListener('keydown', down)
+      window.removeEventListener('keyup', up)
+      window.removeEventListener('blur', blur)
+    }
+  }, [])
+
   // 사이즈 추적 — 로컬 state + 미니맵용 store 동시 업데이트
   useEffect(() => {
     if (!hostRef.current) return
@@ -235,9 +274,58 @@ export function Canvas({ doc }: Props) {
     return () => ro.disconnect()
   }, [setCanvasSize])
 
-  // 키보드: Delete, ⌘Z, ⌘⇧Z, 엣지 스타일/방향 토글
+  // 키보드: Delete, ⌘Z/⌘⇧Z, ⌘A, ⌘C/⌘X/⌘V, 엣지 스타일/방향 토글
   useEffect(() => {
     if (!doc) return
+
+    // 선택된 노드(+그 사이 엣지)를 클립보드에 담는다. 담을 게 있으면 true.
+    function copySelection(): boolean {
+      const picked = [...selNodes]
+        .map((id) => nodesById.get(id))
+        .filter((n): n is DomainNode => !!n)
+      if (picked.length === 0) return false
+      const minX = Math.min(...picked.map((n) => n.x))
+      const minY = Math.min(...picked.map((n) => n.y))
+      const maxX = Math.max(...picked.map((n) => n.x))
+      const maxY = Math.max(...picked.map((n) => n.y))
+      const sel = new Set(picked.map((n) => n.id))
+      clipboardRef.current = {
+        nodes: picked.map((n) => ({
+          tmpId: n.id,
+          type: n.type,
+          label: n.label,
+          x: n.x - minX,
+          y: n.y - minY,
+          catalogVersion: n.catalogVersion,
+        })),
+        edges: edges
+          .filter((ed) => sel.has(ed.from) && sel.has(ed.to))
+          .map((ed) => ({
+            from: ed.from,
+            to: ed.to,
+            fromAnchor: ed.fromAnchor,
+            toAnchor: ed.toAnchor,
+            style: ed.style,
+            direction: ed.direction,
+            label: ed.label,
+          })),
+        width: maxX - minX + NODE_W,
+        height: maxY - minY + NODE_H,
+      }
+      return true
+    }
+
+    function pasteClipboard() {
+      const clip = clipboardRef.current
+      if (!clip || !doc || clip.nodes.length === 0) return
+      // 포인터 위치에 묶음 중심을 맞춘다. 포인터 없으면 살짝 어긋나게.
+      const center = pointerRef.current
+      const baseX = center ? center.x - clip.width / 2 : 24
+      const baseY = center ? center.y - clip.height / 2 : 24
+      const newIds = pasteElements(doc, clip, baseX, baseY)
+      if (newIds.length) setSel(newIds.map((id) => ({ kind: 'node' as const, id })))
+    }
+
     function onKey(e: KeyboardEvent) {
       const target = e.target as HTMLElement | null
       if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
@@ -257,6 +345,34 @@ export function Canvas({ doc }: Props) {
       if (meta && e.key.toLowerCase() === 'a') {
         e.preventDefault()
         if (nodes.length) setSel(nodes.map((n) => ({ kind: 'node' as const, id: n.id })))
+        return
+      }
+
+      // ⌘/Ctrl + C — 복사
+      if (meta && e.key.toLowerCase() === 'c') {
+        if (copySelection()) e.preventDefault()
+        return
+      }
+
+      // ⌘/Ctrl + X — 잘라내기 (복사 후 선택 삭제)
+      if (meta && e.key.toLowerCase() === 'x') {
+        if (copySelection()) {
+          e.preventDefault()
+          const nIds = [...selNodes]
+          const eIds = [...selEdges]
+          const gIds = [...selGroups]
+          if (nIds.length) deleteNodes(doc!, nIds)
+          if (eIds.length) deleteEdges(doc!, eIds)
+          if (gIds.length) deleteGroups(doc!, gIds)
+          clearSel()
+        }
+        return
+      }
+
+      // ⌘/Ctrl + V — 붙여넣기
+      if (meta && e.key.toLowerCase() === 'v') {
+        e.preventDefault()
+        pasteClipboard()
         return
       }
 
@@ -303,29 +419,35 @@ export function Canvas({ doc }: Props) {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [doc, undoManager, selNodes, selEdges, selGroups, clearSel, nodes, setSel])
+  }, [doc, undoManager, selNodes, selEdges, selGroups, clearSel, nodes, edges, nodesById, setSel])
 
-  // 휠 줌 — scale 클램프 후 position 도 같은 값으로 정렬해 한계에서 드리프트 방지
+  // 휠 동작 — Excalidraw 식.
+  //  - 기본(트랙패드 두 손가락 스크롤/마우스 휠) → 화면 이동(팬)
+  //  - Ctrl/Cmd + 휠 (트랙패드 핀치는 ctrlKey=true 로 들어옴) → 포인터 기준 줌
   const onWheel = useCallback(
     (e: Konva.KonvaEventObject<WheelEvent>) => {
       e.evt.preventDefault()
       const stage = e.target.getStage()
       if (!stage) return
-      const pointer = stage.getPointerPosition()
-      if (!pointer) return
-      const direction = e.evt.deltaY > 0 ? -1 : 1
-      const rawNext = direction > 0 ? scale * 1.05 : scale / 1.05
-      const next = clampScale(rawNext)
-      // 한계 도달 시 setScale 만 noop 되고 position 만 움직이는 걸 방지
-      if (next === scale) return
-      const mouseTo = {
-        x: (pointer.x - vx) / scale,
-        y: (pointer.y - vy) / scale,
+      // 연속 휠 이벤트에서 stale 값 누적을 막기 위해 최신 뷰포트를 store 에서 직접 읽는다.
+      const vp = useViewportStore.getState()
+
+      if (e.evt.ctrlKey || e.evt.metaKey) {
+        const pointer = stage.getPointerPosition()
+        if (!pointer) return
+        // deltaY 크기에 비례한 부드러운 줌 (핀치도 자연스럽게)
+        const next = clampScale(vp.scale * Math.exp(-e.evt.deltaY * 0.0015))
+        if (next === vp.scale) return
+        const mouseTo = { x: (pointer.x - vp.x) / vp.scale, y: (pointer.y - vp.y) / vp.scale }
+        setScale(next)
+        setPosition(pointer.x - mouseTo.x * next, pointer.y - mouseTo.y * next)
+        return
       }
-      setScale(next)
-      setPosition(pointer.x - mouseTo.x * next, pointer.y - mouseTo.y * next)
+
+      // 팬 — 휠 델타만큼 뷰포트 이동 (Shift+휠은 브라우저가 deltaX 로 주거나, 그대로 적용)
+      setPosition(vp.x - e.evt.deltaX, vp.y - e.evt.deltaY)
     },
-    [scale, vx, vy, setScale, setPosition],
+    [setScale, setPosition],
   )
 
   // 휠클릭(가운데 버튼) 드래그 = 화면 이동(팬). 노드 위에서 시작해도 동작하도록
@@ -340,7 +462,9 @@ export function Canvas({ doc }: Props) {
     let startVx = 0
     let startVy = 0
     const onDown = (e: MouseEvent) => {
-      if (e.button !== 1) return
+      // 휠클릭(가운데) 또는 Space+좌클릭 → 팬. 노드 위에서 시작해도 동작.
+      const isPan = e.button === 1 || (e.button === 0 && spaceDownRef.current)
+      if (!isPan) return
       e.preventDefault()
       active = true
       startX = e.clientX
@@ -398,6 +522,8 @@ export function Canvas({ doc }: Props) {
       panRef.current = { px: sp.x, py: sp.y, vx, vy }
       return
     }
+    // Space 팬 모드면 마퀴를 시작하지 않는다 (네이티브 리스너가 팬 처리).
+    if (spaceDown) return
     // 마우스 — 좌클릭만 마퀴 시작 (가운데/오른쪽은 무시)
     if ((e.evt as MouseEvent).button === 0) {
       const p = stage.getRelativePointerPosition()
@@ -430,6 +556,7 @@ export function Canvas({ doc }: Props) {
 
     const p = stage.getRelativePointerPosition()
     if (!p) return
+    pointerRef.current = { x: p.x, y: p.y }
 
     if (pendingSelect) {
       setPendingSelect({
@@ -595,6 +722,7 @@ export function Canvas({ doc }: Props) {
       onDrop={onDrop}
       onDragOver={onDragOver}
       data-tool={tool}
+      data-space={spaceDown}
     >
       <Stage
         ref={stageRef}
@@ -693,6 +821,7 @@ export function Canvas({ doc }: Props) {
                 node={n}
                 selected={selNodes.has(n.id)}
                 hovered={hoveredNode === n.id}
+                draggable={!spaceDown}
                 pendingEdgeAnchor={pendingEdgeAnchor}
                 onSelect={(additive) => toggleSel('node', n.id, additive)}
                 onHover={(h) => setHoveredNode(h ? n.id : (cur) => (cur === n.id ? null : cur))}
@@ -851,6 +980,8 @@ export function Canvas({ doc }: Props) {
       <style>{`
         .canvas-root { position: absolute; inset: 0; overflow: hidden; touch-action: none; }
         .canvas-root[data-tool="group"] { cursor: crosshair; }
+        /* Space 핸드(팬) 모드 — 잡을 수 있다는 grab 커서 (드래그 중 grabbing 은 JS 가 직접 지정) */
+        .canvas-root[data-space="true"] { cursor: grab; }
       `}</style>
     </div>
   )
