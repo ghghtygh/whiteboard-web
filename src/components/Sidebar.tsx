@@ -10,6 +10,7 @@ import { useSnapStore } from '@/canvas/snapStore'
 import { useSelection } from '@/canvas/selection'
 import { createNode } from '@/canvas/ops'
 import { COARSE_GRID, NODE_H, NODE_W, coarseSnap, dropJitter } from '@/canvas/geometry'
+import { CloseIcon } from '@/components/icons'
 
 const CATEGORY_LABELS: Record<string, string> = {
   'ci-cd': 'CI / CD',
@@ -315,7 +316,7 @@ export function Sidebar({ open = false, onClose }: SidebarProps = {}) {
             aria-label="Close menu"
             title="Close"
           >
-            ×
+            <CloseIcon />
           </button>
         </div>
 

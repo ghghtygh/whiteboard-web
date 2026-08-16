@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { localInvites, type PendingInvite } from '@/local/invitesStore'
 import { SYNC_AVAILABLE, useSyncStore } from '@/store/sync'
+import { CloseIcon } from '@/components/icons'
 import type { MemberRole } from '@/types/domain'
 
 interface Props {
@@ -69,7 +70,9 @@ export function ShareModal({ boardId, syncConnected, onClose }: Props) {
       <div className="share-modal" onClick={(e) => e.stopPropagation()}>
         <div className="share-head">
           <h2>보드 공유</h2>
-          <button className="x" onClick={onClose} aria-label="닫기">×</button>
+          <button className="x" onClick={onClose} aria-label="Close" title="Close">
+            <CloseIcon />
+          </button>
         </div>
 
         <section>
@@ -85,7 +88,7 @@ export function ShareModal({ boardId, syncConnected, onClose }: Props) {
                 : '동기화 서버에 연결 중…'
               : SYNC_AVAILABLE
                 ? '실시간 동기화가 꺼져 있습니다. 상단의 상태 표시를 눌러 켜면 링크를 공유한 사용자와 함께 편집할 수 있습니다.'
-                : '현재 로컬 전용 모드입니다. VITE_SYNC_WS_URL 을 설정하면 링크를 공유한 사용자와 실시간 공동 편집이 가능합니다.'}
+                : '현재 이 보드는 실시간 공동 편집을 지원하지 않습니다. 링크를 공유해도 각자 로컬에 따로 저장됩니다.'}
           </p>
         </section>
 
@@ -141,7 +144,10 @@ export function ShareModal({ boardId, syncConnected, onClose }: Props) {
           .share-head { display: flex; align-items: center; }
           .share-head h2 { margin: 0; font: var(--font-h2); }
           .share-head .x { margin-left: auto; background: none; border: none;
-                           font-size: 22px; cursor: pointer; color: var(--text-muted); padding: 0 6px; }
+                           display: inline-flex; align-items: center; justify-content: center;
+                           font-size: 20px; cursor: pointer; color: var(--text-muted); padding: 4px 6px;
+                           border-radius: var(--radius-sm); }
+          .share-head .x:hover { background: var(--surface-hover); color: var(--text-body); }
           .lbl { display: block; font: var(--weight-semibold) var(--text-2xs)/1 var(--font-sans);
                  color: var(--text-muted); margin-bottom: 7px;
                  text-transform: uppercase; letter-spacing: var(--tracking-caps); }

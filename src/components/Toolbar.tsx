@@ -5,6 +5,7 @@ import { useGridStore } from '@/canvas/gridStore'
 import { useSnapStore } from '@/canvas/snapStore'
 import { useSelection } from '@/canvas/selection'
 import { deleteNodes, deleteEdges, deleteGroups } from '@/canvas/ops'
+import { UndoIcon, RedoIcon, TrashIcon } from '@/components/icons'
 
 export function Toolbar() {
   const tool = useToolStore((s) => s.tool)
@@ -46,35 +47,35 @@ export function Toolbar() {
 
   return (
     <div className="toolbar">
-      <button className="ico" title="실행 취소 (⌘Z)" disabled={!canUndo} onClick={() => undoManager?.undo()}>
-        ↶
+      <button className="ico" title="Undo (⌘Z)" disabled={!canUndo} onClick={() => undoManager?.undo()}>
+        <UndoIcon />
       </button>
-      <button className="ico" title="다시 실행 (⌘⇧Z)" disabled={!canRedo} onClick={() => undoManager?.redo()}>
-        ↷
+      <button className="ico" title="Redo (⌘⇧Z)" disabled={!canRedo} onClick={() => undoManager?.redo()}>
+        <RedoIcon />
       </button>
       {hasSelection && (
         <>
           <span className="sep" />
-          <button className="ico del" title="선택 삭제 (Delete)" onClick={handleDelete}>
-            🗑
+          <button className="ico del" title="Delete selection (Delete)" onClick={handleDelete}>
+            <TrashIcon />
           </button>
         </>
       )}
       <span className="sep" />
       <button
         className="ico txt"
-        title="그룹 만들기 — 빈 영역을 드래그"
+        title="Create group — drag an empty area"
         data-active={tool === 'group'}
         onClick={toggleGroup}
       >
         그룹
       </button>
-      <button className="ico txt" title="격자 보기" data-active={gridVisible} onClick={toggleGrid}>
+      <button className="ico txt" title="Toggle grid" data-active={gridVisible} onClick={toggleGrid}>
         격자
       </button>
       <button
         className="ico txt"
-        title="격자 스냅 — 새 배치/드래그를 40px 격자에 맞춤 (Alt 누르면 반전)"
+        title="Snap to grid — aligns new placement/drag to a 40px grid (hold Alt to invert)"
         data-active={snapEnabled}
         onClick={toggleSnap}
       >

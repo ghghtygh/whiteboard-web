@@ -1,4 +1,5 @@
 import { useViewportStore, MIN_SCALE, MAX_SCALE } from '@/store/viewport'
+import { MinusIcon, PlusIcon } from '@/components/icons'
 
 export function ZoomOverlay() {
   const scale = useViewportStore((s) => s.scale)
@@ -11,13 +12,13 @@ export function ZoomOverlay() {
   return (
     <div className="zoom-overlay">
       <button title="Zoom out" disabled={atMin} onClick={() => setScale(scale / 1.1)}>
-        −
+        <MinusIcon />
       </button>
       <button title="Reset to 100%" onClick={reset} className="zoom-pct">
         {Math.round(scale * 100)}%
       </button>
       <button title="Zoom in" disabled={atMax} onClick={() => setScale(scale * 1.1)}>
-        +
+        <PlusIcon />
       </button>
 
       <style>{`

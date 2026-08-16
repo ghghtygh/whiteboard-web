@@ -1,8 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { createBoard, deleteBoard, listBoards } from '@/api/boards'
 import { useAuthStore } from '@/store/auth'
+import { toast } from '@/store/toast'
 import type { Board } from '@/types/domain'
+
+const DELETE_UNDO_MS = 4000
 
 export function BoardListPage() {
   const navigate = useNavigate()
@@ -11,6 +14,8 @@ export function BoardListPage() {
   const [boards, setBoards] = useState<Board[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  // 실행취소 대기 중인 삭제(아직 서버/로컬에 실제 반영 안 됨) 예약 타이머.
+  const pendingDeletes = useRef(new Map<string, ReturnType<typeof setTimeout>>())
 
   async function refresh() {
     setLoading(true)
@@ -26,19 +31,50 @@ export function BoardListPage() {
 
   useEffect(() => {
     void refresh()
+    const pending = pendingDeletes.current
+    return () => {
+      // 페이지를 떠나면 대기 중인 삭제는 즉시 확정한다(예약을 무한정 들고 있지 않음).
+      for (const timer of pending.values()) clearTimeout(timer)
+      pending.clear()
+    }
   }, [])
 
   async function onCreate() {
-    const title = window.prompt('새 보드 제목', '새 보드')
-    if (!title) return
-    const board = await createBoard(title)
+    // 제목 입력 팝업 없이 바로 만들고, 보드 안에서 제목을 눌러 바꾸게 한다.
+    const board = await createBoard('새 보드')
     navigate(`/boards/${board.id}`)
   }
 
-  async function onDelete(id: string) {
-    if (!window.confirm('이 보드를 삭제하시겠어요?')) return
-    await deleteBoard(id)
-    await refresh()
+  function onDelete(id: string) {
+    const target = boards.find((b) => b.id === id)
+    if (!target) return
+
+    // 낙관적으로 목록에서 제거 — 실제 삭제는 실행취소 유예 시간 뒤에 확정한다.
+    setBoards((bs) => bs.filter((b) => b.id !== id))
+
+    const timer = setTimeout(() => {
+      pendingDeletes.current.delete(id)
+      void deleteBoard(id).catch(() => {
+        toast.show('보드를 삭제하지 못했습니다.', { tone: 'danger' })
+        void refresh()
+      })
+    }, DELETE_UNDO_MS)
+    pendingDeletes.current.set(id, timer)
+
+    toast.show(`"${target.title}" 보드를 삭제했습니다`, {
+      action: {
+        label: '실행취소',
+        onClick: () => {
+          const pending = pendingDeletes.current.get(id)
+          if (pending) {
+            clearTimeout(pending)
+            pendingDeletes.current.delete(id)
+          }
+          setBoards((bs) => (bs.some((b) => b.id === id) ? bs : [target, ...bs]))
+        },
+      },
+      duration: DELETE_UNDO_MS,
+    })
   }
 
   return (
@@ -75,7 +111,7 @@ export function BoardListPage() {
                 <Link to={`/boards/${b.id}`} className="card-title">{b.title}</Link>
                 <p className="muted">{new Date(b.updatedAt).toLocaleDateString('ko-KR')} 업데이트</p>
               </div>
-              <button className="card-del" title="삭제" onClick={() => onDelete(b.id)}>삭제</button>
+              <button className="card-del" title="Delete board" onClick={() => onDelete(b.id)}>삭제</button>
             </li>
           ))}
         </ul>
