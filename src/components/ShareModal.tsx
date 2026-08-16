@@ -46,8 +46,8 @@ export function ShareModal({ boardId, syncConnected, onClose }: Props) {
     setEmail('')
     setFeedback(
       syncEnabled
-        ? '초대를 저장했습니다. (백엔드가 준비되면 이메일이 발송됩니다.)'
-        : '초대를 저장했습니다. (실시간 동기화가 꺼져 있어 아직 함께 편집할 수 없습니다.)',
+        ? 'Invite saved. (An email will be sent once the backend is ready.)'
+        : 'Invite saved. (Real-time sync is off, so you can’t collaborate yet.)',
     )
     setTimeout(() => setFeedback(null), 3000)
   }
@@ -70,31 +70,31 @@ export function ShareModal({ boardId, syncConnected, onClose }: Props) {
     <div className="share-backdrop" onClick={onClose}>
       <div className="share-modal" onClick={(e) => e.stopPropagation()}>
         <div className="share-head">
-          <h2>보드 공유</h2>
+          <h2>Share board</h2>
           <button className="x" onClick={onClose} aria-label="Close" title="Close">
             <CloseIcon />
           </button>
         </div>
 
         <section>
-          <label className="lbl">공유 링크</label>
+          <label className="lbl">Share link</label>
           <div className="row">
             <input id="share-url" readOnly value={shareUrl} onFocus={(e) => e.target.select()} />
-            <button className="primary" onClick={copy}>{copied ? '복사됨' : '링크 복사'}</button>
+            <button className="primary" onClick={copy}>{copied ? 'Copied' : 'Copy link'}</button>
           </div>
           <p className="hint" data-tone={syncEnabled ? (syncConnected ? 'ok' : 'warn') : 'info'}>
             {syncEnabled
               ? syncConnected
-                ? '실시간 동기화 활성화 — 링크가 있는 누구나 함께 편집할 수 있습니다.'
-                : '동기화 서버에 연결 중…'
+                ? 'Real-time sync is on — anyone with the link can collaborate.'
+                : 'Connecting to the sync server…'
               : SYNC_AVAILABLE
-                ? '실시간 동기화가 꺼져 있습니다. 상단의 상태 표시를 눌러 켜면 링크를 공유한 사용자와 함께 편집할 수 있습니다.'
-                : '현재 이 보드는 실시간 공동 편집을 지원하지 않습니다. 링크를 공유해도 각자 로컬에 따로 저장됩니다.'}
+                ? 'Real-time sync is off. Turn on the status indicator above to let people with the link collaborate.'
+                : 'This board doesn’t support real-time collaboration right now. Sharing the link still keeps each person’s copy local.'}
           </p>
         </section>
 
         <section>
-          <label className="lbl">이메일로 초대</label>
+          <label className="lbl">Invite by email</label>
           <form className="row" onSubmit={onInvite}>
             <input
               type="email"
@@ -104,24 +104,24 @@ export function ShareModal({ boardId, syncConnected, onClose }: Props) {
               required
             />
             <select value={role} onChange={(e) => setRole(e.target.value as MemberRole)}>
-              <option value="viewer">뷰어</option>
-              <option value="editor">편집자</option>
-              <option value="owner">소유자</option>
+              <option value="viewer">Viewer</option>
+              <option value="editor">Editor</option>
+              <option value="owner">Owner</option>
             </select>
-            <button className="primary" type="submit">초대</button>
+            <button className="primary" type="submit">Invite</button>
           </form>
           {feedback && <p className="feedback">{feedback}</p>}
         </section>
 
         {invites.length > 0 && (
           <section>
-            <label className="lbl">대기 중인 초대 ({invites.length})</label>
+            <label className="lbl">Pending invites ({invites.length})</label>
             <ul className="invites">
               {invites.map((inv) => (
                 <li key={inv.id}>
                   <span className="em">{inv.email}</span>
                   <span className="role">{inv.role}</span>
-                  <button className="link" onClick={() => onRevoke(inv.id)}>취소</button>
+                  <button className="link" onClick={() => onRevoke(inv.id)}>Revoke</button>
                 </li>
               ))}
             </ul>

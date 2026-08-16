@@ -35,9 +35,9 @@ export function SignupPage() {
         </Link>
         <div className="brand-pitch">
           <p className="eyebrow">SOFTWARE ARCHITECTURE, TOGETHER</p>
-          <h2>아키텍처를<br />그릴 준비 되셨나요?</h2>
+          <h2>Ready to start<br />mapping your architecture?</h2>
           <p className="brand-sub">
-            계정을 만들고 첫 다이어그램을 시작해 보세요. 팀 초대도 한 번의 링크로.
+            Create an account and start your first diagram. Invite your team with a single link.
           </p>
         </div>
         <span className="brand-foot">wb.gpglab.site</span>
@@ -45,18 +45,18 @@ export function SignupPage() {
 
       <div className="auth-pane">
         <form className="auth-card" onSubmit={onSubmit}>
-          <h1>회원가입</h1>
-          <p className="sub">몇 가지 정보만 입력하면 바로 시작할 수 있어요.</p>
+          <h1>Sign up</h1>
+          <p className="sub">Just a few details and you’re ready to go.</p>
           <label>
-            이메일
+            Email
             <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoFocus />
           </label>
           <label>
-            이름
+            Name
             <input value={name} onChange={(e) => setName(e.target.value)} required />
           </label>
           <label>
-            비밀번호
+            Password
             <input
               type="password"
               value={password}
@@ -67,11 +67,11 @@ export function SignupPage() {
           </label>
           {error && <p className="error">{error}</p>}
           <button type="submit" className="primary" disabled={loading}>
-            {loading ? '처리 중…' : '계정 만들기'}
+            {loading ? 'Creating account…' : 'Create account'}
           </button>
           <SocialLoginButtons />
           <p className="muted">
-            이미 계정이 있으신가요? <Link to="/login">로그인</Link>
+            Already have an account? <Link to="/login">Log in</Link>
           </p>
         </form>
       </div>

@@ -1025,7 +1025,7 @@ export function Canvas({ doc }: Props) {
             <Text
               x={20}
               y={20}
-              text="왼쪽에서 컴포넌트를 끌어다 보드에 놓아 보세요."
+              text="Drag a component from the left panel and drop it on the board."
               fontSize={14}
               fill="#98a3b5"
               listening={false}

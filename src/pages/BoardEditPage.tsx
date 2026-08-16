@@ -135,7 +135,7 @@ export function BoardEditPage() {
               setShareOpen(true)
             }}
           >
-            공유
+            Share
           </button>
           {SYNC_AVAILABLE ? (
             <button
@@ -147,12 +147,12 @@ export function BoardEditPage() {
               onClick={toggleSync}
             >
               <span className="dot" />
-              {syncOn ? (syncConnected ? '동기화 중' : '연결 중…') : '동기화 꺼짐'}
+              {syncOn ? (syncConnected ? 'Syncing' : 'Connecting…') : 'Sync off'}
             </button>
           ) : (
             <span className="status" data-online={collab.ready} title="No sync server configured — saved locally only">
               <span className="dot" />
-              {collab.ready ? '로컬' : '…'}
+              {collab.ready ? 'Local' : '…'}
             </span>
           )}
         </header>
