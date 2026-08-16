@@ -306,7 +306,7 @@ export function Sidebar({ open = false, onClose }: SidebarProps = {}) {
       <aside className="sidebar" data-open={open}>
         <div className="search">
           <input
-            placeholder="컴포넌트 검색"
+            placeholder="Search components"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
@@ -322,12 +322,12 @@ export function Sidebar({ open = false, onClose }: SidebarProps = {}) {
         </div>
 
         <div className="list">
-          {loading && <p className="muted">불러오는 중…</p>}
+          {loading && <p className="muted">Loading…</p>}
           {error && <p className="error">{error}</p>}
 
           {recents.length > 0 && (
             <section>
-              <h3>최근 사용</h3>
+              <h3>Recently used</h3>
               <ul>
                 {recents.map((c) => (
                   <ComponentRow
@@ -371,7 +371,7 @@ export function Sidebar({ open = false, onClose }: SidebarProps = {}) {
           })}
 
           {!loading && items.length === 0 && !error && (
-            <p className="muted">카탈로그가 비어 있습니다</p>
+            <p className="muted">The catalog is empty</p>
           )}
         </div>
 

@@ -44,9 +44,9 @@ export function LoginPage() {
         </Link>
         <div className="brand-pitch">
           <p className="eyebrow">SOFTWARE ARCHITECTURE, TOGETHER</p>
-          <h2>팀과 함께 그리는<br />소프트웨어 아키텍처</h2>
+          <h2>Software architecture,<br />drawn together</h2>
           <p className="brand-sub">
-            기술 스택을 끌어다 놓고, 엣지로 잇고, 실시간으로 함께 편집하세요.
+            Drag in your stack, connect it with edges, and edit together in real time.
           </p>
         </div>
         <span className="brand-foot">wb.gpglab.site</span>
@@ -54,10 +54,10 @@ export function LoginPage() {
 
       <div className="auth-pane">
         <form className="auth-card" onSubmit={onSubmit}>
-          <h1>로그인</h1>
-          <p className="sub">계정에 로그인하고 보드를 이어서 작업하세요.</p>
+          <h1>Log in</h1>
+          <p className="sub">Log in to your account and pick up where you left off.</p>
           <label>
-            이메일
+            Email
             <input
               type="email"
               value={email}
@@ -67,7 +67,7 @@ export function LoginPage() {
             />
           </label>
           <label>
-            비밀번호
+            Password
             <input
               type="password"
               value={password}
@@ -77,14 +77,14 @@ export function LoginPage() {
           </label>
           {error && <p className="error">{error}</p>}
           <button type="submit" className="primary" disabled={loading}>
-            {loading ? '로그인 중…' : '로그인'}
+            {loading ? 'Logging in…' : 'Log in'}
           </button>
           <SocialLoginButtons />
           <button type="button" className="guest-btn" onClick={onGuest}>
-            비회원으로 시작하기
+            Continue as guest
           </button>
           <p className="muted">
-            계정이 없으신가요? <Link to="/signup">회원가입</Link>
+            Don’t have an account? <Link to="/signup">Sign up</Link>
           </p>
         </form>
       </div>

@@ -39,7 +39,7 @@ export const useAuthStore = create<AuthState>()(
       ensureGuest: () => {
         const cur = get()
         if (cur.user) return
-        set({ user: { id: nanoid(8), email: 'guest@local', name: '게스트' }, isGuest: true })
+        set({ user: { id: nanoid(8), email: 'guest@local', name: 'Guest' }, isGuest: true })
       },
     }),
     { name: 'whiteboard-auth' },

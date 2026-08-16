@@ -42,7 +42,7 @@ export function BoardListPage() {
 
   async function onCreate() {
     // 제목 입력 팝업 없이 바로 만들고, 보드 안에서 제목을 눌러 바꾸게 한다.
-    const board = await createBoard('새 보드')
+    const board = await createBoard('New board')
     navigate(`/boards/${board.id}`)
   }
 
@@ -56,15 +56,15 @@ export function BoardListPage() {
     const timer = setTimeout(() => {
       pendingDeletes.current.delete(id)
       void deleteBoard(id).catch(() => {
-        toast.show('보드를 삭제하지 못했습니다.', { tone: 'danger' })
+        toast.show('Failed to delete the board.', { tone: 'danger' })
         void refresh()
       })
     }, DELETE_UNDO_MS)
     pendingDeletes.current.set(id, timer)
 
-    toast.show(`"${target.title}" 보드를 삭제했습니다`, {
+    toast.show(`Deleted "${target.title}"`, {
       action: {
-        label: '실행취소',
+        label: 'Undo',
         onClick: () => {
           const pending = pendingDeletes.current.get(id)
           if (pending) {
@@ -83,23 +83,23 @@ export function BoardListPage() {
       <header className="topbar">
         <div className="brand">
           <span className="brand-dot" />
-          <h1>내 보드</h1>
+          <h1>My boards</h1>
         </div>
         <div className="spacer" />
         <span className="who">{user?.name ?? user?.email}</span>
-        <button onClick={() => { logout(); navigate('/login') }}>로그아웃</button>
-        <button className="primary" onClick={onCreate}>새 보드</button>
+        <button onClick={() => { logout(); navigate('/login') }}>Log out</button>
+        <button className="primary" onClick={onCreate}>New board</button>
       </header>
 
-      {loading && <p className="muted">불러오는 중…</p>}
+      {loading && <p className="muted">Loading…</p>}
       {error && <p className="error">{error}</p>}
 
       {!loading && !error && (
         <ul className="grid">
           {boards.length === 0 && (
             <li className="empty">
-              <strong>보드가 없습니다</strong>
-              <span>“새 보드”를 눌러 첫 다이어그램을 만들어 보세요.</span>
+              <strong>No boards yet</strong>
+              <span>Click “New board” to create your first diagram.</span>
             </li>
           )}
           {boards.map((b) => (
@@ -110,9 +110,9 @@ export function BoardListPage() {
               </Link>
               <div className="card-body">
                 <Link to={`/boards/${b.id}`} className="card-title">{b.title}</Link>
-                <p className="muted">{new Date(b.updatedAt).toLocaleDateString('ko-KR')} 업데이트</p>
+                <p className="muted">Updated {new Date(b.updatedAt).toLocaleDateString('en-US')}</p>
               </div>
-              <button className="card-del" title="Delete board" onClick={() => onDelete(b.id)}>삭제</button>
+              <button className="card-del" title="Delete board" onClick={() => onDelete(b.id)}>Delete</button>
             </li>
           ))}
         </ul>

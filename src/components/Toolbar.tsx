@@ -69,10 +69,10 @@ export function Toolbar() {
         data-active={tool === 'group'}
         onClick={toggleGroup}
       >
-        그룹
+        Group
       </button>
       <button className="ico txt" title="Toggle grid" data-active={gridVisible} onClick={toggleGrid}>
-        격자
+        Grid
       </button>
       <button
         className="ico txt"
@@ -80,7 +80,7 @@ export function Toolbar() {
         data-active={snapEnabled}
         onClick={toggleSnap}
       >
-        스냅
+        Snap
       </button>
 
       <style>{`

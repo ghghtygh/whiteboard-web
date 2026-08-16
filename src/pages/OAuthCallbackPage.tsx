@@ -28,7 +28,7 @@ export function OAuthCallbackPage() {
     const refreshToken = params.get('refreshToken')
 
     if (!accessToken || !refreshToken) {
-      setError('로그인 정보를 받지 못했습니다. 다시 시도해 주세요.')
+      setError('We didn’t receive your login details. Please try again.')
       return
     }
 
@@ -44,7 +44,7 @@ export function OAuthCallbackPage() {
       })
       .catch(() => {
         logout()
-        setError('사용자 정보를 불러오지 못했습니다. 다시 로그인해 주세요.')
+        setError('We couldn’t load your account. Please log in again.')
       })
   }, [navigate, setTokens, setUser, logout])
 
@@ -53,14 +53,14 @@ export function OAuthCallbackPage() {
       <div className="auth-card">
         {error ? (
           <>
-            <h1>로그인 실패</h1>
+            <h1>Login failed</h1>
             <p className="error">{error}</p>
-            <Link to="/login" className="primary back">로그인으로 돌아가기</Link>
+            <Link to="/login" className="primary back">Back to login</Link>
           </>
         ) : (
           <>
-            <h1>로그인 중…</h1>
-            <p className="muted">소셜 계정 정보를 확인하고 있습니다.</p>
+            <h1>Logging in…</h1>
+            <p className="muted">Checking your social account…</p>
           </>
         )}
       </div>

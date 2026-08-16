@@ -6,7 +6,7 @@ export function SocialLoginButtons() {
   return (
     <div className="social-login">
       <div className="divider">
-        <span>또는</span>
+        <span>or</span>
       </div>
       <div className="social-buttons">
         {OAUTH_PROVIDERS.map((p) => (
@@ -16,7 +16,7 @@ export function SocialLoginButtons() {
             href={oauthLoginUrl(p.id)}
             style={{ background: p.bg, color: p.fg, border: `1px solid ${p.border ?? p.bg}` }}
           >
-            {p.label} 계정으로 계속
+            Continue with {p.label}
           </a>
         ))}
       </div>
