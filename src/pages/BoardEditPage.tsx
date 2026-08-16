@@ -1,5 +1,5 @@
 import { useParams, Link } from 'react-router-dom'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { getBoard, renameBoard } from '@/api/boards'
 import { localBoards } from '@/local/boardsStore'
 import { isBackendActive, useAuthStore } from '@/store/auth'
@@ -11,6 +11,8 @@ import { ShareModal } from '@/components/ShareModal'
 import { PresenceBadges } from '@/components/PresenceBadges'
 import { ZoomOverlay } from '@/components/ZoomOverlay'
 import { Minimap } from '@/components/Minimap'
+import { MenuIcon, ArrowLeftIcon } from '@/components/icons'
+import { MOBILE_BP } from '@/styles/breakpoints'
 import { Canvas } from '@/canvas/Canvas'
 import { useBoardCollab } from '@/collab/useBoardCollab'
 import { useStableConnected } from '@/collab/useStableConnected'
@@ -38,6 +40,25 @@ export function BoardEditPage() {
   const isGuest = useAuthStore((s) => s.isGuest)
   const shareDisabled = !IS_LOCAL_MODE && isGuest
 
+  // 제목 인라인 편집 — window.prompt 대신 클릭 시 그 자리에서 입력 필드로 전환.
+  const [editingTitle, setEditingTitle] = useState(false)
+  const [titleDraft, setTitleDraft] = useState('')
+  const titleInputRef = useRef<HTMLInputElement>(null)
+
+  function startEditTitle() {
+    if (!board) return
+    setTitleDraft(board.title)
+    setEditingTitle(true)
+  }
+
+  async function commitTitle() {
+    setEditingTitle(false)
+    const next = titleDraft.trim()
+    if (!board || !next || next === board.title) return
+    const updated = await renameBoard(board.id, next)
+    setBoard(updated)
+  }
+
   useEffect(() => {
     if (!import.meta.env.DEV) return
     ;(window as unknown as { __wbDebug?: unknown }).__wbDebug = {
@@ -57,13 +78,9 @@ export function BoardEditPage() {
     return () => clearSel()
   }, [boardId, clearSel])
 
-  async function onRename() {
-    if (!board) return
-    const next = window.prompt('Board title', board.title)
-    if (!next || next === board.title) return
-    const updated = await renameBoard(board.id, next)
-    setBoard(updated)
-  }
+  useEffect(() => {
+    if (editingTitle) titleInputRef.current?.select()
+  }, [editingTitle])
 
   return (
     <CanvasContextProvider
@@ -77,12 +94,28 @@ export function BoardEditPage() {
             aria-label="Open components menu"
             title="Components"
           >
-            ☰
+            <MenuIcon />
           </button>
-          <Link to="/boards" className="back" title="보드 목록">←</Link>
-          <button className="title-btn" onClick={onRename}>
-            {board?.title ?? '…'}
-          </button>
+          <Link to="/boards" className="back" aria-label="Back to board list" title="Board list">
+            <ArrowLeftIcon />
+          </Link>
+          {editingTitle ? (
+            <input
+              ref={titleInputRef}
+              className="title-input"
+              value={titleDraft}
+              onChange={(e) => setTitleDraft(e.target.value)}
+              onBlur={commitTitle}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') e.currentTarget.blur()
+                if (e.key === 'Escape') setEditingTitle(false)
+              }}
+            />
+          ) : (
+            <button className="title-btn" onClick={startEditTitle} title="Rename board">
+              {board?.title ?? '…'}
+            </button>
+          )}
           <span className="vsep" />
           <Toolbar />
           <div className="spacer" />
@@ -90,7 +123,7 @@ export function BoardEditPage() {
           <button
             className="share-btn primary"
             disabled={shareDisabled}
-            title={shareDisabled ? '로그인 후 공유할 수 있습니다.' : undefined}
+            title={shareDisabled ? 'Sign in to share' : undefined}
             onClick={async () => {
               // 공유 시 협업 세션 보장(비회원이면 게스트 토큰 발급 + 동기화 ON).
               // 실패해도 모달은 열어 로컬 안내를 보여준다.
@@ -110,14 +143,14 @@ export function BoardEditPage() {
               className="status status-btn"
               data-online={syncOn && syncConnected}
               data-on={syncOn}
-              title={syncOn ? '실시간 동기화 켜짐 — 눌러서 끄기' : '실시간 동기화 꺼짐 — 눌러서 켜기'}
+              title={syncOn ? 'Real-time sync on — click to turn off' : 'Real-time sync off — click to turn on'}
               onClick={toggleSync}
             >
               <span className="dot" />
               {syncOn ? (syncConnected ? '동기화 중' : '연결 중…') : '동기화 꺼짐'}
             </button>
           ) : (
-            <span className="status" data-online={collab.ready} title="동기화 서버가 설정되지 않아 로컬에만 저장됩니다">
+            <span className="status" data-online={collab.ready} title="No sync server configured — saved locally only">
               <span className="dot" />
               {collab.ready ? '로컬' : '…'}
             </span>
@@ -156,13 +189,17 @@ export function BoardEditPage() {
           .menu-btn { display: none; background: var(--surface-panel);
                       border: 1px solid var(--border-subtle);
                       border-radius: var(--radius-sm); padding: 4px 8px; font-size: 16px; line-height: 1; }
-          .back { font-size: 17px; color: var(--text-muted); text-decoration: none; padding: 2px 6px;
+          .back { display: inline-flex; align-items: center; justify-content: center;
+                  font-size: 17px; color: var(--text-muted); text-decoration: none; padding: 4px 6px;
                   border-radius: var(--radius-sm); }
           .back:hover { color: var(--primary); background: var(--surface-hover); text-decoration: none; }
           .title-btn { background: none; border: none; font: var(--font-body-strong);
                        padding: 5px 8px; cursor: pointer; max-width: 220px;
                        white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
           .title-btn:hover { background: var(--surface-hover); border-radius: var(--radius-sm); }
+          .title-input { font: var(--font-body-strong); padding: 5px 8px; max-width: 220px;
+                          border: 1px solid var(--border-focus); border-radius: var(--radius-sm);
+                          background: var(--surface-panel); box-shadow: var(--focus-ring); }
           .vsep { width: 1px; height: 18px; background: var(--border-subtle); margin: 0 4px; }
           .spacer { flex: 1; }
           .share-btn { font-size: var(--text-sm); padding: 6px 14px; border-radius: var(--radius-md); }
@@ -194,14 +231,16 @@ export function BoardEditPage() {
           .error { color: var(--danger); padding: 16px; }
 
           /* 모바일: 사이드바를 drawer 로 떼고, 햄버거 노출, 상단바 압축 */
-          @media (max-width: 768px) {
+          @media (max-width: ${MOBILE_BP}px) {
             .board-topbar { padding: 6px 8px; gap: 6px; min-height: 44px; }
             .menu-btn { display: inline-flex; align-items: center; justify-content: center;
                         width: 32px; height: 32px; padding: 0; }
             .vsep { display: none; }
             .title-btn { font-size: 13px; max-width: 120px; }
             .share-btn { padding: 4px 8px; }
-            .status { font-size: 10px; padding: 0 2px; }
+            /* 10px 미만은 판독성이 떨어져 DS 최소 크기(--text-2xs)를 유지하고
+               대신 패딩/줄바꿈으로 압축한다. */
+            .status { font-size: var(--text-2xs); padding: 4px; white-space: nowrap; }
             .board-body { grid-template-columns: 1fr; }
           }
         `}</style>

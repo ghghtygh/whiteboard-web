@@ -1,8 +1,10 @@
 /**
  * 인증 화면(로그인/회원가입/소셜 콜백) 공유 스타일.
  * 디자인 시스템 명세: 50/50 분할 — 왼쪽 인디고 브랜드 패널(유일한
- * 그라데이션), 오른쪽 흰 카드. 760px 미만에서 브랜드 패널은 접힌다.
+ * 그라데이션), 오른쪽 흰 카드. MOBILE_BP 미만에서 브랜드 패널은 접힌다.
  */
+import { MOBILE_BP } from '@/styles/breakpoints'
+
 export const authStyles = `
   .auth-split {
     min-height: 100%;
@@ -105,8 +107,8 @@ export const authStyles = `
     height: 42px; text-decoration: none; border-radius: var(--radius-md);
   }
 
-  /* ---------- 반응형: 760px 미만에서 브랜드 패널 접기 ---------- */
-  @media (max-width: 760px) {
+  /* ---------- 반응형: MOBILE_BP 미만에서 브랜드 패널 접기 ---------- */
+  @media (max-width: ${MOBILE_BP}px) {
     .auth-split { grid-template-columns: 1fr; }
     .auth-brand { display: none; }
     .auth-pane { padding: 16px; }

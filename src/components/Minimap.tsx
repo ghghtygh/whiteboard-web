@@ -4,6 +4,7 @@ import { useCanvasContext } from '@/canvas/useCanvasContext'
 import { useNodesSnapshot, useGroupsSnapshot, useEdgesSnapshot } from '@/canvas/hooks'
 import { NODE_H, NODE_W } from '@/canvas/geometry'
 import { catalogColor } from '@/local/catalogSeed'
+import { MOBILE_BP } from '@/styles/breakpoints'
 
 const MM_W = 200
 const MM_H = 140
@@ -189,7 +190,7 @@ export function Minimap() {
         .minimap svg:active { cursor: grabbing; }
 
         /* 모바일 — 화면 차지가 커서 미니맵은 숨김 */
-        @media (max-width: 768px) {
+        @media (max-width: ${MOBILE_BP}px) {
           .minimap { display: none; }
         }
       `}</style>

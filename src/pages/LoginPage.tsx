@@ -38,7 +38,7 @@ export function LoginPage() {
   return (
     <div className="auth-split">
       <aside className="auth-brand">
-        <Link to="/boards" className="brand-mark" title="내 보드로">
+        <Link to="/boards" className="brand-mark" title="Go to my boards">
           <span className="brand-dot" />
           Whiteboard
         </Link>
