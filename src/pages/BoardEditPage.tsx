@@ -12,6 +12,7 @@ import { PresenceBadges } from '@/components/PresenceBadges'
 import { ZoomOverlay } from '@/components/ZoomOverlay'
 import { Minimap } from '@/components/Minimap'
 import { MenuIcon, ArrowLeftIcon } from '@/components/icons'
+import { MOBILE_BP } from '@/styles/breakpoints'
 import { Canvas } from '@/canvas/Canvas'
 import { useBoardCollab } from '@/collab/useBoardCollab'
 import { useStableConnected } from '@/collab/useStableConnected'
@@ -230,14 +231,16 @@ export function BoardEditPage() {
           .error { color: var(--danger); padding: 16px; }
 
           /* 모바일: 사이드바를 drawer 로 떼고, 햄버거 노출, 상단바 압축 */
-          @media (max-width: 768px) {
+          @media (max-width: ${MOBILE_BP}px) {
             .board-topbar { padding: 6px 8px; gap: 6px; min-height: 44px; }
             .menu-btn { display: inline-flex; align-items: center; justify-content: center;
                         width: 32px; height: 32px; padding: 0; }
             .vsep { display: none; }
             .title-btn { font-size: 13px; max-width: 120px; }
             .share-btn { padding: 4px 8px; }
-            .status { font-size: 10px; padding: 0 2px; }
+            /* 10px 미만은 판독성이 떨어져 DS 최소 크기(--text-2xs)를 유지하고
+               대신 패딩/줄바꿈으로 압축한다. */
+            .status { font-size: var(--text-2xs); padding: 4px; white-space: nowrap; }
             .board-body { grid-template-columns: 1fr; }
           }
         `}</style>

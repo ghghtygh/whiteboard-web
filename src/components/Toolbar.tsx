@@ -6,6 +6,7 @@ import { useSnapStore } from '@/canvas/snapStore'
 import { useSelection } from '@/canvas/selection'
 import { deleteNodes, deleteEdges, deleteGroups } from '@/canvas/ops'
 import { UndoIcon, RedoIcon, TrashIcon } from '@/components/icons'
+import { MOBILE_BP } from '@/styles/breakpoints'
 
 export function Toolbar() {
   const tool = useToolStore((s) => s.tool)
@@ -103,7 +104,7 @@ export function Toolbar() {
         .toolbar .del:hover:not(:disabled) { background: var(--danger-soft); color: var(--danger); }
 
         /* 모바일 — 터치 영역 확대 + 텍스트 라벨 압축 */
-        @media (max-width: 768px) {
+        @media (max-width: ${MOBILE_BP}px) {
           .toolbar .ico { width: 36px; height: 36px; font-size: 17px; }
           .toolbar .ico.txt { padding: 0 8px; min-height: 36px; }
         }

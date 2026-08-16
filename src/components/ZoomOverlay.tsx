@@ -1,5 +1,6 @@
 import { useViewportStore, MIN_SCALE, MAX_SCALE } from '@/store/viewport'
 import { MinusIcon, PlusIcon } from '@/components/icons'
+import { MOBILE_BP } from '@/styles/breakpoints'
 
 export function ZoomOverlay() {
   const scale = useViewportStore((s) => s.scale)
@@ -52,7 +53,7 @@ export function ZoomOverlay() {
         .zoom-overlay .zoom-pct:hover { color: var(--text-body); }
 
         /* 모바일 — 터치 영역 확대 + 위치 살짝 위로 (safe-area 고려) */
-        @media (max-width: 768px) {
+        @media (max-width: ${MOBILE_BP}px) {
           .zoom-overlay {
             left: 12px;
             bottom: calc(12px + env(safe-area-inset-bottom, 0px));

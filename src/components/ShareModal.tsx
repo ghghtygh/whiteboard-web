@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { localInvites, type PendingInvite } from '@/local/invitesStore'
 import { SYNC_AVAILABLE, useSyncStore } from '@/store/sync'
 import { CloseIcon } from '@/components/icons'
+import { COMPACT_BP } from '@/styles/breakpoints'
 import type { MemberRole } from '@/types/domain'
 
 interface Props {
@@ -166,7 +167,7 @@ export function ShareModal({ boardId, syncConnected, onClose }: Props) {
           .invites .role { font: var(--font-mono-sm); color: var(--accent-text); }
           .invites .link { background: none; border: none; color: var(--danger); cursor: pointer; padding: 0; font-size: var(--text-xs); }
 
-          @media (max-width: 640px) {
+          @media (max-width: ${COMPACT_BP}px) {
             .share-backdrop { padding: 0; align-items: stretch; }
             .share-modal {
               min-width: 0; max-width: none; width: 100%;

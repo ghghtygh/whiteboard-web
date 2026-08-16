@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { createBoard, deleteBoard, listBoards } from '@/api/boards'
 import { useAuthStore } from '@/store/auth'
 import { toast } from '@/store/toast'
+import { COMPACT_BP } from '@/styles/breakpoints'
 import type { Board } from '@/types/domain'
 
 const DELETE_UNDO_MS = 4000
@@ -171,7 +172,7 @@ export function BoardListPage() {
                  color: var(--text-muted); }
         .empty strong { font: var(--font-h3); color: var(--text-strong); }
 
-        @media (max-width: 640px) {
+        @media (max-width: ${COMPACT_BP}px) {
           .page { padding: 16px; }
           .topbar { gap: 8px; margin-bottom: 16px; }
           .topbar h1 { font-size: var(--text-xl); }

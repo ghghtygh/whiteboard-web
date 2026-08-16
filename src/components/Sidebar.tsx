@@ -11,6 +11,7 @@ import { useSelection } from '@/canvas/selection'
 import { createNode } from '@/canvas/ops'
 import { COARSE_GRID, NODE_H, NODE_W, coarseSnap, dropJitter } from '@/canvas/geometry'
 import { CloseIcon } from '@/components/icons'
+import { MOBILE_BP } from '@/styles/breakpoints'
 
 const CATEGORY_LABELS: Record<string, string> = {
   'ci-cd': 'CI / CD',
@@ -431,7 +432,7 @@ export function Sidebar({ open = false, onClose }: SidebarProps = {}) {
           }
 
           /* 모바일 = drawer 모드. 화면 왼쪽에서 슬라이드. */
-          @media (max-width: 768px) {
+          @media (max-width: ${MOBILE_BP}px) {
             .sidebar {
               position: fixed; top: 0; left: 0; bottom: 0;
               width: min(82vw, 320px);
