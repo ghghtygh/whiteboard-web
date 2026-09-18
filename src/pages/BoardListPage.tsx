@@ -87,6 +87,7 @@ export function BoardListPage() {
         </div>
         <div className="spacer" />
         <span className="who">{user?.name ?? user?.email}</span>
+        <Link to="/settings/tokens">API tokens</Link>
         <button onClick={() => { logout(); navigate('/login') }}>Log out</button>
         <button className="primary" onClick={onCreate}>New board</button>
       </header>

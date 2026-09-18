@@ -5,6 +5,7 @@ import { SignupPage } from '@/pages/SignupPage'
 import { OAuthCallbackPage } from '@/pages/OAuthCallbackPage'
 import { BoardListPage } from '@/pages/BoardListPage'
 import { BoardEditPage } from '@/pages/BoardEditPage'
+import { TokensPage } from '@/pages/TokensPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
 import { LandingRedirect } from '@/pages/LandingRedirect'
 
@@ -23,7 +24,10 @@ export const router = createBrowserRouter([
   {
     // 보드 목록은 회원 전용 — 원격 모드의 비회원은 로그인 페이지로 이동.
     element: <RequireMember />,
-    children: [{ path: '/boards', element: <BoardListPage /> }],
+    children: [
+      { path: '/boards', element: <BoardListPage /> },
+      { path: '/settings/tokens', element: <TokensPage /> },
+    ],
   },
   { path: '*', element: <NotFoundPage /> },
 ])
