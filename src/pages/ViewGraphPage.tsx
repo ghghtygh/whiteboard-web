@@ -5,12 +5,12 @@ import { createBoardDoc, type BoardDoc } from '@/collab/doc'
 import { CanvasContextProvider } from '@/canvas/CanvasContext'
 import { Canvas } from '@/canvas/Canvas'
 import { useUndoManager } from '@/canvas/hooks'
-import { readEdges, readGroups, readNodes } from '@/canvas/ops'
-import { decodeGraph, encodeGraph, emptyGraph, type GraphSnapshot } from '@/board/graphCodec'
+import { decodeGraph, emptyGraph, type GraphSnapshot } from '@/board/graphCodec'
 
-// 서버에 저장되지 않는 1회용 그래프 뷰어. /view/:token 의 token 이 그래프 전체 내용이다
-// (whiteboard-mcp 가 만든 링크, 또는 이 페이지 자체가 편집 후 다시 인코드한 링크).
-// URL 을 아는 사람만 열 수 있고, 다른 곳에서 이 그래프를 나열/검색할 방법은 없다.
+// 서버에 저장되지 않는 1회용 그래프 뷰어(읽기 전용). /view/:token 의 token 이 그래프 전체
+// 내용이다(whiteboard-mcp 가 만든 링크). URL 을 아는 사람만 열 수 있고, 다른 곳에서 이 그래프를
+// 나열/검색할 방법은 없다. 편집은 지원하지 않는다 — 보기 전용 Canvas 는 pan/zoom 도 그래프
+// 콘텐츠 범위 안으로 제한된다(boundToContent).
 export function ViewGraphPage() {
   const { token } = useParams<{ token: string }>()
   const [doc, setDoc] = useState<BoardDoc | null>(null)
@@ -51,23 +51,6 @@ export function ViewGraphPage() {
     }
   }, [token])
 
-  // 편집하면 주소창 URL 을 항상 현재 상태와 맞춘다 — 새로고침해도 편집한 그대로 열린다.
-  useEffect(() => {
-    if (!doc) return
-    const sync = () => {
-      const next = encodeGraph({ nodes: readNodes(doc), edges: readEdges(doc), groups: readGroups(doc) })
-      window.history.replaceState(null, '', `/view/${next}`)
-    }
-    doc.nodes.observeDeep(sync)
-    doc.edges.observeDeep(sync)
-    doc.groups.observeDeep(sync)
-    return () => {
-      doc.nodes.unobserveDeep(sync)
-      doc.edges.unobserveDeep(sync)
-      doc.groups.unobserveDeep(sync)
-    }
-  }, [doc])
-
   const ctxValue = useMemo(() => ({ doc, undoManager, awareness: null }), [doc, undoManager])
 
   async function copyLink() {
@@ -101,7 +84,14 @@ export function ViewGraphPage() {
           <button type="button" onClick={copyLink}>{copied ? 'Copied' : 'Copy link'}</button>
         </header>
         <div className="view-canvas-host">
-          <Canvas boardId="view" doc={doc} />
+          <Canvas
+            boardId="view"
+            doc={doc}
+            readOnly
+            boundToContent
+            zoomSensitivity={0.0006}
+            panSensitivity={0.6}
+          />
         </div>
 
         <style>{`
