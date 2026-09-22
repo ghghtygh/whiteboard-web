@@ -5,17 +5,18 @@ import type { Group } from '@/types/domain'
 interface Props {
   group: Group
   selected: boolean
+  draggable?: boolean
   onSelect: (additive: boolean) => void
   onDragEnd: (dx: number, dy: number) => void
   onLabelEdit: () => void
 }
 
-export function GroupShape({ group, selected, onSelect, onDragEnd, onLabelEdit }: Props) {
+export function GroupShape({ group, selected, draggable = true, onSelect, onDragEnd, onLabelEdit }: Props) {
   return (
     <KGroup
       x={group.x}
       y={group.y}
-      draggable
+      draggable={draggable}
       onClick={(e) => onSelect(e.evt.shiftKey)}
       onTap={() => onSelect(false)}
       onDblClick={onLabelEdit}

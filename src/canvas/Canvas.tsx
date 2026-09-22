@@ -76,6 +76,65 @@ import { LOCAL_CATALOG } from '@/local/catalogSeed'
 interface Props {
   boardId: string
   doc: BoardDoc | null
+  // 읽기 전용 뷰어(예: /view/:token) 용 — 노드/엣지/그룹을 만들거나 옮기거나 라벨을 고칠 수
+  // 없게 막는다. pan/zoom(보기)은 계속 된다.
+  readOnly?: boolean
+  // 콘텐츠 바깥으로 pan/zoom 하지 못하게 제한 (그래프 전체가 보이는 배율보다 더 축소 불가,
+  // 콘텐츠 바깥 빈 공간이 보이지 않게 pan 제한). 처음 마운트 시 콘텐츠 전체가 보이도록 자동
+  // 맞춤도 함께 한다.
+  boundToContent?: boolean
+  // Ctrl/Cmd+휠(핀치) 줌 민감도 — 작을수록 천천히 확대/축소. 기본값은 일반 보드 편집기와 동일.
+  zoomSensitivity?: number
+  // 휠 스크롤(팬) 민감도 배율 — 1 보다 작으면 스크롤 이동이 더 천천히 일어난다.
+  panSensitivity?: number
+}
+
+// pan/zoom 이 콘텐츠 바운딩 박스 밖으로 못 나가게 자른다. 그래프 전체가 딱 맞는 배율보다
+// 더 축소할 수 없고(minScale), 그 상태에선 가운데 정렬로 고정된다 — 그보다 확대돼 있으면
+// 보이는 영역이 콘텐츠 범위 안에 머물도록 x/y 만 자른다.
+const CONTENT_PAD = 80
+interface ContentBounds {
+  x: number
+  y: number
+  width: number
+  height: number
+}
+function clampToContent(
+  bounds: ContentBounds | null,
+  stageW: number,
+  stageH: number,
+  scale: number,
+  x: number,
+  y: number,
+): { scale: number; x: number; y: number } {
+  if (!bounds || stageW <= 0 || stageH <= 0) return { scale: clampScale(scale), x, y }
+  const fitted = {
+    x: bounds.x - CONTENT_PAD,
+    y: bounds.y - CONTENT_PAD,
+    width: bounds.width + CONTENT_PAD * 2,
+    height: bounds.height + CONTENT_PAD * 2,
+  }
+  const minScale = Math.min(stageW / fitted.width, stageH / fitted.height)
+  const nextScale = clampScale(Math.max(scale, minScale))
+  const viewW = stageW / nextScale
+  const viewH = stageH / nextScale
+  let nx = x
+  let ny = y
+  if (viewW >= fitted.width) {
+    nx = (stageW - fitted.width * nextScale) / 2 - fitted.x * nextScale
+  } else {
+    const worldMinX = -x / nextScale
+    const clampedMinX = Math.min(Math.max(worldMinX, fitted.x), fitted.x + fitted.width - viewW)
+    nx = -clampedMinX * nextScale
+  }
+  if (viewH >= fitted.height) {
+    ny = (stageH - fitted.height * nextScale) / 2 - fitted.y * nextScale
+  } else {
+    const worldMinY = -y / nextScale
+    const clampedMinY = Math.min(Math.max(worldMinY, fitted.y), fitted.y + fitted.height - viewH)
+    ny = -clampedMinY * nextScale
+  }
+  return { scale: nextScale, x: nx, y: ny }
 }
 
 // 시스템 클립보드에 싣는 JSON 의 식별 마커.
@@ -127,7 +186,13 @@ type EditingTarget =
   | { kind: 'group'; id: string }
   | null
 
-export function Canvas({ doc }: Props) {
+export function Canvas({
+  doc,
+  readOnly = false,
+  boundToContent = false,
+  zoomSensitivity = 0.0015,
+  panSensitivity = 1,
+}: Props) {
   const hostRef = useRef<HTMLDivElement>(null)
   const stageRef = useRef<Konva.Stage>(null)
   const [size, setSize] = useState({ width: 0, height: 0 })
@@ -135,8 +200,8 @@ export function Canvas({ doc }: Props) {
   const scale = useViewportStore((s) => s.scale)
   const vx = useViewportStore((s) => s.x)
   const vy = useViewportStore((s) => s.y)
-  const setScale = useViewportStore((s) => s.setScale)
-  const setPosition = useViewportStore((s) => s.setPosition)
+  const rawSetScale = useViewportStore((s) => s.setScale)
+  const rawSetPosition = useViewportStore((s) => s.setPosition)
   const setCanvasSize = useViewportStore((s) => s.setCanvasSize)
 
   const tool = useToolStore((s) => s.tool)
@@ -163,6 +228,74 @@ export function Canvas({ doc }: Props) {
   const nodes = useNodesSnapshot(doc)
   const edges = useEdgesSnapshot(doc)
   const groups = useGroupsSnapshot(doc)
+
+  // boundToContent 일 때만 쓰는 콘텐츠 전체 바운딩 박스. 없으면(빈 그래프) 제한 없음.
+  const contentBounds = useMemo<ContentBounds | null>(() => {
+    if (!boundToContent || (nodes.length === 0 && groups.length === 0)) return null
+    let minX = Infinity
+    let minY = Infinity
+    let maxX = -Infinity
+    let maxY = -Infinity
+    for (const n of nodes) {
+      const box = getNodeBox(n)
+      minX = Math.min(minX, n.x + box.xOffset)
+      minY = Math.min(minY, n.y)
+      maxX = Math.max(maxX, n.x + box.xOffset + box.width)
+      maxY = Math.max(maxY, n.y + box.height)
+    }
+    for (const g of groups) {
+      minX = Math.min(minX, g.x)
+      minY = Math.min(minY, g.y)
+      maxX = Math.max(maxX, g.x + g.width)
+      maxY = Math.max(maxY, g.y + g.height)
+    }
+    return { x: minX, y: minY, width: maxX - minX, height: maxY - minY }
+  }, [boundToContent, nodes, groups])
+
+  // setScale/setPosition 를 그대로 쓰던 모든 호출부(휠 줌/팬, 가운데버튼 드래그, 터치 팬)가
+  // boundToContent 일 때 자동으로 콘텐츠 범위 안으로 잘리도록 이름을 가려(shadow) 대체한다.
+  const setScale = useCallback(
+    (next: number) => {
+      if (!boundToContent) {
+        rawSetScale(next)
+        return
+      }
+      const vp = useViewportStore.getState()
+      const c = clampToContent(contentBounds, size.width, size.height, next, vp.x, vp.y)
+      rawSetScale(c.scale)
+      rawSetPosition(c.x, c.y)
+    },
+    [boundToContent, contentBounds, size.width, size.height, rawSetScale, rawSetPosition],
+  )
+  const setPosition = useCallback(
+    (x: number, y: number) => {
+      if (!boundToContent) {
+        rawSetPosition(x, y)
+        return
+      }
+      const vp = useViewportStore.getState()
+      const c = clampToContent(contentBounds, size.width, size.height, vp.scale, x, y)
+      if (c.scale !== vp.scale) rawSetScale(c.scale)
+      rawSetPosition(c.x, c.y)
+    },
+    [boundToContent, contentBounds, size.width, size.height, rawSetScale, rawSetPosition],
+  )
+
+  // 처음 로드될 때 콘텐츠 전체가 화면에 딱 맞게 보이도록 한 번 맞춘다. doc 이 바뀌면
+  // (다른 토큰으로 재진입) 다시 한 번 맞출 수 있게 리셋.
+  const firstFitRef = useRef(false)
+  useEffect(() => {
+    firstFitRef.current = false
+  }, [doc])
+  useEffect(() => {
+    if (!boundToContent || !contentBounds || size.width === 0 || size.height === 0) return
+    if (firstFitRef.current) return
+    firstFitRef.current = true
+    const fit = clampToContent(contentBounds, size.width, size.height, 0, 0, 0)
+    rawSetScale(fit.scale)
+    rawSetPosition(fit.x, fit.y)
+  }, [boundToContent, contentBounds, size.width, size.height, rawSetScale, rawSetPosition])
+
   const { undoManager, awareness } = useCanvasContext()
   // 잠깐 끊겨도 4초간 유지해 원격 커서/이름 깜빡임을 막는다.
   const remoteAwareness = useStableAwareness(useRemoteAwareness(awareness))
@@ -179,6 +312,11 @@ export function Canvas({ doc }: Props) {
   const [pendingGroup, setPendingGroup] = useState<PendingGroup | null>(null)
   const [pendingSelect, setPendingSelect] = useState<PendingSelect | null>(null)
   const [editing, setEditing] = useState<EditingTarget>(null)
+  // 읽기 전용에서는 라벨 편집(더블클릭)을 시작하지 않는다.
+  const beginEdit = useCallback((target: EditingTarget) => {
+    if (readOnly) return
+    setEditing(target)
+  }, [readOnly])
 
   // Space 누름 = 핸드(팬) 모드 — 누른 채 드래그하면 화면 이동. 트랙패드에서도 잘 동작.
   const [spaceDown, setSpaceDown] = useState(false)
@@ -296,7 +434,7 @@ export function Canvas({ doc }: Props) {
   // 두 경로(paste 이벤트 / keydown readText)가 같은 내용을 두 번 넣지 않도록 디듀프.
   const applyPaste = useCallback(
     (clip: ClipboardData) => {
-      if (!doc || clip.nodes.length === 0) return
+      if (readOnly || !doc || clip.nodes.length === 0) return
       const sig = clip.nodes.length + '|' + clip.nodes.map((n) => n.tmpId).join(',')
       const now = Date.now()
       if (lastPasteRef.current.sig === sig && now - lastPasteRef.current.at < 500) return
@@ -307,7 +445,7 @@ export function Canvas({ doc }: Props) {
       const newIds = pasteElements(doc, clip, baseX, baseY)
       if (newIds.length) setSel(newIds.map((id) => ({ kind: 'node' as const, id })))
     },
-    [doc, setSel],
+    [readOnly, doc, setSel],
   )
 
   // 키보드: Delete, ⌘Z/⌘⇧Z, ⌘A, ⌘C/⌘X(복사/잘라내기), ⌘V(붙여넣기 폴백), 엣지 스타일/방향 토글.
@@ -381,6 +519,17 @@ export function Canvas({ doc }: Props) {
     function onKey(e: KeyboardEvent) {
       const target = e.target as HTMLElement | null
       if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
+        return
+      }
+      // 읽기 전용에서는 편집성 단축키(undo/redo, 복사/잘라내기/붙여넣기, 삭제, 엣지 스타일
+      // 토글)를 전부 막는다 — Escape(선택 해제)만 예외.
+      if (readOnly) {
+        if (e.key === 'Escape') {
+          setPendingEdge(null)
+          setPendingGroup(null)
+          clearSel()
+          setEditing(null)
+        }
         return
       }
       const meta = e.metaKey || e.ctrlKey
@@ -493,7 +642,7 @@ export function Canvas({ doc }: Props) {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [doc, undoManager, selNodes, selEdges, selGroups, clearSel, nodes, edges, groups, nodesById, setSel, applyPaste])
+  }, [doc, undoManager, selNodes, selEdges, selGroups, clearSel, nodes, edges, groups, nodesById, setSel, applyPaste, readOnly])
 
   // 붙여넣기 — 네이티브 paste 이벤트의 clipboardData 를 읽는다(권한 프롬프트 없음).
   // 텍스트 입력(라벨 편집 등) 포커스 시에는 기본 붙여넣기에 양보한다.
@@ -530,7 +679,7 @@ export function Canvas({ doc }: Props) {
         const pointer = stage.getPointerPosition()
         if (!pointer) return
         // deltaY 크기에 비례한 부드러운 줌 (핀치도 자연스럽게)
-        const next = clampScale(vp.scale * Math.exp(-e.evt.deltaY * 0.0015))
+        const next = clampScale(vp.scale * Math.exp(-e.evt.deltaY * zoomSensitivity))
         if (next === vp.scale) return
         const mouseTo = { x: (pointer.x - vp.x) / vp.scale, y: (pointer.y - vp.y) / vp.scale }
         setScale(next)
@@ -539,9 +688,9 @@ export function Canvas({ doc }: Props) {
       }
 
       // 팬 — 휠 델타만큼 뷰포트 이동 (Shift+휠은 브라우저가 deltaX 로 주거나, 그대로 적용)
-      setPosition(vp.x - e.evt.deltaX, vp.y - e.evt.deltaY)
+      setPosition(vp.x - e.evt.deltaX * panSensitivity, vp.y - e.evt.deltaY * panSensitivity)
     },
-    [setScale, setPosition],
+    [setScale, setPosition, zoomSensitivity, panSensitivity],
   )
 
   // 휠클릭(가운데 버튼) 드래그 = 화면 이동(팬). 노드 위에서 시작해도 동작하도록
@@ -602,7 +751,7 @@ export function Canvas({ doc }: Props) {
     const isStageBg = e.target === stage || e.target.attrs.name === 'bg'
     if (!isStageBg) return
 
-    if (tool === 'group') {
+    if (tool === 'group' && !readOnly) {
       const p = stage.getRelativePointerPosition()
       if (!p) return
       setPendingGroup({ startX: p.x, startY: p.y, x: p.x, y: p.y, width: 0, height: 0 })
@@ -748,6 +897,7 @@ export function Canvas({ doc }: Props) {
   // 사이드바 드롭 — 정렬 모드면 좌상단을 COARSE_GRID 에 스냅하고 중앙 좌표로 환산해 전달
   const onDrop = (e: React.DragEvent) => {
     e.preventDefault()
+    if (readOnly) return
     const type = e.dataTransfer.getData('application/x-whiteboard-component')
     if (!type || !doc) return
     const stage = stageRef.current
@@ -859,9 +1009,10 @@ export function Canvas({ doc }: Props) {
               key={g.id}
               group={g}
               selected={selGroups.has(g.id)}
+              draggable={!readOnly}
               onSelect={(additive) => toggleSel('group', g.id, additive)}
               onDragEnd={(dx, dy) => doc && moveGroup(doc, g.id, dx, dy)}
-              onLabelEdit={() => setEditing({ kind: 'group', id: g.id })}
+              onLabelEdit={() => beginEdit({ kind: 'group', id: g.id })}
             />
           ))}
 
@@ -878,7 +1029,7 @@ export function Canvas({ doc }: Props) {
                 to={to}
                 selected={selEdges.has(e.id)}
                 onSelect={(additive) => toggleSel('edge', e.id, additive)}
-                onLabelEdit={() => setEditing({ kind: 'edge', id: e.id })}
+                onLabelEdit={() => beginEdit({ kind: 'edge', id: e.id })}
               />
             )
           })}
@@ -915,7 +1066,7 @@ export function Canvas({ doc }: Props) {
                 node={n}
                 selected={selNodes.has(n.id)}
                 hovered={hoveredNode === n.id}
-                draggable={!spaceDown}
+                draggable={!spaceDown && !readOnly}
                 pendingEdgeAnchor={pendingEdgeAnchor}
                 onSelect={(additive) => toggleSel('node', n.id, additive)}
                 onHover={(h) => setHoveredNode(h ? n.id : (cur) => (cur === n.id ? null : cur))}
@@ -971,10 +1122,12 @@ export function Canvas({ doc }: Props) {
                   multiDragRef.current = null
                 }}
                 onAnchorDown={(anchor) => {
+                  if (readOnly) return
                   const a = anchorPoint(n.x, n.y, anchor, getNodeBox(n))
                   setPendingEdge({ fromId: n.id, fromAnchor: anchor, x: a.x, y: a.y })
                 }}
                 onAnchorUp={() => {
+                  if (readOnly) return
                   if (pendingEdge && pendingEdge.fromId !== n.id && doc) {
                     const from = nodesById.get(pendingEdge.fromId)
                     const fromC = from ? boxCenter(from.x, from.y, getNodeBox(from)) : null
@@ -985,7 +1138,7 @@ export function Canvas({ doc }: Props) {
                     setPendingEdge(null)
                   }
                 }}
-                onLabelEdit={() => setEditing({ kind: 'node', id: n.id })}
+                onLabelEdit={() => beginEdit({ kind: 'node', id: n.id })}
               />
             )
           })}
