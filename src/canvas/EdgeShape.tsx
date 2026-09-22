@@ -85,9 +85,7 @@ export function EdgeShape({ edge, from, to, selected, onSelect, onLabelEdit }: P
             y={midY - 11}
             width={100}
             height={22}
-            fill="white"
-            stroke="#e3e6eb"
-            strokeWidth={1}
+            fill="transparent"
             cornerRadius={4}
           />
           <Text
