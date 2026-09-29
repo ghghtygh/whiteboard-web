@@ -87,6 +87,9 @@ interface Props {
   zoomSensitivity?: number
   // 휠 스크롤(팬) 민감도 배율 — 1 보다 작으면 스크롤 이동이 더 천천히 일어난다.
   panSensitivity?: number
+  // 휠 이벤트가 끊기지 않고 연속으로 들어올 때(트랙패드로 계속 쓸어넘기는 등) 최대 이 배로
+  // 감도가 점점 가속된다. 1(기본값)이면 가속 없음 — 매 이벤트가 항상 같은 감도.
+  maxWheelAcceleration?: number
 }
 
 // pan/zoom 이 콘텐츠 바운딩 박스 밖으로 못 나가게 자른다. 그래프 전체가 딱 맞는 배율보다
@@ -192,10 +195,13 @@ export function Canvas({
   boundToContent = false,
   zoomSensitivity = 0.0015,
   panSensitivity = 1,
+  maxWheelAcceleration = 1,
 }: Props) {
   const hostRef = useRef<HTMLDivElement>(null)
   const stageRef = useRef<Konva.Stage>(null)
   const [size, setSize] = useState({ width: 0, height: 0 })
+  // 연속 휠 이벤트 가속 상태 — maxWheelAcceleration > 1 일 때만 의미 있다.
+  const wheelMomentumRef = useRef({ multiplier: 1, lastAt: 0 })
 
   const scale = useViewportStore((s) => s.scale)
   const vx = useViewportStore((s) => s.x)
@@ -675,11 +681,24 @@ export function Canvas({
       // 연속 휠 이벤트에서 stale 값 누적을 막기 위해 최신 뷰포트를 store 에서 직접 읽는다.
       const vp = useViewportStore.getState()
 
+      // 휠 이벤트가 끊기지 않고 계속 들어오면(트랙패드로 쭉 쓸어넘기는 등) 감도를 점점
+      // 올린다 — 짧게 툭 치면 여전히 낮은 초기 감도, 길게 밀면 점점 빨라진다. 이벤트 사이
+      // 간격이 벌어지면(120ms 이상, 즉 손을 뗐다 다시 시작) 기본 감도로 리셋.
+      let accel = 1
+      if (maxWheelAcceleration > 1) {
+        const now = performance.now()
+        const m = wheelMomentumRef.current
+        const continuing = now - m.lastAt < 120
+        m.lastAt = now
+        m.multiplier = continuing ? Math.min(maxWheelAcceleration, m.multiplier + 0.15) : 1
+        accel = m.multiplier
+      }
+
       if (e.evt.ctrlKey || e.evt.metaKey) {
         const pointer = stage.getPointerPosition()
         if (!pointer) return
         // deltaY 크기에 비례한 부드러운 줌 (핀치도 자연스럽게)
-        const next = clampScale(vp.scale * Math.exp(-e.evt.deltaY * zoomSensitivity))
+        const next = clampScale(vp.scale * Math.exp(-e.evt.deltaY * zoomSensitivity * accel))
         if (next === vp.scale) return
         const mouseTo = { x: (pointer.x - vp.x) / vp.scale, y: (pointer.y - vp.y) / vp.scale }
         setScale(next)
@@ -688,9 +707,9 @@ export function Canvas({
       }
 
       // 팬 — 휠 델타만큼 뷰포트 이동 (Shift+휠은 브라우저가 deltaX 로 주거나, 그대로 적용)
-      setPosition(vp.x - e.evt.deltaX * panSensitivity, vp.y - e.evt.deltaY * panSensitivity)
+      setPosition(vp.x - e.evt.deltaX * panSensitivity * accel, vp.y - e.evt.deltaY * panSensitivity * accel)
     },
-    [setScale, setPosition, zoomSensitivity, panSensitivity],
+    [setScale, setPosition, zoomSensitivity, panSensitivity, maxWheelAcceleration],
   )
 
   // 휠클릭(가운데 버튼) 드래그 = 화면 이동(팬). 노드 위에서 시작해도 동작하도록

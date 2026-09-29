@@ -91,6 +91,7 @@ export function ViewGraphPage() {
             boundToContent
             zoomSensitivity={0.0006}
             panSensitivity={0.6}
+            maxWheelAcceleration={4}
           />
         </div>
 
