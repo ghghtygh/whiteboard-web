@@ -334,6 +334,11 @@ export function Canvas({
   const lastPasteRef = useRef<{ sig: string; at: number }>({ sig: '', at: 0 })
   // 터치 한 손가락 / Space 팬 진행 상태 (시작 시점의 화면 포인터 + 뷰포트 위치 스냅샷).
   const panRef = useRef<{ px: number; py: number; vx: number; vy: number } | null>(null)
+  // 읽기 전용 전용 — 두 손가락 핀치 줌/팬 진행 상태. anchorWorld 는 핀치 시작 시점 두 손가락
+  // 중간점이 가리키던 월드 좌표(핀치 내내 화면상 같은 지점에 고정).
+  const pinchRef = useRef<{ startDist: number; startScale: number; anchorWorldX: number; anchorWorldY: number } | null>(
+    null,
+  )
   // 다중 선택 드래그: 시작 시 선택된 노드들의 원위치 스냅샷. anchor = 실제로 잡고 끄는 노드.
   const multiDragRef = useRef<
     { anchorId: string; startX: number; startY: number; others: { id: string; x: number; y: number }[] } | null
@@ -767,6 +772,39 @@ export function Canvas({
   const onStageMouseDown = (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
     const stage = e.target.getStage()
     if (!stage) return
+
+    const isTouch = 'touches' in e.evt
+    // 읽기 전용에서는 손가락이 노드/엣지 위에서 시작해도 팬/핀치가 되게 한다 — 배경만 가능한
+    // 아래 기본 로직(isStageBg 게이트)과 달리, 편집이 꺼져 있으니 노드를 굳이 정확히 피해
+    // 배경을 짚을 필요가 없다(좁은 화면에서 배경만 짚기 어렵다는 피드백).
+    if (isTouch && readOnly) {
+      const touches = (e.evt as TouchEvent).touches
+      if (touches.length === 2) {
+        const rect = stage.container().getBoundingClientRect()
+        const t0 = touches[0]!
+        const t1 = touches[1]!
+        const p0 = { x: t0.clientX - rect.left, y: t0.clientY - rect.top }
+        const p1 = { x: t1.clientX - rect.left, y: t1.clientY - rect.top }
+        const dist = Math.hypot(p1.x - p0.x, p1.y - p0.y) || 1
+        const vp = useViewportStore.getState()
+        panRef.current = null
+        pinchRef.current = {
+          startDist: dist,
+          startScale: vp.scale,
+          anchorWorldX: ((p0.x + p1.x) / 2 - vp.x) / vp.scale,
+          anchorWorldY: ((p0.y + p1.y) / 2 - vp.y) / vp.scale,
+        }
+        return
+      }
+      if (touches.length === 1) {
+        const sp = stage.getPointerPosition()
+        if (!sp) return
+        pinchRef.current = null
+        panRef.current = { px: sp.x, py: sp.y, vx, vy }
+        return
+      }
+    }
+
     const isStageBg = e.target === stage || e.target.attrs.name === 'bg'
     if (!isStageBg) return
 
@@ -777,7 +815,6 @@ export function Canvas({
       return
     }
 
-    const isTouch = 'touches' in e.evt
     if (isTouch) {
       const sp = stage.getPointerPosition()
       if (!sp) return
@@ -803,9 +840,28 @@ export function Canvas({
   }
 
   // 마우스 이동 — 팬 / 마퀴 / pendingEdge / pendingGroup 추적 + awareness 커서 송신
-  const onStageMouseMove = () => {
+  const onStageMouseMove = (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
     const stage = stageRef.current
     if (!stage) return
+
+    // 읽기 전용 — 두 손가락 핀치. 거리 변화로 배율을, 중간점으로 팬을 함께 처리해서
+    // 핀치 중간점이 화면상 같은 지점에 고정되게 한다(스크롤 ctrl+휠 줌과 같은 방식).
+    if (pinchRef.current && 'touches' in e.evt && e.evt.touches.length === 2) {
+      const rect = stage.container().getBoundingClientRect()
+      const t0 = e.evt.touches[0]!
+      const t1 = e.evt.touches[1]!
+      const p0 = { x: t0.clientX - rect.left, y: t0.clientY - rect.top }
+      const p1 = { x: t1.clientX - rect.left, y: t1.clientY - rect.top }
+      const dist = Math.hypot(p1.x - p0.x, p1.y - p0.y)
+      const pinch = pinchRef.current
+      const nextScale = clampScale(pinch.startScale * (dist / pinch.startDist))
+      setScale(nextScale)
+      setPosition(
+        (p0.x + p1.x) / 2 - pinch.anchorWorldX * nextScale,
+        (p0.y + p1.y) / 2 - pinch.anchorWorldY * nextScale,
+      )
+      return
+    }
 
     // 터치 한 손가락 팬 — 화면 픽셀 델타만큼 뷰포트 이동
     if (panRef.current) {
@@ -866,6 +922,10 @@ export function Canvas({
 
   // 마우스 업 — 팬 종료 / 마퀴 선택 확정 / pendingEdge·pendingGroup 마감
   const onStageMouseUp = () => {
+    if (pinchRef.current) {
+      pinchRef.current = null
+      return
+    }
     if (panRef.current) {
       panRef.current = null
       return
