@@ -303,7 +303,7 @@ export function Sidebar({ open = false, onClose }: SidebarProps = {}) {
         onClick={onClose}
         aria-hidden
       />
-      <aside className="sidebar" data-open={open}>
+      <aside className="sidebar" data-open={open} data-tour="sidebar">
         <div className="search">
           <input
             placeholder="Search components"

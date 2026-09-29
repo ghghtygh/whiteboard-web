@@ -11,7 +11,9 @@ import { ShareModal } from '@/components/ShareModal'
 import { PresenceBadges } from '@/components/PresenceBadges'
 import { ZoomOverlay } from '@/components/ZoomOverlay'
 import { Minimap } from '@/components/Minimap'
-import { MenuIcon, ArrowLeftIcon } from '@/components/icons'
+import { MenuIcon, ArrowLeftIcon, HelpIcon } from '@/components/icons'
+import { OnboardingTour } from '@/onboarding/OnboardingTour'
+import { detectDevice, hasSeenTour, useOnboardingStore } from '@/onboarding/store'
 import { MOBILE_BP } from '@/styles/breakpoints'
 import { Canvas } from '@/canvas/Canvas'
 import { useBoardCollab } from '@/collab/useBoardCollab'
@@ -82,6 +84,17 @@ export function BoardEditPage() {
     if (editingTitle) titleInputRef.current?.select()
   }, [editingTitle])
 
+  // 첫 진입 온보딩 — PC/모바일 각각 처음일 때 한 번. 보드 로드 후 레이아웃이 자리잡을 때까지 잠깐 기다린다.
+  const startTour = useOnboardingStore((s) => s.start)
+  const boardLoaded = !!board
+  useEffect(() => {
+    if (!boardLoaded) return
+    const device = detectDevice()
+    if (hasSeenTour(device)) return
+    const t = window.setTimeout(() => startTour(device), 400)
+    return () => window.clearTimeout(t)
+  }, [boardLoaded, startTour])
+
   return (
     <CanvasContextProvider
       value={{ doc: collab.doc, undoManager, awareness: collab.provider?.awareness ?? null }}
@@ -90,6 +103,7 @@ export function BoardEditPage() {
         <header className="board-topbar">
           <button
             className="menu-btn"
+            data-tour="menu"
             onClick={() => setSidebarOpen(true)}
             aria-label="Open components menu"
             title="Components"
@@ -121,7 +135,21 @@ export function BoardEditPage() {
           <div className="spacer" />
           <PresenceBadges awareness={collab.provider?.awareness ?? null} />
           <button
+            type="button"
+            className="help-btn"
+            data-tour="help"
+            aria-label="Show feature tour"
+            title="Feature tour"
+            onClick={() => {
+              setSidebarOpen(false)
+              startTour()
+            }}
+          >
+            <HelpIcon />
+          </button>
+          <button
             className="share-btn primary"
+            data-tour="share"
             disabled={shareDisabled}
             title={shareDisabled ? 'Sign in to share' : undefined}
             onClick={async () => {
@@ -141,6 +169,7 @@ export function BoardEditPage() {
             <button
               type="button"
               className="status status-btn"
+              data-tour="sync"
               data-online={syncOn && syncConnected}
               data-on={syncOn}
               title={syncOn ? 'Real-time sync on — click to turn off' : 'Real-time sync off — click to turn on'}
@@ -150,12 +179,14 @@ export function BoardEditPage() {
               {syncOn ? (syncConnected ? 'Syncing' : 'Connecting…') : 'Sync off'}
             </button>
           ) : (
-            <span className="status" data-online={collab.ready} title="No sync server configured — saved locally only">
+            <span className="status" data-tour="sync" data-online={collab.ready} title="No sync server configured — saved locally only">
               <span className="dot" />
               {collab.ready ? 'Local' : '…'}
             </span>
           )}
         </header>
+
+        <OnboardingTour />
 
         {shareOpen && boardId && (
           <ShareModal
@@ -168,7 +199,7 @@ export function BoardEditPage() {
         <div className="board-body">
           <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
           <main className="board-main">
-            <div className="canvas-host">
+            <div className="canvas-host" data-tour="canvas">
               {error ? <p className="error">{error}</p> : <Canvas boardId={boardId ?? ''} doc={collab.doc} />}
               {!error && (
                 <>
@@ -202,6 +233,11 @@ export function BoardEditPage() {
                           background: var(--surface-panel); box-shadow: var(--focus-ring); }
           .vsep { width: 1px; height: 18px; background: var(--border-subtle); margin: 0 4px; }
           .spacer { flex: 1; }
+          .help-btn { display: inline-flex; align-items: center; justify-content: center;
+                      width: 30px; height: 30px; padding: 0; font-size: 17px;
+                      background: transparent; border: 1px solid transparent;
+                      border-radius: var(--radius-sm); color: var(--text-muted); cursor: pointer; }
+          .help-btn:hover { background: var(--surface-hover); color: var(--primary); }
           .share-btn { font-size: var(--text-sm); padding: 6px 14px; border-radius: var(--radius-md); }
           .share-btn:disabled { opacity: 0.45; cursor: not-allowed; filter: grayscale(0.3); }
           .status { display: inline-flex; align-items: center; gap: 6px;
@@ -238,6 +274,7 @@ export function BoardEditPage() {
             .vsep { display: none; }
             .title-btn { font-size: 13px; max-width: 120px; }
             .share-btn { padding: 4px 8px; }
+            .help-btn { width: 32px; height: 32px; }
             /* 10px 미만은 판독성이 떨어져 DS 최소 크기(--text-2xs)를 유지하고
                대신 패딩/줄바꿈으로 압축한다. */
             .status { font-size: var(--text-2xs); padding: 4px; white-space: nowrap; }

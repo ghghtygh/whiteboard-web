@@ -11,7 +11,7 @@ export function ZoomOverlay() {
   const atMax = scale >= MAX_SCALE - 1e-6
 
   return (
-    <div className="zoom-overlay">
+    <div className="zoom-overlay" data-tour="zoom">
       <button title="Zoom out" disabled={atMin} onClick={() => setScale(scale / 1.1)}>
         <MinusIcon />
       </button>
