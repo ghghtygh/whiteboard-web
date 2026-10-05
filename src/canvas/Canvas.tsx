@@ -235,9 +235,10 @@ export function Canvas({
   const edges = useEdgesSnapshot(doc)
   const groups = useGroupsSnapshot(doc)
 
-  // boundToContent 일 때만 쓰는 콘텐츠 전체 바운딩 박스. 없으면(빈 그래프) 제한 없음.
+  // 콘텐츠 전체 바운딩 박스. 없으면(빈 그래프) 제한 없음.
+  // boundToContent 면 아래 clampToContent 로 엄격하게, 아니면 viewport store 의 panLimit 으로 느슨하게 제한.
   const contentBounds = useMemo<ContentBounds | null>(() => {
-    if (!boundToContent || (nodes.length === 0 && groups.length === 0)) return null
+    if (nodes.length === 0 && groups.length === 0) return null
     let minX = Infinity
     let minY = Infinity
     let maxX = -Infinity
@@ -256,7 +257,15 @@ export function Canvas({
       maxY = Math.max(maxY, g.y + g.height)
     }
     return { x: minX, y: minY, width: maxX - minX, height: maxY - minY }
-  }, [boundToContent, nodes, groups])
+  }, [nodes, groups])
+
+  // 편집 화면에선 콘텐츠(미니맵에 보이는 영역)에서 너무 멀리 팬하지 못하도록 store 에 제한을 건다.
+  // 휠/드래그/터치/미니맵/줌 버튼 등 store 의 setPosition·setScale 을 쓰는 모든 경로에 적용된다.
+  const setPanLimit = useViewportStore((s) => s.setPanLimit)
+  useEffect(() => {
+    setPanLimit(boundToContent ? null : contentBounds)
+  }, [boundToContent, contentBounds, setPanLimit])
+  useEffect(() => () => setPanLimit(null), [setPanLimit])
 
   // setScale/setPosition 를 그대로 쓰던 모든 호출부(휠 줌/팬, 가운데버튼 드래그, 터치 팬)가
   // boundToContent 일 때 자동으로 콘텐츠 범위 안으로 잘리도록 이름을 가려(shadow) 대체한다.
