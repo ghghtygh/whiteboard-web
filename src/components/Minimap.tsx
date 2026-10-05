@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { useViewportStore } from '@/store/viewport'
 import { useCanvasContext } from '@/canvas/useCanvasContext'
 import { useNodesSnapshot, useGroupsSnapshot, useEdgesSnapshot } from '@/canvas/hooks'
@@ -65,39 +65,59 @@ export function Minimap() {
     return { xMin, yMin, xMax, yMax, scale: s }
   }, [nodes, groups, vpX, vpY, vpW, vpH])
 
+  // 드래그 중엔 미니맵 축척/원점을 고정한다. bounds 가 뷰포트를 포함하도록 매번 다시 계산되기 때문에,
+  // 고정하지 않으면 뷰포트가 움직일 때마다 좌표계도 같이 밀려 포인터보다 훨씬 빠르게 달아난다.
+  const [frozenBounds, setFrozenBounds] = useState<Bounds | null>(null)
+  const b = frozenBounds ?? bounds
+
   // 월드 좌표 → 미니맵 픽셀 좌표
   function toMmX(x: number) {
-    return (x - bounds.xMin) * bounds.scale
+    return (x - b.xMin) * b.scale
   }
   function toMmY(y: number) {
-    return (y - bounds.yMin) * bounds.scale
+    return (y - b.yMin) * b.scale
   }
 
-  // 포인터 위치를 캔버스 중앙으로 정렬
-  function panToPointer(clientX: number, clientY: number) {
-    if (!svgRef.current || cw === 0 || ch === 0) return
-    const rect = svgRef.current.getBoundingClientRect()
-    const mx = clientX - rect.left
-    const my = clientY - rect.top
-    const worldX = bounds.xMin + mx / bounds.scale
-    const worldY = bounds.yMin + my / bounds.scale
-    setPosition(cw / 2 - worldX * scale, ch / 2 - worldY * scale)
+  // 드래그 시작 시점의 포인터(미니맵 px)와 스테이지 위치. 이동량만큼만 상대적으로 팬한다.
+  const dragRef = useRef<{ mx: number; my: number; vx: number; vy: number; bounds: Bounds } | null>(null)
+
+  function pointerInSvg(clientX: number, clientY: number) {
+    const rect = svgRef.current!.getBoundingClientRect()
+    return { mx: clientX - rect.left, my: clientY - rect.top }
   }
 
-  // 드래그 라이브 팬 — pointer capture 로 SVG 밖으로 나가도 계속 따라옴
-  const draggingRef = useRef(false)
   function onPointerDown(e: React.PointerEvent<SVGSVGElement>) {
-    draggingRef.current = true
-    svgRef.current?.setPointerCapture(e.pointerId)
-    panToPointer(e.clientX, e.clientY)
+    if (!svgRef.current || cw === 0 || ch === 0) return
+    svgRef.current.setPointerCapture(e.pointerId)
+    const { mx, my } = pointerInSvg(e.clientX, e.clientY)
+    const frozen = bounds
+    const vp = useViewportStore.getState()
+    // 뷰포트 사각형 밖을 누르면 그 지점을 화면 중앙으로 한 번 점프, 안을 누르면 그대로 잡고 끈다.
+    const insideVp =
+      mx >= toMmX(vpX) && mx <= toMmX(vpX + vpW) && my >= toMmY(vpY) && my <= toMmY(vpY + vpH)
+    if (!insideVp) {
+      const worldX = frozen.xMin + mx / frozen.scale
+      const worldY = frozen.yMin + my / frozen.scale
+      setPosition(cw / 2 - worldX * vp.scale, ch / 2 - worldY * vp.scale)
+    }
+    const after = useViewportStore.getState()
+    dragRef.current = { mx, my, vx: after.x, vy: after.y, bounds: frozen }
+    setFrozenBounds(frozen)
   }
   function onPointerMove(e: React.PointerEvent<SVGSVGElement>) {
-    if (!draggingRef.current) return
-    panToPointer(e.clientX, e.clientY)
+    const drag = dragRef.current
+    if (!drag || !svgRef.current) return
+    const { mx, my } = pointerInSvg(e.clientX, e.clientY)
+    // 미니맵 px 이동량 → 월드 이동량 → 스테이지 px 이동량 (뷰포트 사각형이 포인터를 1:1 로 따라감)
+    const s = useViewportStore.getState().scale
+    const dxWorld = (mx - drag.mx) / drag.bounds.scale
+    const dyWorld = (my - drag.my) / drag.bounds.scale
+    setPosition(drag.vx - dxWorld * s, drag.vy - dyWorld * s)
   }
   function onPointerUp(e: React.PointerEvent<SVGSVGElement>) {
-    draggingRef.current = false
-    svgRef.current?.releasePointerCapture(e.pointerId)
+    dragRef.current = null
+    setFrozenBounds(null)
+    if (svgRef.current?.hasPointerCapture(e.pointerId)) svgRef.current.releasePointerCapture(e.pointerId)
   }
 
   return (
@@ -142,8 +162,8 @@ export function Minimap() {
             key={`g-${g.id}`}
             x={toMmX(g.x)}
             y={toMmY(g.y)}
-            width={g.width * bounds.scale}
-            height={g.height * bounds.scale}
+            width={g.width * b.scale}
+            height={g.height * b.scale}
             fill="rgba(93, 91, 239, 0.06)"
             stroke="#a3a7ff"
             strokeWidth={1}
@@ -156,8 +176,8 @@ export function Minimap() {
             key={`n-${n.id}`}
             x={toMmX(n.x)}
             y={toMmY(n.y)}
-            width={Math.max(2, NODE_W * bounds.scale)}
-            height={Math.max(2, NODE_H * bounds.scale)}
+            width={Math.max(2, NODE_W * b.scale)}
+            height={Math.max(2, NODE_H * b.scale)}
             fill={catalogColor(n.type)}
             rx={1}
           />
@@ -167,8 +187,8 @@ export function Minimap() {
         <rect
           x={toMmX(vpX)}
           y={toMmY(vpY)}
-          width={vpW * bounds.scale}
-          height={vpH * bounds.scale}
+          width={vpW * b.scale}
+          height={vpH * b.scale}
           fill="rgba(93, 91, 239, 0.10)"
           stroke="#5d5bef"
           strokeWidth={1.5}
