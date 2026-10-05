@@ -1,7 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useCatalogStore } from '@/store/catalog'
 import type { ComponentType } from '@/types/domain'
-import { catalogColor, LOCAL_CATALOG } from '@/local/catalogSeed'
+import {
+  CATALOG_CATEGORIES,
+  LOCAL_CATALOG,
+  catalogAliases,
+  catalogColor,
+  catalogRank,
+} from '@/local/catalogSeed'
 import { localRecents } from '@/local/recents'
 import { iconDataUrl, hasIcon } from '@/canvas/icons'
 import { useCanvasContext } from '@/canvas/useCanvasContext'
@@ -13,17 +19,32 @@ import { COARSE_GRID, NODE_H, NODE_W, coarseSnap, dropJitter } from '@/canvas/ge
 import { CloseIcon } from '@/components/icons'
 import { MOBILE_BP } from '@/styles/breakpoints'
 
-const CATEGORY_LABELS: Record<string, string> = {
-  'ci-cd': 'CI / CD',
-  database: 'Database',
-  framework: 'Framework',
-  messaging: 'Messaging',
-  infrastructure: 'Infrastructure',
-  cloud: 'Cloud',
-  observability: 'Observability',
-  auth: 'Auth',
-  storage: 'Storage',
-  etc: 'Other',
+const CATEGORY_LABELS: Record<string, string> = Object.fromEntries(
+  CATALOG_CATEGORIES.map((c) => [c.id, c.label]),
+)
+const CATEGORY_ORDER = new Map(CATALOG_CATEGORIES.map((c, i) => [c.id, i]))
+
+// 카테고리마다 인기순 상위 N개만 먼저 보여주고 나머지는 "더보기" 로 접는다.
+// 숨길 항목이 1개뿐이면 버튼이 그 자리를 차지할 뿐이라 전부 보여준다.
+const TOP_N = 4
+const EXPANDED_KEY = 'whiteboard.sidebar.expanded.v1'
+
+function readExpanded(): Record<string, boolean> {
+  try {
+    const raw = localStorage.getItem(EXPANDED_KEY)
+    const obj = raw ? JSON.parse(raw) : {}
+    return obj && typeof obj === 'object' ? (obj as Record<string, boolean>) : {}
+  } catch {
+    return {}
+  }
+}
+
+function writeExpanded(v: Record<string, boolean>) {
+  try {
+    localStorage.setItem(EXPANDED_KEY, JSON.stringify(v))
+  } catch {
+    // 저장 실패는 무시 — 다음 진입 때 기본(접힘) 상태로 보일 뿐
+  }
 }
 
 interface TouchDragState {
@@ -101,6 +122,7 @@ export function Sidebar({ open = false, onClose }: SidebarProps = {}) {
   const [query, setQuery] = useState('')
   const [debounced, setDebounced] = useState('')
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
+  const [expanded, setExpanded] = useState<Record<string, boolean>>(readExpanded)
   const [, setRecentsTick] = useState(0)
 
   const { doc } = useCanvasContext()
@@ -255,6 +277,14 @@ export function Sidebar({ open = false, onClose }: SidebarProps = {}) {
     onClose?.()
   }
 
+  function toggleExpanded(category: string) {
+    setExpanded((s) => {
+      const next = { ...s, [category]: !s[category] }
+      writeExpanded(next)
+      return next
+    })
+  }
+
   useEffect(() => {
     void load()
   }, [load])
@@ -272,7 +302,10 @@ export function Sidebar({ open = false, onClose }: SidebarProps = {}) {
   const filtered = useMemo(() => {
     if (!debounced) return items
     return items.filter(
-      (c) => c.displayName.toLowerCase().includes(debounced) || c.type.toLowerCase().includes(debounced),
+      (c) =>
+        c.displayName.toLowerCase().includes(debounced) ||
+        c.type.toLowerCase().includes(debounced) ||
+        catalogAliases(c.type).some((a) => a.toLowerCase().includes(debounced)),
     )
   }, [items, debounced])
 
@@ -283,7 +316,9 @@ export function Sidebar({ open = false, onClose }: SidebarProps = {}) {
       arr.push(item)
       map.set(item.category, arr)
     }
-    return [...map.entries()]
+    for (const arr of map.values()) arr.sort((a, b) => catalogRank(a.type) - catalogRank(b.type))
+    const order = (c: string) => CATEGORY_ORDER.get(c) ?? Number.MAX_SAFE_INTEGER
+    return [...map.entries()].sort(([a], [b]) => order(a) - order(b))
   }, [filtered])
 
   const recents = useMemo(() => {
@@ -344,6 +379,10 @@ export function Sidebar({ open = false, onClose }: SidebarProps = {}) {
 
           {grouped.map(([category, list]) => {
             const isCollapsed = collapsed[category]
+            // 검색 중엔 일치 항목을 모두 보여준다
+            const canTruncate = !debounced && list.length > TOP_N + 1
+            const isExpanded = !!expanded[category]
+            const visible = canTruncate && !isExpanded ? list.slice(0, TOP_N) : list
             return (
               <section key={category}>
                 <h3
@@ -355,7 +394,7 @@ export function Sidebar({ open = false, onClose }: SidebarProps = {}) {
                 </h3>
                 {!isCollapsed && (
                   <ul>
-                    {list.map((c) => (
+                    {visible.map((c) => (
                       <ComponentRow
                         key={c.type}
                         item={c}
@@ -365,6 +404,16 @@ export function Sidebar({ open = false, onClose }: SidebarProps = {}) {
                       />
                     ))}
                   </ul>
+                )}
+                {!isCollapsed && canTruncate && (
+                  <button
+                    type="button"
+                    className="more-btn"
+                    onClick={() => toggleExpanded(category)}
+                    aria-expanded={isExpanded}
+                  >
+                    {isExpanded ? 'Show less' : `+${list.length - TOP_N} more`}
+                  </button>
                 )}
               </section>
             )
@@ -402,6 +451,11 @@ export function Sidebar({ open = false, onClose }: SidebarProps = {}) {
                    color: white; font-size: 10px; font-weight: 700; flex-shrink: 0; }
           .icon { width: 20px; height: 20px; flex-shrink: 0; object-fit: contain; }
           .name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+          .more-btn { display: block; width: 100%; margin-top: 2px; padding: 5px 9px;
+                      background: none; border: none; border-radius: var(--radius-md);
+                      text-align: left; font-size: var(--text-xs); color: var(--text-muted);
+                      cursor: pointer; }
+          .more-btn:hover { background: var(--surface-hover); color: var(--text-body); }
           .muted { color: var(--text-muted); font-size: var(--text-sm); }
           .error { color: var(--danger); font-size: var(--text-sm); }
           .sidebar-backdrop { display: none; }

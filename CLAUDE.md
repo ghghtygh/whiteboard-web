@@ -11,6 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | 타입 체크만 | `npm run typecheck` |
 | 린트 | `npm run lint` |
 | 빌드 미리보기 | `npm run preview` |
+| 카탈로그/아이콘 재생성 | `npm run catalog:sync` (`src/catalog/stacks.json` 수정 후) |
 
 테스트 러너는 아직 설정돼 있지 않다. 변경 후엔 최소한 `npm run typecheck && npm run lint` 를 돌리고, UI 가 바뀌었으면 `npm run dev` 로 실제 동작도 확인한다.
 

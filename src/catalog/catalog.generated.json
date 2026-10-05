@@ -1,0 +1,1404 @@
+{
+  "categories": [
+    {
+      "id": "language",
+      "label": "Language"
+    },
+    {
+      "id": "frontend",
+      "label": "Frontend"
+    },
+    {
+      "id": "mobile",
+      "label": "Mobile"
+    },
+    {
+      "id": "framework",
+      "label": "Backend"
+    },
+    {
+      "id": "database",
+      "label": "Database"
+    },
+    {
+      "id": "messaging",
+      "label": "Messaging"
+    },
+    {
+      "id": "data",
+      "label": "Data / ML"
+    },
+    {
+      "id": "ci-cd",
+      "label": "CI / CD · Build"
+    },
+    {
+      "id": "infrastructure",
+      "label": "Infrastructure"
+    },
+    {
+      "id": "cloud",
+      "label": "Cloud"
+    },
+    {
+      "id": "observability",
+      "label": "Observability"
+    },
+    {
+      "id": "auth",
+      "label": "Auth"
+    },
+    {
+      "id": "storage",
+      "label": "Storage"
+    },
+    {
+      "id": "testing",
+      "label": "Testing / API"
+    },
+    {
+      "id": "etc",
+      "label": "Collaboration"
+    }
+  ],
+  "items": [
+    {
+      "type": "java",
+      "displayName": "Java",
+      "category": "language",
+      "color": "#ea2d2e",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "kotlin",
+      "displayName": "Kotlin",
+      "category": "language",
+      "color": "#c711e1",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "typescript",
+      "displayName": "TypeScript",
+      "category": "language",
+      "color": "#007acc",
+      "aliases": [
+        "ts"
+      ],
+      "icon": true
+    },
+    {
+      "type": "javascript",
+      "displayName": "JavaScript",
+      "category": "language",
+      "color": "#f0db4f",
+      "aliases": [
+        "js",
+        "ecmascript"
+      ],
+      "icon": true
+    },
+    {
+      "type": "python",
+      "displayName": "Python",
+      "category": "language",
+      "color": "#ffd845",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "go",
+      "displayName": "Go",
+      "category": "language",
+      "color": "#00acd7",
+      "aliases": [
+        "golang"
+      ],
+      "icon": true
+    },
+    {
+      "type": "swift",
+      "displayName": "Swift",
+      "category": "language",
+      "color": "#f05138",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "dart",
+      "displayName": "Dart",
+      "category": "language",
+      "color": "#00a8e1",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "scala",
+      "displayName": "Scala",
+      "category": "language",
+      "color": "#de3423",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "rust",
+      "displayName": "Rust",
+      "category": "language",
+      "color": "#000000",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "cpp",
+      "displayName": "C++",
+      "category": "language",
+      "color": "#004482",
+      "aliases": [
+        "cplusplus"
+      ],
+      "icon": true
+    },
+    {
+      "type": "csharp",
+      "displayName": "C#",
+      "category": "language",
+      "color": "#68217a",
+      "aliases": [
+        ".net",
+        "dotnet"
+      ],
+      "icon": true
+    },
+    {
+      "type": "php",
+      "displayName": "PHP",
+      "category": "language",
+      "color": "#777bb3",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "react",
+      "displayName": "React",
+      "category": "frontend",
+      "color": "#61dafb",
+      "aliases": [
+        "reactjs"
+      ],
+      "icon": true
+    },
+    {
+      "type": "nextjs",
+      "displayName": "Next.js",
+      "category": "frontend",
+      "color": "#000000",
+      "aliases": [
+        "next"
+      ],
+      "icon": true
+    },
+    {
+      "type": "vue",
+      "displayName": "Vue",
+      "category": "frontend",
+      "color": "#42b883",
+      "aliases": [
+        "vuejs"
+      ],
+      "icon": true
+    },
+    {
+      "type": "nuxtjs",
+      "displayName": "Nuxt",
+      "category": "frontend",
+      "color": "#00c48d",
+      "aliases": [
+        "nuxt"
+      ],
+      "icon": true
+    },
+    {
+      "type": "angular",
+      "displayName": "Angular",
+      "category": "frontend",
+      "color": "#dd0031",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "svelte",
+      "displayName": "Svelte",
+      "category": "frontend",
+      "color": "#ff3e00",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "redux",
+      "displayName": "Redux",
+      "category": "frontend",
+      "color": "#764abc",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "recoil",
+      "displayName": "Recoil",
+      "category": "frontend",
+      "color": "#3578e5",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "tailwindcss",
+      "displayName": "Tailwind CSS",
+      "category": "frontend",
+      "color": "#38bdf8",
+      "aliases": [
+        "tailwind"
+      ],
+      "icon": true
+    },
+    {
+      "type": "styled-components",
+      "displayName": "styled-components",
+      "category": "frontend",
+      "color": "#d268a7",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "webpack",
+      "displayName": "Webpack",
+      "category": "frontend",
+      "color": "#1c78c0",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "vite",
+      "displayName": "Vite",
+      "category": "frontend",
+      "color": "#ffdd35",
+      "aliases": [
+        "vitejs"
+      ],
+      "icon": true
+    },
+    {
+      "type": "storybook",
+      "displayName": "Storybook",
+      "category": "frontend",
+      "color": "#ff4785",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "android",
+      "displayName": "Android",
+      "category": "mobile",
+      "color": "#a4c439",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "ios",
+      "displayName": "iOS",
+      "category": "mobile",
+      "color": "#000000",
+      "aliases": [
+        "apple"
+      ],
+      "icon": true
+    },
+    {
+      "type": "flutter",
+      "displayName": "Flutter",
+      "category": "mobile",
+      "color": "#3fb6d3",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "react-native",
+      "displayName": "React Native",
+      "category": "mobile",
+      "color": "#61dafb",
+      "aliases": [
+        "rn"
+      ],
+      "icon": true
+    },
+    {
+      "type": "spring-boot",
+      "displayName": "Spring Boot",
+      "category": "framework",
+      "color": "#6db33f",
+      "aliases": [
+        "spring"
+      ],
+      "icon": true
+    },
+    {
+      "type": "spring-web",
+      "displayName": "Spring Web",
+      "category": "framework",
+      "color": "#6db33f",
+      "aliases": [
+        "spring mvc",
+        "webflux"
+      ],
+      "icon": true
+    },
+    {
+      "type": "jpa",
+      "displayName": "JPA",
+      "category": "framework",
+      "color": "#59666c",
+      "aliases": [
+        "spring data jpa"
+      ],
+      "icon": false
+    },
+    {
+      "type": "querydsl",
+      "displayName": "Querydsl",
+      "category": "framework",
+      "color": "#0f7ec1",
+      "aliases": [],
+      "icon": false
+    },
+    {
+      "type": "mybatis",
+      "displayName": "MyBatis",
+      "category": "framework",
+      "color": "#a32d2a",
+      "aliases": [],
+      "icon": false
+    },
+    {
+      "type": "hibernate",
+      "displayName": "Hibernate",
+      "category": "framework",
+      "color": "#bcae79",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "nodejs",
+      "displayName": "Node.js",
+      "category": "framework",
+      "color": "#5fa04e",
+      "aliases": [
+        "node"
+      ],
+      "icon": true
+    },
+    {
+      "type": "nestjs",
+      "displayName": "NestJS",
+      "category": "framework",
+      "color": "#df234f",
+      "aliases": [
+        "nest"
+      ],
+      "icon": true
+    },
+    {
+      "type": "express",
+      "displayName": "Express",
+      "category": "framework",
+      "color": "#444444",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "django",
+      "displayName": "Django",
+      "category": "framework",
+      "color": "#092e20",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "fastapi",
+      "displayName": "FastAPI",
+      "category": "framework",
+      "color": "#009688",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "flask",
+      "displayName": "Flask",
+      "category": "framework",
+      "color": "#010101",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "graphql",
+      "displayName": "GraphQL",
+      "category": "framework",
+      "color": "#e434aa",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "apollo-graphql",
+      "displayName": "Apollo GraphQL",
+      "category": "framework",
+      "color": "#112b49",
+      "aliases": [
+        "apollo"
+      ],
+      "icon": true
+    },
+    {
+      "type": "grpc",
+      "displayName": "gRPC",
+      "category": "framework",
+      "color": "#00b0ad",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "armeria",
+      "displayName": "Armeria",
+      "category": "framework",
+      "color": "#ff6b2d",
+      "aliases": [],
+      "icon": false
+    },
+    {
+      "type": "mysql",
+      "displayName": "MySQL",
+      "category": "database",
+      "color": "#00758f",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "redis",
+      "displayName": "Redis",
+      "category": "database",
+      "color": "#a41e11",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "postgresql",
+      "displayName": "PostgreSQL",
+      "category": "database",
+      "color": "#336791",
+      "aliases": [
+        "postgres",
+        "psql"
+      ],
+      "icon": true
+    },
+    {
+      "type": "mongodb",
+      "displayName": "MongoDB",
+      "category": "database",
+      "color": "#13aa52",
+      "aliases": [
+        "mongo"
+      ],
+      "icon": true
+    },
+    {
+      "type": "elasticsearch",
+      "displayName": "Elasticsearch",
+      "category": "database",
+      "color": "#005571",
+      "aliases": [
+        "es"
+      ],
+      "icon": true
+    },
+    {
+      "type": "oracle",
+      "displayName": "Oracle DB",
+      "category": "database",
+      "color": "#ea1b22",
+      "aliases": [
+        "oracle"
+      ],
+      "icon": true
+    },
+    {
+      "type": "mariadb",
+      "displayName": "MariaDB",
+      "category": "database",
+      "color": "#003545",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "dynamodb",
+      "displayName": "DynamoDB",
+      "category": "database",
+      "color": "#4053d6",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "cassandra",
+      "displayName": "Cassandra",
+      "category": "database",
+      "color": "#1287b1",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "hbase",
+      "displayName": "HBase",
+      "category": "database",
+      "color": "#be160c",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "arcus",
+      "displayName": "Arcus",
+      "category": "database",
+      "color": "#2e5aa8",
+      "aliases": [
+        "memcached"
+      ],
+      "icon": false
+    },
+    {
+      "type": "cubrid",
+      "displayName": "CUBRID",
+      "category": "database",
+      "color": "#1b4e8c",
+      "aliases": [],
+      "icon": false
+    },
+    {
+      "type": "vitess",
+      "displayName": "Vitess",
+      "category": "database",
+      "color": "#f16827",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "clickhouse",
+      "displayName": "ClickHouse",
+      "category": "database",
+      "color": "#e2c400",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "kafka",
+      "displayName": "Kafka",
+      "category": "messaging",
+      "color": "#231f20",
+      "aliases": [
+        "apache kafka"
+      ],
+      "icon": true
+    },
+    {
+      "type": "rabbitmq",
+      "displayName": "RabbitMQ",
+      "category": "messaging",
+      "color": "#ff6600",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "sqs",
+      "displayName": "SQS",
+      "category": "messaging",
+      "color": "#ff4f8b",
+      "aliases": [
+        "aws sqs"
+      ],
+      "icon": true
+    },
+    {
+      "type": "kinesis",
+      "displayName": "Kinesis",
+      "category": "messaging",
+      "color": "#9d40ff",
+      "aliases": [
+        "aws kinesis"
+      ],
+      "icon": true
+    },
+    {
+      "type": "nats",
+      "displayName": "NATS",
+      "category": "messaging",
+      "color": "#27aae1",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "spark",
+      "displayName": "Spark",
+      "category": "data",
+      "color": "#e15919",
+      "aliases": [
+        "apache spark"
+      ],
+      "icon": true
+    },
+    {
+      "type": "airflow",
+      "displayName": "Airflow",
+      "category": "data",
+      "color": "#017cee",
+      "aliases": [
+        "apache airflow"
+      ],
+      "icon": true
+    },
+    {
+      "type": "hadoop",
+      "displayName": "Hadoop",
+      "category": "data",
+      "color": "#66ccff",
+      "aliases": [
+        "hdfs"
+      ],
+      "icon": true
+    },
+    {
+      "type": "hive",
+      "displayName": "Hive",
+      "category": "data",
+      "color": "#fdee21",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "trino",
+      "displayName": "Trino",
+      "category": "data",
+      "color": "#dd00a1",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "presto",
+      "displayName": "Presto",
+      "category": "data",
+      "color": "#5890ff",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "flink",
+      "displayName": "Flink",
+      "category": "data",
+      "color": "#e6526f",
+      "aliases": [
+        "apache flink"
+      ],
+      "icon": true
+    },
+    {
+      "type": "druid",
+      "displayName": "Druid",
+      "category": "data",
+      "color": "#29f1fb",
+      "aliases": [
+        "apache druid"
+      ],
+      "icon": true
+    },
+    {
+      "type": "bigquery",
+      "displayName": "BigQuery",
+      "category": "data",
+      "color": "#669df6",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "snowflake",
+      "displayName": "Snowflake",
+      "category": "data",
+      "color": "#29b5e8",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "superset",
+      "displayName": "Superset",
+      "category": "data",
+      "color": "#20a6c9",
+      "aliases": [
+        "apache superset"
+      ],
+      "icon": true
+    },
+    {
+      "type": "redash",
+      "displayName": "Redash",
+      "category": "data",
+      "color": "#ff7964",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "tableau",
+      "displayName": "Tableau",
+      "category": "data",
+      "color": "#e97627",
+      "aliases": [],
+      "icon": false
+    },
+    {
+      "type": "jupyter",
+      "displayName": "Jupyter",
+      "category": "data",
+      "color": "#f37726",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "pandas",
+      "displayName": "pandas",
+      "category": "data",
+      "color": "#130754",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "tensorflow",
+      "displayName": "TensorFlow",
+      "category": "data",
+      "color": "#ff6f00",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "pytorch",
+      "displayName": "PyTorch",
+      "category": "data",
+      "color": "#ee4c2c",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "kubeflow",
+      "displayName": "Kubeflow",
+      "category": "data",
+      "color": "#72a1e5",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "mlflow",
+      "displayName": "MLflow",
+      "category": "data",
+      "color": "#0194e2",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "jenkins",
+      "displayName": "Jenkins",
+      "category": "ci-cd",
+      "color": "#d24939",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "github-actions",
+      "displayName": "GitHub Actions",
+      "category": "ci-cd",
+      "color": "#2088ff",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "argocd",
+      "displayName": "Argo CD",
+      "category": "ci-cd",
+      "color": "#ef7b4d",
+      "aliases": [
+        "argo"
+      ],
+      "icon": true
+    },
+    {
+      "type": "gitlab-ci",
+      "displayName": "GitLab CI",
+      "category": "ci-cd",
+      "color": "#fc6d26",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "gradle",
+      "displayName": "Gradle",
+      "category": "ci-cd",
+      "color": "#02303a",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "maven",
+      "displayName": "Maven",
+      "category": "ci-cd",
+      "color": "#e97826",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "circleci",
+      "displayName": "CircleCI",
+      "category": "ci-cd",
+      "color": "#343434",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "kubernetes",
+      "displayName": "Kubernetes",
+      "category": "infrastructure",
+      "color": "#326ce5",
+      "aliases": [
+        "k8s"
+      ],
+      "icon": true
+    },
+    {
+      "type": "docker",
+      "displayName": "Docker",
+      "category": "infrastructure",
+      "color": "#2496ed",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "nginx",
+      "displayName": "Nginx",
+      "category": "infrastructure",
+      "color": "#009639",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "terraform",
+      "displayName": "Terraform",
+      "category": "infrastructure",
+      "color": "#7b42bc",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "helm",
+      "displayName": "Helm",
+      "category": "infrastructure",
+      "color": "#0f1689",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "istio",
+      "displayName": "Istio",
+      "category": "infrastructure",
+      "color": "#466bb0",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "ansible",
+      "displayName": "Ansible",
+      "category": "infrastructure",
+      "color": "#1a1918",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "zookeeper",
+      "displayName": "ZooKeeper",
+      "category": "infrastructure",
+      "color": "#6f8a2b",
+      "aliases": [
+        "apache zookeeper"
+      ],
+      "icon": false
+    },
+    {
+      "type": "envoy",
+      "displayName": "Envoy",
+      "category": "infrastructure",
+      "color": "#e13eaf",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "consul",
+      "displayName": "Consul",
+      "category": "infrastructure",
+      "color": "#e03875",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "vault",
+      "displayName": "Vault",
+      "category": "infrastructure",
+      "color": "#000000",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "linux",
+      "displayName": "Linux",
+      "category": "infrastructure",
+      "color": "#fcc624",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "ubuntu",
+      "displayName": "Ubuntu",
+      "category": "infrastructure",
+      "color": "#e95420",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "centos",
+      "displayName": "CentOS",
+      "category": "infrastructure",
+      "color": "#932178",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "aws",
+      "displayName": "AWS",
+      "category": "cloud",
+      "color": "#ff9900",
+      "aliases": [
+        "amazon web services"
+      ],
+      "icon": true
+    },
+    {
+      "type": "aws-ec2",
+      "displayName": "AWS EC2",
+      "category": "cloud",
+      "color": "#ff9900",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "aws-s3",
+      "displayName": "AWS S3",
+      "category": "cloud",
+      "color": "#569a31",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "aws-lambda",
+      "displayName": "AWS Lambda",
+      "category": "cloud",
+      "color": "#ff9900",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "aws-rds",
+      "displayName": "AWS RDS",
+      "category": "cloud",
+      "color": "#3b48cc",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "gcp",
+      "displayName": "Google Cloud",
+      "category": "cloud",
+      "color": "#4285f4",
+      "aliases": [
+        "gcp"
+      ],
+      "icon": true
+    },
+    {
+      "type": "gcp-cloud-run",
+      "displayName": "GCP Cloud Run",
+      "category": "cloud",
+      "color": "#4285f4",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "azure",
+      "displayName": "Azure",
+      "category": "cloud",
+      "color": "#0078d4",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "azure-functions",
+      "displayName": "Azure Functions",
+      "category": "cloud",
+      "color": "#0078d4",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "naver-cloud",
+      "displayName": "Naver Cloud",
+      "category": "cloud",
+      "color": "#03c75a",
+      "aliases": [
+        "ncp",
+        "ncloud",
+        "네이버 클라우드"
+      ],
+      "icon": false
+    },
+    {
+      "type": "nhn-cloud",
+      "displayName": "NHN Cloud",
+      "category": "cloud",
+      "color": "#125de6",
+      "aliases": [
+        "toast",
+        "nhn"
+      ],
+      "icon": false
+    },
+    {
+      "type": "kakao-cloud",
+      "displayName": "Kakao Cloud",
+      "category": "cloud",
+      "color": "#3c1e1e",
+      "aliases": [
+        "kakao i cloud",
+        "카카오 클라우드"
+      ],
+      "icon": false
+    },
+    {
+      "type": "firebase",
+      "displayName": "Firebase",
+      "category": "cloud",
+      "color": "#ffa000",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "vercel",
+      "displayName": "Vercel",
+      "category": "cloud",
+      "color": "#000000",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "netlify",
+      "displayName": "Netlify",
+      "category": "cloud",
+      "color": "#05bdba",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "grafana",
+      "displayName": "Grafana",
+      "category": "observability",
+      "color": "#f46800",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "prometheus",
+      "displayName": "Prometheus",
+      "category": "observability",
+      "color": "#e6522c",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "elk",
+      "displayName": "ELK",
+      "category": "observability",
+      "color": "#005571",
+      "aliases": [
+        "elastic stack"
+      ],
+      "icon": true
+    },
+    {
+      "type": "datadog",
+      "displayName": "Datadog",
+      "category": "observability",
+      "color": "#632ca6",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "sentry",
+      "displayName": "Sentry",
+      "category": "observability",
+      "color": "#362d59",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "pinpoint",
+      "displayName": "Pinpoint",
+      "category": "observability",
+      "color": "#2c7be5",
+      "aliases": [
+        "apm"
+      ],
+      "icon": false
+    },
+    {
+      "type": "kibana",
+      "displayName": "Kibana",
+      "category": "observability",
+      "color": "#f04e98",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "logstash",
+      "displayName": "Logstash",
+      "category": "observability",
+      "color": "#fec514",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "fluentd",
+      "displayName": "Fluentd",
+      "category": "observability",
+      "color": "#0e83c8",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "newrelic",
+      "displayName": "New Relic",
+      "category": "observability",
+      "color": "#1d252c",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "jaeger",
+      "displayName": "Jaeger",
+      "category": "observability",
+      "color": "#66b3ff",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "zipkin",
+      "displayName": "Zipkin",
+      "category": "observability",
+      "color": "#f48120",
+      "aliases": [],
+      "icon": false
+    },
+    {
+      "type": "scouter",
+      "displayName": "Scouter",
+      "category": "observability",
+      "color": "#3d7cc9",
+      "aliases": [
+        "apm"
+      ],
+      "icon": false
+    },
+    {
+      "type": "keycloak",
+      "displayName": "Keycloak",
+      "category": "auth",
+      "color": "#4d4d4d",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "auth0",
+      "displayName": "Auth0",
+      "category": "auth",
+      "color": "#eb5424",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "okta",
+      "displayName": "Okta",
+      "category": "auth",
+      "color": "#007dc1",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "minio",
+      "displayName": "MinIO",
+      "category": "storage",
+      "color": "#c72e29",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "ceph",
+      "displayName": "Ceph",
+      "category": "storage",
+      "color": "#ef5b25",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "junit",
+      "displayName": "JUnit",
+      "category": "testing",
+      "color": "#dc514a",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "jest",
+      "displayName": "Jest",
+      "category": "testing",
+      "color": "#99425b",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "cypress",
+      "displayName": "Cypress",
+      "category": "testing",
+      "color": "#1b1e2e",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "playwright",
+      "displayName": "Playwright",
+      "category": "testing",
+      "color": "#2ead33",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "selenium",
+      "displayName": "Selenium",
+      "category": "testing",
+      "color": "#cf0a2c",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "postman",
+      "displayName": "Postman",
+      "category": "testing",
+      "color": "#f37036",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "swagger",
+      "displayName": "Swagger",
+      "category": "testing",
+      "color": "#49a32b",
+      "aliases": [
+        "openapi"
+      ],
+      "icon": true
+    },
+    {
+      "type": "github",
+      "displayName": "GitHub",
+      "category": "etc",
+      "color": "#181717",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "gitlab",
+      "displayName": "GitLab",
+      "category": "etc",
+      "color": "#fc6d26",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "git",
+      "displayName": "Git",
+      "category": "etc",
+      "color": "#f34f29",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "bitbucket",
+      "displayName": "Bitbucket",
+      "category": "etc",
+      "color": "#205081",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "jira",
+      "displayName": "Jira",
+      "category": "etc",
+      "color": "#0052cc",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "confluence",
+      "displayName": "Confluence",
+      "category": "etc",
+      "color": "#136be6",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "slack",
+      "displayName": "Slack",
+      "category": "etc",
+      "color": "#4a154b",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "notion",
+      "displayName": "Notion",
+      "category": "etc",
+      "color": "#000000",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "figma",
+      "displayName": "Figma",
+      "category": "etc",
+      "color": "#f24e1e",
+      "aliases": [],
+      "icon": true
+    },
+    {
+      "type": "zeplin",
+      "displayName": "Zeplin",
+      "category": "etc",
+      "color": "#ee6723",
+      "aliases": [],
+      "icon": false
+    }
+  ]
+}
