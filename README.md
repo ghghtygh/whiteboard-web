@@ -1,5 +1,12 @@
 # whiteboard-web
 
+**Whiteboard** — 소프트웨어 아키텍처 다이어그램을 함께 그리는 협업 캔버스. Excalidraw 스타일 UX로
+기술 스택 컴포넌트(Spring Boot, Kafka, PostgreSQL...)를 검색·배치·연결하고, 실시간으로 같이 편집합니다.
+
+🔗 **라이브 데모**: [wb.gpglab.site](http://wb.gpglab.site/) · 🛠 React 18 · TypeScript · Vite · Yjs(CRDT) · react-konva
+
+---
+
 협업 화이트보드의 React 프론트엔드. 스펙 문서 v0.1 (2026-05-15) 기반.
 
 > **현재 상태**: 백엔드 없이 동작하는 **로컬 모드**가 기본. 보드 목록은 localStorage,
