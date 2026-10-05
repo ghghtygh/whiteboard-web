@@ -47,7 +47,7 @@ export function Toolbar() {
   const canRedo = !!undoManager && undoManager.redoStack.length > 0
 
   return (
-    <div className="toolbar">
+    <div className="toolbar" data-tour="toolbar">
       <button className="ico" title="Undo (⌘Z)" disabled={!canUndo} onClick={() => undoManager?.undo()}>
         <UndoIcon />
       </button>

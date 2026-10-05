@@ -101,7 +101,7 @@ export function Minimap() {
   }
 
   return (
-    <div className="minimap">
+    <div className="minimap" data-tour="minimap">
       <svg
         ref={svgRef}
         width={MM_W}
