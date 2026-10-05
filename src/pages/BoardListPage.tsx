@@ -132,7 +132,6 @@ export function BoardListPage() {
                              background: var(--primary); box-shadow: 0 0 0 4px var(--primary-soft); }
         .topbar h1 { margin: 0; font: var(--font-h1); letter-spacing: var(--tracking-tight); }
         .spacer { flex: 1; }
-        .lang-select { width: auto; font-size: var(--text-sm); }
         .who { color: var(--text-muted); font-size: var(--text-sm); }
         .muted { color: var(--text-muted); font-size: var(--text-sm); }
         .error { color: var(--danger); }

@@ -24,6 +24,7 @@ import { useSelection } from '@/canvas/selection'
 import { SYNC_AVAILABLE, useSyncStore } from '@/store/sync'
 import type { Board } from '@/types/domain'
 import { useT } from '@/i18n'
+import { LanguageSelect } from '@/components/LanguageSelect'
 
 export function BoardEditPage() {
   const t = useT()
@@ -149,6 +150,7 @@ export function BoardEditPage() {
           >
             <HelpIcon />
           </button>
+          <LanguageSelect compact />
           <button
             className="share-btn primary"
             data-tour="share"
@@ -277,6 +279,7 @@ export function BoardEditPage() {
             .title-btn { font-size: 13px; max-width: 120px; }
             .share-btn { padding: 4px 8px; }
             .help-btn { width: 32px; height: 32px; }
+            .lang-select[data-compact="true"] .lang-trigger { width: 32px; height: 32px; }
             /* 10px 미만은 판독성이 떨어져 DS 최소 크기(--text-2xs)를 유지하고
                대신 패딩/줄바꿈으로 압축한다. */
             .status { font-size: var(--text-2xs); padding: 4px; white-space: nowrap; }

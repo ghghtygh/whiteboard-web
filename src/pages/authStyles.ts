@@ -78,10 +78,7 @@ export const authStyles = `
     padding: 24px;
     background: var(--surface-app);
   }
-  .auth-pane .lang-select {
-    position: absolute; top: 16px; right: 16px;
-    width: auto; font-size: var(--text-sm);
-  }
+  .auth-pane .lang-select { position: absolute; top: 16px; right: 16px; }
   .auth-card {
     background: var(--surface-panel);
     border: 1px solid var(--border-subtle);

@@ -110,3 +110,14 @@ export function HelpIcon(props: IconProps) {
     </Svg>
   )
 }
+
+export function GlobeIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M3 12h18" />
+      <path d="M12 3a14 14 0 0 1 0 18" />
+      <path d="M12 3a14 14 0 0 0 0 18" />
+    </Svg>
+  )
+}

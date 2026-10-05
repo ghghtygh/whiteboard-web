@@ -14,7 +14,6 @@ import { CloseIcon } from '@/components/icons'
 import { MOBILE_BP } from '@/styles/breakpoints'
 import { useT } from '@/i18n'
 import en from '@/i18n/locales/en'
-import { LanguageSelect } from '@/components/LanguageSelect'
 
 // 카탈로그 카테고리 id → 번역 키. 모르는 카테고리(서버에서 새로 추가 등)는 id 를 그대로 보여준다.
 type CategoryId = keyof typeof en.sidebar.categories
@@ -372,10 +371,6 @@ export function Sidebar({ open = false, onClose }: SidebarProps = {}) {
           )}
         </div>
 
-        <div className="sidebar-foot">
-          <LanguageSelect />
-        </div>
-
         <style>{`
           .sidebar { display: flex; flex-direction: column;
                      border-right: 1px solid var(--border-subtle);
@@ -387,8 +382,6 @@ export function Sidebar({ open = false, onClose }: SidebarProps = {}) {
                        font-size: 24px; line-height: 1; padding: 0 4px;
                        color: var(--text-muted); cursor: pointer; }
           .list { flex: 1; overflow-y: auto; padding: 8px 12px; }
-          .sidebar-foot { padding: 8px 12px; border-top: 1px solid var(--border-subtle); }
-          .sidebar-foot .lang-select { width: 100%; font-size: var(--text-sm); }
           .list h3 { font: var(--weight-semibold) var(--text-2xs)/1 var(--font-sans);
                      text-transform: uppercase; color: var(--text-muted);
                      margin: 14px 0 6px; letter-spacing: var(--tracking-caps);
