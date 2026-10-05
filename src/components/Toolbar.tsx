@@ -7,8 +7,10 @@ import { useSelection } from '@/canvas/selection'
 import { deleteNodes, deleteEdges, deleteGroups } from '@/canvas/ops'
 import { UndoIcon, RedoIcon, TrashIcon } from '@/components/icons'
 import { MOBILE_BP } from '@/styles/breakpoints'
+import { MOD_KEY, useT } from '@/i18n'
 
 export function Toolbar() {
+  const t = useT()
   const tool = useToolStore((s) => s.tool)
   const toggleGroup = useToolStore((s) => s.toggleGroup)
   const gridVisible = useGridStore((s) => s.visible)
@@ -48,16 +50,16 @@ export function Toolbar() {
 
   return (
     <div className="toolbar" data-tour="toolbar">
-      <button className="ico" title="Undo (⌘Z)" disabled={!canUndo} onClick={() => undoManager?.undo()}>
+      <button className="ico" title={t('toolbar.undo', { mod: MOD_KEY })} disabled={!canUndo} onClick={() => undoManager?.undo()}>
         <UndoIcon />
       </button>
-      <button className="ico" title="Redo (⌘⇧Z)" disabled={!canRedo} onClick={() => undoManager?.redo()}>
+      <button className="ico" title={t('toolbar.redo', { mod: MOD_KEY })} disabled={!canRedo} onClick={() => undoManager?.redo()}>
         <RedoIcon />
       </button>
       {hasSelection && (
         <>
           <span className="sep" />
-          <button className="ico del" title="Delete selection (Delete)" onClick={handleDelete}>
+          <button className="ico del" title={t('toolbar.deleteSelection')} onClick={handleDelete}>
             <TrashIcon />
           </button>
         </>
@@ -65,22 +67,22 @@ export function Toolbar() {
       <span className="sep" />
       <button
         className="ico txt"
-        title="Create group — drag an empty area"
+        title={t('toolbar.groupHint')}
         data-active={tool === 'group'}
         onClick={toggleGroup}
       >
-        Group
+        {t('toolbar.group')}
       </button>
-      <button className="ico txt" title="Toggle grid" data-active={gridVisible} onClick={toggleGrid}>
-        Grid
+      <button className="ico txt" title={t('toolbar.gridHint')} data-active={gridVisible} onClick={toggleGrid}>
+        {t('toolbar.grid')}
       </button>
       <button
         className="ico txt"
-        title="Snap to grid — aligns new placement/drag to a 40px grid (hold Alt to invert)"
+        title={t('toolbar.snapHint')}
         data-active={snapEnabled}
         onClick={toggleSnap}
       >
-        Snap
+        {t('toolbar.snap')}
       </button>
 
       <style>{`

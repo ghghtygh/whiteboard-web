@@ -6,15 +6,17 @@ import { CanvasContextProvider } from '@/canvas/CanvasContext'
 import { Canvas } from '@/canvas/Canvas'
 import { useUndoManager } from '@/canvas/hooks'
 import { decodeGraph, emptyGraph, type GraphSnapshot } from '@/board/graphCodec'
+import { useT } from '@/i18n'
 
 // 서버에 저장되지 않는 1회용 그래프 뷰어(읽기 전용). /view/:token 의 token 이 그래프 전체
 // 내용이다(whiteboard-mcp 가 만든 링크). URL 을 아는 사람만 열 수 있고, 다른 곳에서 이 그래프를
 // 나열/검색할 방법은 없다. 편집은 지원하지 않는다 — 보기 전용 Canvas 는 pan/zoom 도 그래프
 // 콘텐츠 범위 안으로 제한된다(boundToContent).
 export function ViewGraphPage() {
+  const t = useT()
   const { token } = useParams<{ token: string }>()
   const [doc, setDoc] = useState<BoardDoc | null>(null)
-  const [decodeError, setDecodeError] = useState<string | null>(null)
+  const [decodeError, setDecodeError] = useState(false)
   const [copied, setCopied] = useState(false)
   const undoManager = useUndoManager(doc)
 
@@ -22,8 +24,8 @@ export function ViewGraphPage() {
     let graph: GraphSnapshot
     try {
       graph = token ? decodeGraph(token) : emptyGraph()
-    } catch (err) {
-      setDecodeError(err instanceof Error ? err.message : 'This graph link is invalid or corrupted.')
+    } catch {
+      setDecodeError(true)
       return
     }
     const next = createBoardDoc()
@@ -66,7 +68,7 @@ export function ViewGraphPage() {
   if (decodeError) {
     return (
       <div className="view-error">
-        <p>{decodeError}</p>
+        <p>{t('view.invalidLink')}</p>
         <style>{`
           .view-error { height: 100%; display: flex; align-items: center; justify-content: center;
                         color: var(--text-muted); padding: 24px; text-align: center; }
@@ -79,9 +81,9 @@ export function ViewGraphPage() {
     <CanvasContextProvider value={ctxValue}>
       <div className="view-shell">
         <header className="view-topbar">
-          <span className="badge">Temporary view — nothing is saved on any server</span>
+          <span className="badge">{t('view.badge')}</span>
           <div className="spacer" />
-          <button type="button" onClick={copyLink}>{copied ? 'Copied' : 'Copy link'}</button>
+          <button type="button" onClick={copyLink}>{copied ? t('common.copied') : t('common.copyLink')}</button>
         </header>
         <div className="view-canvas-host">
           <Canvas

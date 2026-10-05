@@ -3,6 +3,8 @@ import { createPortal } from 'react-dom'
 import { useOnboardingStore } from '@/onboarding/store'
 import { TOUR_STEPS, type Placement, type TourStep } from '@/onboarding/steps'
 import { CloseIcon } from '@/components/icons'
+import { MOD_KEY, useT } from '@/i18n'
+import { Rich } from '@/i18n/Rich'
 
 // 기능 소개 온보딩 투어 — 대상 요소를 스포트라이트로 하이라이트하고, 옆에 설명 툴팁을 순서대로 띄운다.
 // 대상은 DOM 의 data-tour="..." 속성으로 찾는다(컴포넌트 간 ref 전달 없이 느슨하게 연결).
@@ -95,6 +97,7 @@ export function OnboardingTour() {
 }
 
 function Tour({ steps: allSteps }: { steps: TourStep[] }) {
+  const t = useT()
   const finish = useOnboardingStore((s) => s.finish)
   // 시작 시점에 화면에 없는 대상의 스텝은 제외한다.
   const steps = useMemo(
@@ -185,14 +188,30 @@ function Tour({ steps: allSteps }: { steps: TourStep[] }) {
         data-centered={!spot}
         style={tipPos ? { left: tipPos.left, top: tipPos.top } : { visibility: 'hidden' }}
       >
-        <button type="button" className="tour-close" aria-label="Skip tour" title="Skip tour" onClick={finish}>
+        <button type="button" className="tour-close" aria-label={t('tour.skipTour')} title={t('tour.skipTour')} onClick={finish}>
           <CloseIcon />
         </button>
         <div className="tour-step-count">
           {index + 1} / {steps.length}
         </div>
-        <h3 id={titleId}>{step.title}</h3>
-        <div className="tour-body">{step.body}</div>
+        <h3 id={titleId}>{t(step.title, { mod: MOD_KEY })}</h3>
+        <div className="tour-body">
+          {step.body.map((block, i) =>
+            'p' in block ? (
+              <p key={i}>
+                <Rich text={t(block.p, { mod: MOD_KEY })} />
+              </p>
+            ) : (
+              <ul key={i}>
+                {block.ul.map((key) => (
+                  <li key={key}>
+                    <Rich text={t(key, { mod: MOD_KEY })} />
+                  </li>
+                ))}
+              </ul>
+            ),
+          )}
+        </div>
         <div className="tour-foot">
           <div className="tour-dots" aria-hidden="true">
             {steps.map((s, i) => (
@@ -201,15 +220,15 @@ function Tour({ steps: allSteps }: { steps: TourStep[] }) {
           </div>
           {index === 0 ? (
             <button type="button" className="tour-ghost" onClick={finish}>
-              Skip
+              {t('tour.skip')}
             </button>
           ) : (
             <button type="button" className="tour-ghost" onClick={prev}>
-              Back
+              {t('tour.back')}
             </button>
           )}
           <button type="button" ref={nextBtnRef} className="primary tour-next" onClick={next}>
-            {index === 0 ? 'Start tour' : isLast ? 'Done' : 'Next'}
+            {index === 0 ? t('tour.start') : isLast ? t('tour.done') : t('tour.next')}
           </button>
         </div>
       </div>

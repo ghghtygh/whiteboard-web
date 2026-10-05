@@ -1,30 +1,27 @@
-import type { ReactNode } from 'react'
+import type { MessageKey } from '@/i18n'
 import type { TourDevice } from '@/onboarding/store'
 
 // 툴팁 위치. 'inside' 는 캔버스처럼 큰 대상 안쪽 중앙에 띄운다. target 이 없으면 화면 중앙 카드.
 export type Placement = 'top' | 'bottom' | 'left' | 'right' | 'inside'
+
+// 본문은 번역 키 블록의 나열이다. 문장 안 <b>/<kbd> 서식과 {mod} 자리표시자는
+// 렌더 시점(OnboardingTour)에 현재 로케일로 풀어낸다 — 언어를 바꾸면 투어도 즉시 바뀐다.
+export type TourKey = Extract<MessageKey, `tour.${string}`>
+export type TourBlock = { p: TourKey } | { ul: TourKey[] }
 
 export interface TourStep {
   id: string
   /** 하이라이트할 요소의 data-tour 값. 없으면 화면 중앙 안내 카드. */
   target?: string
   placement?: Placement
-  title: string
-  body: ReactNode
+  title: TourKey
+  body: TourBlock[]
 }
-
-const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform)
-const MOD = isMac ? '⌘' : 'Ctrl'
 
 const WELCOME: TourStep = {
   id: 'welcome',
-  title: 'Welcome to Whiteboard',
-  body: (
-    <p>
-      Sketch system architecture diagrams — alone or together in real time. This quick tour walks you through the
-      basics.
-    </p>
-  ),
+  title: 'tour.welcome.title',
+  body: [{ p: 'tour.welcome.body' }],
 }
 
 const DESKTOP: TourStep[] = [
@@ -33,106 +30,57 @@ const DESKTOP: TourStep[] = [
     id: 'sidebar',
     target: 'sidebar',
     placement: 'right',
-    title: 'Component library',
-    body: (
-      <>
-        <p>Search for services, databases and tools.</p>
-        <ul>
-          <li>Drag an item onto the canvas to place it.</li>
-          <li>Or click it to drop it in the middle of the view.</li>
-        </ul>
-      </>
-    ),
+    title: 'tour.sidebar.title',
+    body: [{ p: 'tour.sidebar.body' }, { ul: ['tour.sidebar.drag', 'tour.sidebar.click'] }],
   },
   {
     id: 'canvas',
     target: 'canvas',
     placement: 'inside',
-    title: 'Build your diagram',
-    body: (
-      <ul>
-        <li>Hover a node and drag from one of its anchor dots to another node to connect them.</li>
-        <li>Double-click a node, edge or group to edit its label.</li>
-        <li>Drag across an empty area to select multiple items.</li>
-      </ul>
-    ),
+    title: 'tour.canvas.title',
+    body: [{ ul: ['tour.canvas.connect', 'tour.canvas.edit', 'tour.canvas.select'] }],
   },
   {
     id: 'toolbar',
     target: 'toolbar',
     placement: 'bottom',
-    title: 'Toolbar',
-    body: (
-      <ul>
-        <li>
-          Undo / Redo — <kbd>{MOD}</kbd> <kbd>Z</kbd>
-        </li>
-        <li>
-          <b>Group</b> — drag an empty area to wrap nodes in a group.
-        </li>
-        <li>
-          <b>Grid</b> / <b>Snap</b> — show the grid and align to it. Hold <kbd>Alt</kbd> to invert snapping.
-        </li>
-      </ul>
-    ),
+    title: 'tour.toolbar.title',
+    body: [{ ul: ['tour.toolbar.undo', 'tour.toolbar.group', 'tour.toolbar.grid'] }],
   },
   {
     id: 'zoom',
     target: 'zoom',
     placement: 'top',
-    title: 'Move around',
-    body: (
-      <ul>
-        <li>Scroll to pan, or hold <kbd>Space</kbd> and drag.</li>
-        <li>
-          <kbd>{MOD}</kbd> + scroll (or pinch the trackpad) to zoom.
-        </li>
-        <li>Click the percentage to reset to 100%.</li>
-      </ul>
-    ),
+    title: 'tour.zoom.title',
+    body: [{ ul: ['tour.zoom.pan', 'tour.zoom.zoom', 'tour.zoom.reset'] }],
   },
   {
     id: 'minimap',
     target: 'minimap',
     placement: 'top',
-    title: 'Minimap',
-    body: <p>See the whole board at a glance. Drag inside it to jump to another area.</p>,
+    title: 'tour.minimap.title',
+    body: [{ p: 'tour.minimap.body' }],
   },
   {
     id: 'share',
     target: 'share',
     placement: 'bottom',
-    title: 'Share',
-    body: <p>Invite others with a link and edit the same board together in real time.</p>,
+    title: 'tour.share.title',
+    body: [{ p: 'tour.share.body' }],
   },
   {
     id: 'sync',
     target: 'sync',
     placement: 'bottom',
-    title: 'Sync status',
-    body: <p>Shows whether changes are syncing live. Your work is always saved in this browser automatically.</p>,
+    title: 'tour.sync.title',
+    body: [{ p: 'tour.sync.body' }],
   },
   {
     id: 'help',
     target: 'help',
     placement: 'bottom',
-    title: 'Handy shortcuts',
-    body: (
-      <>
-        <ul>
-          <li>
-            <kbd>{MOD}</kbd> <kbd>C</kbd> / <kbd>V</kbd> copy &amp; paste, <kbd>Delete</kbd> remove
-          </li>
-          <li>
-            With an edge selected: <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> line style, <kbd>D</kbd> arrow direction
-          </li>
-          <li>
-            <kbd>Esc</kbd> cancel / clear selection
-          </li>
-        </ul>
-        <p>You can replay this tour any time from here.</p>
-      </>
-    ),
+    title: 'tour.help.title',
+    body: [{ ul: ['tour.help.copyPaste', 'tour.help.edge', 'tour.help.esc'] }, { p: 'tour.help.replay' }],
   },
 ]
 
@@ -142,74 +90,50 @@ const MOBILE: TourStep[] = [
     id: 'menu',
     target: 'menu',
     placement: 'bottom',
-    title: 'Add components',
-    body: (
-      <>
-        <p>Tap here to open the component library.</p>
-        <ul>
-          <li>Tap an item to add it to the canvas.</li>
-          <li>Or press and drag it to where you want it.</li>
-        </ul>
-      </>
-    ),
+    title: 'tour.menu.title',
+    body: [{ p: 'tour.menu.body' }, { ul: ['tour.menu.tap', 'tour.menu.drag'] }],
   },
   {
     id: 'canvas',
     target: 'canvas',
     placement: 'inside',
-    title: 'Build your diagram',
-    body: (
-      <ul>
-        <li>Tap a node to select it, then drag one of its anchor dots onto another node to connect them.</li>
-        <li>Double-tap a node, edge or group to edit its label.</li>
-        <li>Drag an empty area with one finger to move around.</li>
-      </ul>
-    ),
+    title: 'tour.canvas.title',
+    body: [{ ul: ['tour.canvas.connectTouch', 'tour.canvas.editTouch', 'tour.canvas.panTouch'] }],
   },
   {
     id: 'toolbar',
     target: 'toolbar',
     placement: 'bottom',
-    title: 'Toolbar',
-    body: (
-      <ul>
-        <li>Undo / Redo your last changes.</li>
-        <li>
-          <b>Group</b> — then drag an empty area to wrap nodes in a group.
-        </li>
-        <li>
-          <b>Grid</b> / <b>Snap</b> — show the grid and align to it.
-        </li>
-      </ul>
-    ),
+    title: 'tour.toolbar.title',
+    body: [{ ul: ['tour.toolbar.undoTouch', 'tour.toolbar.groupTouch', 'tour.toolbar.gridTouch'] }],
   },
   {
     id: 'zoom',
     target: 'zoom',
     placement: 'top',
-    title: 'Zoom',
-    body: <p>Use − and + to zoom. Tap the percentage to reset to 100%.</p>,
+    title: 'tour.zoom.titleTouch',
+    body: [{ p: 'tour.zoom.bodyTouch' }],
   },
   {
     id: 'share',
     target: 'share',
     placement: 'bottom',
-    title: 'Share',
-    body: <p>Invite others with a link and edit the same board together in real time.</p>,
+    title: 'tour.share.title',
+    body: [{ p: 'tour.share.body' }],
   },
   {
     id: 'sync',
     target: 'sync',
     placement: 'bottom',
-    title: 'Sync status',
-    body: <p>Shows whether changes are syncing live. Your work is always saved on this device automatically.</p>,
+    title: 'tour.sync.title',
+    body: [{ p: 'tour.sync.bodyTouch' }],
   },
   {
     id: 'help',
     target: 'help',
     placement: 'bottom',
-    title: "You're all set",
-    body: <p>Tap here any time to replay this tour.</p>,
+    title: 'tour.help.titleTouch',
+    body: [{ p: 'tour.help.replayTouch' }],
   },
 ]
 

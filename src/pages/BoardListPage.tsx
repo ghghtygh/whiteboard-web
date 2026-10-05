@@ -3,12 +3,16 @@ import { Link, useNavigate } from 'react-router-dom'
 import { createBoard, deleteBoard, listBoards } from '@/api/boards'
 import { useAuthStore } from '@/store/auth'
 import { toast } from '@/store/toast'
+import { t as translateNow, useFormatDate, useT } from '@/i18n'
+import { LanguageSelect } from '@/components/LanguageSelect'
 import { COMPACT_BP } from '@/styles/breakpoints'
 import type { Board } from '@/types/domain'
 
 const DELETE_UNDO_MS = 4000
 
 export function BoardListPage() {
+  const t = useT()
+  const formatDate = useFormatDate()
   const navigate = useNavigate()
   const logout = useAuthStore((s) => s.logout)
   const user = useAuthStore((s) => s.user)
@@ -24,7 +28,7 @@ export function BoardListPage() {
       setBoards(await listBoards())
       setError(null)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load boards')
+      setError(err instanceof Error ? err.message : translateNow('boards.loadFailed'))
     } finally {
       setLoading(false)
     }
@@ -42,7 +46,7 @@ export function BoardListPage() {
 
   async function onCreate() {
     // 제목 입력 팝업 없이 바로 만들고, 보드 안에서 제목을 눌러 바꾸게 한다.
-    const board = await createBoard('New board')
+    const board = await createBoard(translateNow('boards.defaultTitle'))
     navigate(`/boards/${board.id}`)
   }
 
@@ -56,15 +60,15 @@ export function BoardListPage() {
     const timer = setTimeout(() => {
       pendingDeletes.current.delete(id)
       void deleteBoard(id).catch(() => {
-        toast.show('Failed to delete the board.', { tone: 'danger' })
+        toast.show(translateNow('boards.deleteFailed'), { tone: 'danger' })
         void refresh()
       })
     }, DELETE_UNDO_MS)
     pendingDeletes.current.set(id, timer)
 
-    toast.show(`Deleted "${target.title}"`, {
+    toast.show(translateNow('boards.deleted', { title: target.title }), {
       action: {
-        label: 'Undo',
+        label: translateNow('common.undo'),
         onClick: () => {
           const pending = pendingDeletes.current.get(id)
           if (pending) {
@@ -83,24 +87,25 @@ export function BoardListPage() {
       <header className="topbar">
         <div className="brand">
           <span className="brand-dot" />
-          <h1>My boards</h1>
+          <h1>{t('boards.title')}</h1>
         </div>
         <div className="spacer" />
         <span className="who">{user?.name ?? user?.email}</span>
-        <Link to="/settings/tokens">API tokens</Link>
-        <button onClick={() => { logout(); navigate('/login') }}>Log out</button>
-        <button className="primary" onClick={onCreate}>New board</button>
+        <LanguageSelect />
+        <Link to="/settings/tokens">{t('boards.apiTokens')}</Link>
+        <button onClick={() => { logout(); navigate('/login') }}>{t('boards.logout')}</button>
+        <button className="primary" onClick={onCreate}>{t('boards.newBoard')}</button>
       </header>
 
-      {loading && <p className="muted">Loading…</p>}
+      {loading && <p className="muted">{t('common.loading')}</p>}
       {error && <p className="error">{error}</p>}
 
       {!loading && !error && (
         <ul className="grid">
           {boards.length === 0 && (
             <li className="empty">
-              <strong>No boards yet</strong>
-              <span>Click “New board” to create your first diagram.</span>
+              <strong>{t('boards.emptyTitle')}</strong>
+              <span>{t('boards.emptyBody')}</span>
             </li>
           )}
           {boards.map((b) => (
@@ -111,9 +116,9 @@ export function BoardListPage() {
               </Link>
               <div className="card-body">
                 <Link to={`/boards/${b.id}`} className="card-title">{b.title}</Link>
-                <p className="muted">Updated {new Date(b.updatedAt).toLocaleDateString('en-US')}</p>
+                <p className="muted">{t('boards.updatedAt', { date: formatDate(b.updatedAt) })}</p>
               </div>
-              <button className="card-del" title="Delete board" onClick={() => onDelete(b.id)}>Delete</button>
+              <button className="card-del" title={t('boards.deleteTitle')} onClick={() => onDelete(b.id)}>{t('boards.delete')}</button>
             </li>
           ))}
         </ul>
@@ -127,6 +132,7 @@ export function BoardListPage() {
                              background: var(--primary); box-shadow: 0 0 0 4px var(--primary-soft); }
         .topbar h1 { margin: 0; font: var(--font-h1); letter-spacing: var(--tracking-tight); }
         .spacer { flex: 1; }
+        .lang-select { width: auto; font-size: var(--text-sm); }
         .who { color: var(--text-muted); font-size: var(--text-sm); }
         .muted { color: var(--text-muted); font-size: var(--text-sm); }
         .error { color: var(--danger); }

@@ -72,6 +72,7 @@ import {
 } from './ops'
 import { localRecents } from '@/local/recents'
 import { LOCAL_CATALOG } from '@/local/catalogSeed'
+import { useT } from '@/i18n'
 
 interface Props {
   boardId: string
@@ -197,6 +198,7 @@ export function Canvas({
   panSensitivity = 1,
   maxWheelAcceleration = 1,
 }: Props) {
+  const t = useT()
   const hostRef = useRef<HTMLDivElement>(null)
   const stageRef = useRef<Konva.Stage>(null)
   const [size, setSize] = useState({ width: 0, height: 0 })
@@ -1257,7 +1259,7 @@ export function Canvas({
             <Text
               x={20}
               y={20}
-              text="Drag a component from the left panel and drop it on the board."
+              text={t('editor.emptyBoard')}
               fontSize={14}
               fill="#98a3b5"
               listening={false}

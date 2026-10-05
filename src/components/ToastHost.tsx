@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useToastStore } from '@/store/toast'
 import { CloseIcon } from '@/components/icons'
+import { useT } from '@/i18n'
 
 export function ToastHost() {
   const toasts = useToastStore((s) => s.toasts)
@@ -36,6 +37,7 @@ interface ToastItemProps {
 }
 
 function ToastItem({ id, message, tone, action, duration, onDismiss }: ToastItemProps) {
+  const t = useT()
   useEffect(() => {
     const timer = window.setTimeout(() => onDismiss(id), duration)
     return () => window.clearTimeout(timer)
@@ -57,7 +59,7 @@ function ToastItem({ id, message, tone, action, duration, onDismiss }: ToastItem
           {action.label}
         </button>
       )}
-      <button type="button" className="toast-close" aria-label="Dismiss" onClick={() => onDismiss(id)}>
+      <button type="button" className="toast-close" aria-label={t('common.dismiss')} onClick={() => onDismiss(id)}>
         <CloseIcon />
       </button>
 
