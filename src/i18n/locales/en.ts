@@ -1,0 +1,278 @@
+// 기준(source of truth) 로케일. 키 구조와 {param} 자리표시자는 여기서 정의되고,
+// 다른 로케일 파일은 이 구조를 그대로 따라야 한다(타입으로 강제 — src/i18n/types.ts).
+//
+// 규칙
+// - 최상위 키 = 화면/기능 단위 네임스페이스 (common, auth, boards, editor, ...).
+// - 값 안의 {name} 은 t(key, { name }) 로 치환된다. 자리표시자 이름도 타입 검사 대상.
+// - <b>, <kbd>, <strong>, <code> 태그는 <Rich> 컴포넌트로 렌더할 때만 해석된다.
+const en = {
+  app: {
+    name: 'Whiteboard',
+    documentTitle: 'Whiteboard — collaborative architecture canvas',
+  },
+
+  common: {
+    loading: 'Loading…',
+    close: 'Close',
+    copy: 'Copy',
+    copied: 'Copied',
+    copyLink: 'Copy link',
+    done: 'Done',
+    undo: 'Undo',
+    revoke: 'Revoke',
+    dismiss: 'Dismiss',
+    language: 'Language',
+    anonymous: 'Anonymous',
+  },
+
+  auth: {
+    goToBoards: 'Go to my boards',
+    eyebrow: 'SOFTWARE ARCHITECTURE, TOGETHER',
+    email: 'Email',
+    password: 'Password',
+    name: 'Name',
+    or: 'or',
+    continueWith: 'Continue with {provider}',
+    guestName: 'Guest',
+    login: {
+      pitchTitleLine1: 'Software architecture,',
+      pitchTitleLine2: 'drawn together',
+      pitchBody: 'Drag in your stack, connect it with edges, and edit together in real time.',
+      title: 'Log in',
+      subtitle: 'Log in to your account and pick up where you left off.',
+      submit: 'Log in',
+      submitting: 'Logging in…',
+      failed: 'Login failed',
+      continueAsGuest: 'Continue as guest',
+      noAccount: 'Don’t have an account?',
+      signupLink: 'Sign up',
+    },
+    signup: {
+      pitchTitleLine1: 'Ready to start',
+      pitchTitleLine2: 'mapping your architecture?',
+      pitchBody: 'Create an account and start your first diagram. Invite your team with a single link.',
+      title: 'Sign up',
+      subtitle: 'Just a few details and you’re ready to go.',
+      submit: 'Create account',
+      submitting: 'Creating account…',
+      failed: 'Sign up failed',
+      haveAccount: 'Already have an account?',
+      loginLink: 'Log in',
+    },
+    callback: {
+      failedTitle: 'Login failed',
+      missingTokens: 'We didn’t receive your login details. Please try again.',
+      loadUserFailed: 'We couldn’t load your account. Please log in again.',
+      backToLogin: 'Back to login',
+      inProgressTitle: 'Logging in…',
+      inProgressBody: 'Checking your social account…',
+    },
+  },
+
+  boards: {
+    title: 'My boards',
+    apiTokens: 'API tokens',
+    logout: 'Log out',
+    newBoard: 'New board',
+    defaultTitle: 'New board',
+    untitledBoard: 'Untitled board',
+    untitledWhiteboard: 'Untitled whiteboard',
+    loadFailed: 'Failed to load boards',
+    deleteFailed: 'Failed to delete the board.',
+    deleted: 'Deleted “{title}”',
+    emptyTitle: 'No boards yet',
+    emptyBody: 'Click “New board” to create your first diagram.',
+    updatedAt: 'Updated {date}',
+    deleteTitle: 'Delete board',
+    delete: 'Delete',
+  },
+
+  tokens: {
+    back: '← My boards',
+    title: 'API tokens',
+    intro:
+      'Personal access tokens let external tools — like an MCP server — call the whiteboard API on your behalf. Anyone with a token can read and edit your boards, so keep it as secret as a password.',
+    remoteOnly: 'API tokens are only available when connected to the backend (remote mode).',
+    namePlaceholder: 'Token name (e.g. MCP on my laptop)',
+    create: 'Create token',
+    creating: 'Creating…',
+    issued: '<strong>{name}</strong> was created. Copy it now — it won’t be shown again.',
+    empty: 'No tokens yet.',
+    created: 'Created {date}',
+    expires: 'Expires {date}',
+    lastUsed: 'Last used {date}',
+    confirmRevoke: 'Confirm revoke',
+    revoked: 'Token revoked.',
+    loadFailed: 'Failed to load tokens.',
+    createFailed: 'Failed to create the token.',
+    revokeFailed: 'Failed to revoke the token.',
+  },
+
+  notFound: {
+    title: 'Page not found',
+    body: 'The address may be wrong, or the board may have been deleted.',
+    home: 'Back to home',
+  },
+
+  view: {
+    badge: 'Temporary view — nothing is saved on any server',
+    invalidLink: 'This graph link is invalid or corrupted.',
+  },
+
+  editor: {
+    openMenu: 'Open components menu',
+    menu: 'Components',
+    backToList: 'Back to board list',
+    boardList: 'Board list',
+    rename: 'Rename board',
+    showTour: 'Show feature tour',
+    tour: 'Feature tour',
+    share: 'Share',
+    signInToShare: 'Sign in to share',
+    syncOnHint: 'Real-time sync on — click to turn off',
+    syncOffHint: 'Real-time sync off — click to turn on',
+    syncing: 'Syncing',
+    connecting: 'Connecting…',
+    syncOff: 'Sync off',
+    localOnlyHint: 'No sync server configured — saved locally only',
+    local: 'Local',
+    emptyBoard: 'Drag a component from the left panel and drop it on the board.',
+  },
+
+  toolbar: {
+    undo: 'Undo ({mod}Z)',
+    redo: 'Redo ({mod}⇧Z)',
+    deleteSelection: 'Delete selection (Delete)',
+    group: 'Group',
+    groupHint: 'Create group — drag an empty area',
+    grid: 'Grid',
+    gridHint: 'Toggle grid',
+    snap: 'Snap',
+    snapHint: 'Snap to grid — aligns new placement/drag to a 40px grid (hold Alt to invert)',
+  },
+
+  zoom: {
+    out: 'Zoom out',
+    in: 'Zoom in',
+    reset: 'Reset to 100%',
+  },
+
+  minimap: {
+    label: 'Minimap — click or drag to pan',
+  },
+
+  sidebar: {
+    search: 'Search components',
+    closeMenu: 'Close menu',
+    recent: 'Recently used',
+    empty: 'The catalog is empty',
+    loadFailed: 'Failed to load catalog',
+    categories: {
+      'ci-cd': 'CI / CD',
+      database: 'Database',
+      framework: 'Framework',
+      messaging: 'Messaging',
+      infrastructure: 'Infrastructure',
+      cloud: 'Cloud',
+      observability: 'Observability',
+      auth: 'Auth',
+      storage: 'Storage',
+      etc: 'Other',
+    },
+  },
+
+  share: {
+    title: 'Share board',
+    link: 'Share link',
+    syncOnConnected: 'Real-time sync is on — anyone with the link can collaborate.',
+    syncOnConnecting: 'Connecting to the sync server…',
+    syncOff: 'Real-time sync is off. Turn on the status indicator above to let people with the link collaborate.',
+    syncUnavailable:
+      'This board doesn’t support real-time collaboration right now. Sharing the link still keeps each person’s copy local.',
+    inviteByEmail: 'Invite by email',
+    invite: 'Invite',
+    inviteSaved: 'Invite saved. (An email will be sent once the backend is ready.)',
+    inviteSavedNoSync: 'Invite saved. (Real-time sync is off, so you can’t collaborate yet.)',
+    pending: 'Pending invites ({count})',
+    roles: {
+      viewer: 'Viewer',
+      editor: 'Editor',
+      owner: 'Owner',
+    },
+  },
+
+  tour: {
+    skipTour: 'Skip tour',
+    skip: 'Skip',
+    back: 'Back',
+    start: 'Start tour',
+    next: 'Next',
+    done: 'Done',
+    welcome: {
+      title: 'Welcome to Whiteboard',
+      body: 'Sketch system architecture diagrams — alone or together in real time. This quick tour walks you through the basics.',
+    },
+    sidebar: {
+      title: 'Component library',
+      body: 'Search for services, databases and tools.',
+      drag: 'Drag an item onto the canvas to place it.',
+      click: 'Or click it to drop it in the middle of the view.',
+    },
+    canvas: {
+      title: 'Build your diagram',
+      connect: 'Hover a node and drag from one of its anchor dots to another node to connect them.',
+      edit: 'Double-click a node, edge or group to edit its label.',
+      select: 'Drag across an empty area to select multiple items.',
+      connectTouch: 'Tap a node to select it, then drag one of its anchor dots onto another node to connect them.',
+      editTouch: 'Double-tap a node, edge or group to edit its label.',
+      panTouch: 'Drag an empty area with one finger to move around.',
+    },
+    toolbar: {
+      title: 'Toolbar',
+      undo: 'Undo / Redo — <kbd>{mod}</kbd> <kbd>Z</kbd>',
+      group: '<b>Group</b> — drag an empty area to wrap nodes in a group.',
+      grid: '<b>Grid</b> / <b>Snap</b> — show the grid and align to it. Hold <kbd>Alt</kbd> to invert snapping.',
+      undoTouch: 'Undo / Redo your last changes.',
+      groupTouch: '<b>Group</b> — then drag an empty area to wrap nodes in a group.',
+      gridTouch: '<b>Grid</b> / <b>Snap</b> — show the grid and align to it.',
+    },
+    zoom: {
+      title: 'Move around',
+      pan: 'Scroll to pan, or hold <kbd>Space</kbd> and drag.',
+      zoom: '<kbd>{mod}</kbd> + scroll (or pinch the trackpad) to zoom.',
+      reset: 'Click the percentage to reset to 100%.',
+      titleTouch: 'Zoom',
+      bodyTouch: 'Use − and + to zoom. Tap the percentage to reset to 100%.',
+    },
+    minimap: {
+      title: 'Minimap',
+      body: 'See the whole board at a glance. Drag inside it to jump to another area.',
+    },
+    share: {
+      title: 'Share',
+      body: 'Invite others with a link and edit the same board together in real time.',
+    },
+    sync: {
+      title: 'Sync status',
+      body: 'Shows whether changes are syncing live. Your work is always saved in this browser automatically.',
+      bodyTouch: 'Shows whether changes are syncing live. Your work is always saved on this device automatically.',
+    },
+    help: {
+      title: 'Handy shortcuts',
+      copyPaste: '<kbd>{mod}</kbd> <kbd>C</kbd> / <kbd>V</kbd> copy & paste, <kbd>Delete</kbd> remove',
+      edge: 'With an edge selected: <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> line style, <kbd>D</kbd> arrow direction',
+      esc: '<kbd>Esc</kbd> cancel / clear selection',
+      replay: 'You can replay this tour any time from here.',
+      titleTouch: 'You’re all set',
+      replayTouch: 'Tap here any time to replay this tour.',
+    },
+    menu: {
+      title: 'Add components',
+      body: 'Tap here to open the component library.',
+      tap: 'Tap an item to add it to the canvas.',
+      drag: 'Or press and drag it to where you want it.',
+    },
+  },
+} as const
+
+export default en

@@ -77,6 +77,7 @@ src/
   pages/       Login, Signup, BoardList, BoardEdit, NotFound
   store/       zustand — auth (게스트 자동 시드), catalog, viewport
   local/       로컬 모드 전용 — mode 플래그, 카탈로그 시드, 보드 localStorage, 최근 사용
+  i18n/        다국어 — en(기준)/ko 메시지, useT/t, 언어 선택 상태. 가이드: docs/i18n.md
   types/       domain.ts — 스펙 §3 도메인 타입
   styles/      global.css
   App.tsx      RequireAuth 가드

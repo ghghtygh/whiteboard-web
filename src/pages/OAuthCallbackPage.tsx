@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { me } from '@/api/auth'
 import { useAuthStore } from '@/store/auth'
+import { useT, type MessageKey } from '@/i18n'
 import { authStyles } from './authStyles'
 
 /**
@@ -11,11 +12,12 @@ import { authStyles } from './authStyles'
  * fragment 는 서버 로그/리퍼러에 남지 않으며, 파싱 직후 주소창에서도 제거한다.
  */
 export function OAuthCallbackPage() {
+  const t = useT()
   const navigate = useNavigate()
   const setTokens = useAuthStore((s) => s.setTokens)
   const setUser = useAuthStore((s) => s.setUser)
   const logout = useAuthStore((s) => s.logout)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<Extract<MessageKey, `auth.callback.${string}`> | null>(null)
   const handled = useRef(false)
 
   useEffect(() => {
@@ -28,7 +30,7 @@ export function OAuthCallbackPage() {
     const refreshToken = params.get('refreshToken')
 
     if (!accessToken || !refreshToken) {
-      setError('We didn’t receive your login details. Please try again.')
+      setError('auth.callback.missingTokens')
       return
     }
 
@@ -44,7 +46,7 @@ export function OAuthCallbackPage() {
       })
       .catch(() => {
         logout()
-        setError('We couldn’t load your account. Please log in again.')
+        setError('auth.callback.loadUserFailed')
       })
   }, [navigate, setTokens, setUser, logout])
 
@@ -53,14 +55,14 @@ export function OAuthCallbackPage() {
       <div className="auth-card">
         {error ? (
           <>
-            <h1>Login failed</h1>
-            <p className="error">{error}</p>
-            <Link to="/login" className="primary back">Back to login</Link>
+            <h1>{t('auth.callback.failedTitle')}</h1>
+            <p className="error">{t(error)}</p>
+            <Link to="/login" className="primary back">{t('auth.callback.backToLogin')}</Link>
           </>
         ) : (
           <>
-            <h1>Logging in…</h1>
-            <p className="muted">Checking your social account…</p>
+            <h1>{t('auth.callback.inProgressTitle')}</h1>
+            <p className="muted">{t('auth.callback.inProgressBody')}</p>
           </>
         )}
       </div>

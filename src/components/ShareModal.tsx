@@ -4,6 +4,7 @@ import { SYNC_AVAILABLE, useSyncStore } from '@/store/sync'
 import { CloseIcon } from '@/components/icons'
 import { COMPACT_BP } from '@/styles/breakpoints'
 import type { MemberRole } from '@/types/domain'
+import { useT } from '@/i18n'
 
 interface Props {
   boardId: string
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export function ShareModal({ boardId, syncConnected, onClose }: Props) {
+  const t = useT()
   const syncOn = useSyncStore((s) => s.enabled)
   // 실제로 동기화가 동작하는 상태 = 릴레이 URL 있음 + 사용자가 켬
   const syncEnabled = SYNC_AVAILABLE && syncOn
@@ -46,8 +48,8 @@ export function ShareModal({ boardId, syncConnected, onClose }: Props) {
     setEmail('')
     setFeedback(
       syncEnabled
-        ? 'Invite saved. (An email will be sent once the backend is ready.)'
-        : 'Invite saved. (Real-time sync is off, so you can’t collaborate yet.)',
+        ? t('share.inviteSaved')
+        : t('share.inviteSavedNoSync'),
     )
     setTimeout(() => setFeedback(null), 3000)
   }
@@ -70,31 +72,31 @@ export function ShareModal({ boardId, syncConnected, onClose }: Props) {
     <div className="share-backdrop" onClick={onClose}>
       <div className="share-modal" onClick={(e) => e.stopPropagation()}>
         <div className="share-head">
-          <h2>Share board</h2>
-          <button className="x" onClick={onClose} aria-label="Close" title="Close">
+          <h2>{t('share.title')}</h2>
+          <button className="x" onClick={onClose} aria-label={t('common.close')} title={t('common.close')}>
             <CloseIcon />
           </button>
         </div>
 
         <section>
-          <label className="lbl">Share link</label>
+          <label className="lbl">{t('share.link')}</label>
           <div className="row">
             <input id="share-url" readOnly value={shareUrl} onFocus={(e) => e.target.select()} />
-            <button className="primary" onClick={copy}>{copied ? 'Copied' : 'Copy link'}</button>
+            <button className="primary" onClick={copy}>{copied ? t('common.copied') : t('common.copyLink')}</button>
           </div>
           <p className="hint" data-tone={syncEnabled ? (syncConnected ? 'ok' : 'warn') : 'info'}>
             {syncEnabled
               ? syncConnected
-                ? 'Real-time sync is on — anyone with the link can collaborate.'
-                : 'Connecting to the sync server…'
+                ? t('share.syncOnConnected')
+                : t('share.syncOnConnecting')
               : SYNC_AVAILABLE
-                ? 'Real-time sync is off. Turn on the status indicator above to let people with the link collaborate.'
-                : 'This board doesn’t support real-time collaboration right now. Sharing the link still keeps each person’s copy local.'}
+                ? t('share.syncOff')
+                : t('share.syncUnavailable')}
           </p>
         </section>
 
         <section>
-          <label className="lbl">Invite by email</label>
+          <label className="lbl">{t('share.inviteByEmail')}</label>
           <form className="row" onSubmit={onInvite}>
             <input
               type="email"
@@ -104,24 +106,24 @@ export function ShareModal({ boardId, syncConnected, onClose }: Props) {
               required
             />
             <select value={role} onChange={(e) => setRole(e.target.value as MemberRole)}>
-              <option value="viewer">Viewer</option>
-              <option value="editor">Editor</option>
-              <option value="owner">Owner</option>
+              <option value="viewer">{t('share.roles.viewer')}</option>
+              <option value="editor">{t('share.roles.editor')}</option>
+              <option value="owner">{t('share.roles.owner')}</option>
             </select>
-            <button className="primary" type="submit">Invite</button>
+            <button className="primary" type="submit">{t('share.invite')}</button>
           </form>
           {feedback && <p className="feedback">{feedback}</p>}
         </section>
 
         {invites.length > 0 && (
           <section>
-            <label className="lbl">Pending invites ({invites.length})</label>
+            <label className="lbl">{t('share.pending', { count: invites.length })}</label>
             <ul className="invites">
               {invites.map((inv) => (
                 <li key={inv.id}>
                   <span className="em">{inv.email}</span>
-                  <span className="role">{inv.role}</span>
-                  <button className="link" onClick={() => onRevoke(inv.id)}>Revoke</button>
+                  <span className="role">{t(`share.roles.${inv.role}`)}</span>
+                  <button className="link" onClick={() => onRevoke(inv.id)}>{t('common.revoke')}</button>
                 </li>
               ))}
             </ul>

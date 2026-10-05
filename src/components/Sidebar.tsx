@@ -12,18 +12,13 @@ import { createNode } from '@/canvas/ops'
 import { COARSE_GRID, NODE_H, NODE_W, coarseSnap, dropJitter } from '@/canvas/geometry'
 import { CloseIcon } from '@/components/icons'
 import { MOBILE_BP } from '@/styles/breakpoints'
+import { useT } from '@/i18n'
+import en from '@/i18n/locales/en'
 
-const CATEGORY_LABELS: Record<string, string> = {
-  'ci-cd': 'CI / CD',
-  database: 'Database',
-  framework: 'Framework',
-  messaging: 'Messaging',
-  infrastructure: 'Infrastructure',
-  cloud: 'Cloud',
-  observability: 'Observability',
-  auth: 'Auth',
-  storage: 'Storage',
-  etc: 'Other',
+// 카탈로그 카테고리 id → 번역 키. 모르는 카테고리(서버에서 새로 추가 등)는 id 를 그대로 보여준다.
+type CategoryId = keyof typeof en.sidebar.categories
+function isKnownCategory(category: string): category is CategoryId {
+  return category in en.sidebar.categories
 }
 
 interface TouchDragState {
@@ -94,6 +89,7 @@ interface SidebarProps {
 }
 
 export function Sidebar({ open = false, onClose }: SidebarProps = {}) {
+  const t = useT()
   const items = useCatalogStore((s) => s.items)
   const loading = useCatalogStore((s) => s.loading)
   const error = useCatalogStore((s) => s.error)
@@ -306,7 +302,7 @@ export function Sidebar({ open = false, onClose }: SidebarProps = {}) {
       <aside className="sidebar" data-open={open} data-tour="sidebar">
         <div className="search">
           <input
-            placeholder="Search components"
+            placeholder={t('sidebar.search')}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
@@ -314,20 +310,20 @@ export function Sidebar({ open = false, onClose }: SidebarProps = {}) {
             type="button"
             className="close-btn"
             onClick={onClose}
-            aria-label="Close menu"
-            title="Close"
+            aria-label={t('sidebar.closeMenu')}
+            title={t('common.close')}
           >
             <CloseIcon />
           </button>
         </div>
 
         <div className="list">
-          {loading && <p className="muted">Loading…</p>}
+          {loading && <p className="muted">{t('common.loading')}</p>}
           {error && <p className="error">{error}</p>}
 
           {recents.length > 0 && (
             <section>
-              <h3>Recently used</h3>
+              <h3>{t('sidebar.recent')}</h3>
               <ul>
                 {recents.map((c) => (
                   <ComponentRow
@@ -350,7 +346,7 @@ export function Sidebar({ open = false, onClose }: SidebarProps = {}) {
                   onClick={() => setCollapsed((s) => ({ ...s, [category]: !s[category] }))}
                   style={{ cursor: 'pointer' }}
                 >
-                  <span>{isCollapsed ? '▸' : '▾'}</span> {CATEGORY_LABELS[category] ?? category}
+                  <span>{isCollapsed ? '▸' : '▾'}</span> {isKnownCategory(category) ? t(`sidebar.categories.${category}`) : category}
                   <span className="count">{list.length}</span>
                 </h3>
                 {!isCollapsed && (
@@ -371,7 +367,7 @@ export function Sidebar({ open = false, onClose }: SidebarProps = {}) {
           })}
 
           {!loading && items.length === 0 && !error && (
-            <p className="muted">The catalog is empty</p>
+            <p className="muted">{t('sidebar.empty')}</p>
           )}
         </div>
 
