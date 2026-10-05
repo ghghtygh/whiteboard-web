@@ -12,6 +12,8 @@
 //   src/assets/stack-icons/<type>.svg   아이콘
 //   src/assets/stack-icons/LICENSE-*    출처 라이선스 고지
 //   src/catalog/catalog.generated.json  런타임 카탈로그 (색상 확정본)
+//
+// src/catalog/presets.json 의 회사 프리셋이 존재하는 type 만 참조하는지도 함께 검사한다.
 
 import fs from 'node:fs'
 import path from 'node:path'
@@ -20,6 +22,7 @@ import * as simpleIcons from 'simple-icons'
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const SRC = path.join(ROOT, 'src/catalog/stacks.json')
+const PRESETS = path.join(ROOT, 'src/catalog/presets.json')
 const OUT_JSON = path.join(ROOT, 'src/catalog/catalog.generated.json')
 const ICON_DIR = path.join(ROOT, 'src/assets/stack-icons')
 const DEVICON_DIR = path.join(ROOT, 'node_modules/devicon')
@@ -101,6 +104,11 @@ for (const s of stacks) {
     aliases: s.aliases ?? [],
     icon: !!resolved,
   })
+}
+
+// 회사 프리셋이 카탈로그에 없는 type 을 가리키지 않는지 검사
+for (const p of JSON.parse(fs.readFileSync(PRESETS, 'utf8')).presets) {
+  for (const t of p.stacks) if (!seen.has(t)) errors.push(`preset '${p.id}': 카탈로그에 없는 type '${t}'`)
 }
 
 if (errors.length) {

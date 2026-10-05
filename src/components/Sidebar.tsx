@@ -14,9 +14,10 @@ import { useCanvasContext } from '@/canvas/useCanvasContext'
 import { useViewportStore } from '@/store/viewport'
 import { useSnapStore } from '@/canvas/snapStore'
 import { useSelection } from '@/canvas/selection'
-import { createNode } from '@/canvas/ops'
+import { createNode, createNodes, readNodes } from '@/canvas/ops'
 import { COARSE_GRID, NODE_H, NODE_W, coarseSnap, dropJitter } from '@/canvas/geometry'
 import { CloseIcon } from '@/components/icons'
+import { PresetPanel } from '@/components/PresetPanel'
 import { MOBILE_BP } from '@/styles/breakpoints'
 
 const CATEGORY_LABELS: Record<string, string> = Object.fromEntries(
@@ -277,6 +278,46 @@ export function Sidebar({ open = false, onClose }: SidebarProps = {}) {
     onClose?.()
   }
 
+  // 프리셋 스택 일괄 배치 — 화면 중앙 기준 격자로 펼치고 한 Undo 스텝으로 묶는다.
+  function onAddAll(types: string[]) {
+    if (!doc || types.length === 0) return
+    const SPACING = COARSE_GRID * 4
+    const cols = Math.min(4, types.length)
+    const rows = Math.ceil(types.length / cols)
+    const cx = (cw / 2 - vx) / scale
+    const cy = (ch / 2 - vy) / scale
+    const entries = types.map((type, i) => {
+      let x = cx + ((i % cols) - (cols - 1) / 2) * SPACING
+      let y = cy + (Math.floor(i / cols) - (rows - 1) / 2) * SPACING
+      if (snapEnabled) {
+        x = coarseSnap(x - NODE_W / 2) + NODE_W / 2
+        y = coarseSnap(y - NODE_H / 2) + NODE_H / 2
+      }
+      const ct = LOCAL_CATALOG.find((c) => c.type === type)
+      return { type, x, y, catalogVersion: ct?.version ?? 1 }
+    })
+    const ids = createNodes(doc, entries)
+    setSel(ids.map((id) => ({ kind: 'node' as const, id })))
+    onClose?.()
+  }
+
+  function getBoardTypes(): string[] {
+    if (!doc) return []
+    return [...new Set(readNodes(doc).map((n) => n.type))]
+  }
+
+  function renderRow(c: ComponentType) {
+    return (
+      <ComponentRow
+        key={`preset-${c.type}`}
+        item={c}
+        onDragPick={onClose}
+        onTapAdd={onTapAdd}
+        onTouchDragStart={onTouchDragStart}
+      />
+    )
+  }
+
   function toggleExpanded(category: string) {
     setExpanded((s) => {
       const next = { ...s, [category]: !s[category] }
@@ -359,6 +400,15 @@ export function Sidebar({ open = false, onClose }: SidebarProps = {}) {
         <div className="list">
           {loading && <p className="muted">Loading…</p>}
           {error && <p className="error">{error}</p>}
+
+          {!debounced && items.length > 0 && (
+            <PresetPanel
+              items={items}
+              renderRow={renderRow}
+              getBoardTypes={getBoardTypes}
+              onAddAll={onAddAll}
+            />
+          )}
 
           {recents.length > 0 && (
             <section>

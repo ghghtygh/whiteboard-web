@@ -59,6 +59,20 @@ export function readGroups(doc: BoardDoc): Group[] {
   return out
 }
 
+function insertNode(doc: BoardDoc, type: string, x: number, y: number, catalogVersion: number): string {
+  const id = nanoid(10)
+  const ymap = new Y.Map<unknown>()
+  ymap.set('id', id)
+  ymap.set('type', type)
+  ymap.set('label', '')
+  ymap.set('x', snap(x - NODE_W / 2))
+  ymap.set('y', snap(y - NODE_H / 2))
+  ymap.set('groupId', containingGroup(doc, x, y))
+  ymap.set('catalogVersion', catalogVersion)
+  doc.nodes.set(id, ymap)
+  return id
+}
+
 export function createNode(
   doc: BoardDoc,
   type: string,
@@ -67,19 +81,24 @@ export function createNode(
   catalogVersion = 1,
   origin?: unknown,
 ): string {
-  const id = nanoid(10)
+  let id = ''
   doc.ydoc.transact(() => {
-    const ymap = new Y.Map<unknown>()
-    ymap.set('id', id)
-    ymap.set('type', type)
-    ymap.set('label', '')
-    ymap.set('x', snap(x - NODE_W / 2))
-    ymap.set('y', snap(y - NODE_H / 2))
-    ymap.set('groupId', containingGroup(doc, x, y))
-    ymap.set('catalogVersion', catalogVersion)
-    doc.nodes.set(id, ymap)
+    id = insertNode(doc, type, x, y, catalogVersion)
   }, origin)
   return id
+}
+
+// 여러 노드를 한 트랜잭션(= 한 Undo 스텝)으로 생성. (x, y) 는 각 노드의 중심 좌표.
+export function createNodes(
+  doc: BoardDoc,
+  entries: { type: string; x: number; y: number; catalogVersion?: number }[],
+  origin?: unknown,
+): string[] {
+  const ids: string[] = []
+  doc.ydoc.transact(() => {
+    for (const e of entries) ids.push(insertNode(doc, e.type, e.x, e.y, e.catalogVersion ?? 1))
+  }, origin)
+  return ids
 }
 
 export function moveNode(
