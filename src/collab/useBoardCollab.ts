@@ -6,6 +6,7 @@ import { connectBoard } from './provider'
 import { bootstrapAwareness } from './awareness'
 import { useAuthStore } from '@/store/auth'
 import { SYNC_AVAILABLE, useSyncStore } from '@/store/sync'
+import { flush, trackBoardSession } from '@/metrics/track'
 
 export interface BoardCollab {
   doc: BoardDoc | null
@@ -65,6 +66,26 @@ export function useBoardCollab(boardId: string | null): BoardCollab {
       setSyncConnected(false)
     }
   }, [boardId, syncEnabled])
+
+  // 보드 체류 시간 — 동기화 토글로 위 effect 가 재실행돼도 끊기지 않도록 boardId 에만 묶는다.
+  // 탭을 닫으면 React cleanup 이 돌지 않으므로 pagehide 에서 보고하고 즉시 beacon 으로 보낸다.
+  useEffect(() => {
+    if (!boardId) return
+    let start = Date.now()
+    const report = () => {
+      trackBoardSession((Date.now() - start) / 1000)
+      start = Date.now()
+    }
+    const onPageHide = () => {
+      report()
+      flush(true)
+    }
+    window.addEventListener('pagehide', onPageHide)
+    return () => {
+      window.removeEventListener('pagehide', onPageHide)
+      report()
+    }
+  }, [boardId])
 
   // 자기 awareness(이름/색)만 갱신 — provider 가 새로 생기거나 user 가 바뀔 때.
   // 연결을 끊지 않으므로 user(토큰 갱신 등) 변경에도 원격 커서가 유지된다.

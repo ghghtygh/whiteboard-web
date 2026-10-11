@@ -2,6 +2,7 @@ import * as Y from 'yjs'
 import { nanoid } from 'nanoid'
 import type { BoardDoc } from '@/collab/doc'
 import type { Anchor, Edge, EdgeDirection, EdgeStyle, Group, Node } from '@/types/domain'
+import { track } from '@/metrics/track'
 import { NODE_H, NODE_W, snap } from './geometry'
 
 function mapToNode(map: Y.Map<unknown>): Node {
@@ -79,6 +80,7 @@ export function createNode(
     ymap.set('catalogVersion', catalogVersion)
     doc.nodes.set(id, ymap)
   }, origin)
+  track('node_create')
   return id
 }
 
@@ -202,6 +204,7 @@ export function pasteElements(
       doc.edges.set(id, ymap)
     }
   }, origin)
+  track('paste')
   return newIds
 }
 
@@ -214,6 +217,7 @@ export function setNodeLabel(doc: BoardDoc, id: string, label: string, origin?: 
 }
 
 export function deleteNodes(doc: BoardDoc, ids: string[], origin?: unknown): void {
+  track('element_delete')
   doc.ydoc.transact(() => {
     for (const id of ids) {
       doc.nodes.delete(id)
@@ -249,6 +253,7 @@ export function createEdge(
     ymap.set('direction', 'forward' satisfies EdgeDirection)
     doc.edges.set(id, ymap)
   }, origin)
+  track('edge_create')
   return id
 }
 
@@ -276,6 +281,7 @@ export function setEdgeLabel(doc: BoardDoc, id: string, label: string, origin?: 
 }
 
 export function deleteEdges(doc: BoardDoc, ids: string[], origin?: unknown): void {
+  track('element_delete')
   doc.ydoc.transact(() => {
     for (const id of ids) doc.edges.delete(id)
   }, origin)
@@ -313,6 +319,7 @@ export function createGroup(
       }
     })
   }, origin)
+  track('group_create')
   return id
 }
 
@@ -345,6 +352,7 @@ export function setGroupLabel(doc: BoardDoc, id: string, label: string, origin?:
 }
 
 export function deleteGroups(doc: BoardDoc, ids: string[], origin?: unknown): void {
+  track('element_delete')
   doc.ydoc.transact(() => {
     for (const id of ids) {
       doc.groups.delete(id)

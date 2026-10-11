@@ -5,6 +5,7 @@ import { CloseIcon } from '@/components/icons'
 import { COMPACT_BP } from '@/styles/breakpoints'
 import type { MemberRole } from '@/types/domain'
 import { useT } from '@/i18n'
+import { track } from '@/metrics/track'
 
 interface Props {
   boardId: string
@@ -28,9 +29,14 @@ export function ShareModal({ boardId, syncConnected, onClose }: Props) {
     setInvites(localInvites.listFor(boardId))
   }, [boardId])
 
+  useEffect(() => {
+    track('share_open')
+  }, [])
+
   async function copy() {
     try {
       await navigator.clipboard.writeText(shareUrl)
+      track('share_link_copy')
       setCopied(true)
       setTimeout(() => setCopied(false), 1800)
     } catch {
