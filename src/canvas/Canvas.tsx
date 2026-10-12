@@ -30,7 +30,6 @@ import {
   coarseSnap,
   dropJitter,
   getNodeBox,
-  nearestAnchor,
   snap,
 } from './geometry'
 
@@ -1147,9 +1146,6 @@ export function Canvas({
           {/* 노드 */}
           {nodes.map((n) => {
             const isPendingTarget = !!pendingEdge && hoveredNode === n.id && pendingEdge.fromId !== n.id
-            const pendingEdgeAnchor = isPendingTarget
-              ? nearestAnchor(n.x, n.y, getNodeBox(n), pendingEdge.x, pendingEdge.y)
-              : undefined
             return (
               <NodeShape
                 key={n.id}
@@ -1157,7 +1153,7 @@ export function Canvas({
                 selected={selNodes.has(n.id)}
                 hovered={hoveredNode === n.id}
                 draggable={!spaceDown && !readOnly}
-                pendingEdgeAnchor={pendingEdgeAnchor}
+                isEdgeTarget={isPendingTarget}
                 onSelect={(additive) => toggleSel('node', n.id, additive)}
                 onHover={(h) => setHoveredNode(h ? n.id : (cur) => (cur === n.id ? null : cur))}
                 snapPos={snapPos}

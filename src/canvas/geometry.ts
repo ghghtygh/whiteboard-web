@@ -108,21 +108,6 @@ export function anchorPoint(nx: number, ny: number, anchor: Anchor, dims: BoxDim
   }
 }
 
-// from→to 가 어느 박스 면으로 빠져나가야 자연스러운지 추정.
-export function nearestAnchor(
-  fromX: number,
-  fromY: number,
-  fromDims: BoxDims,
-  toX: number,
-  toY: number,
-): Anchor {
-  const c = boxCenter(fromX, fromY, fromDims)
-  const dx = toX - c.x
-  const dy = toY - c.y
-  if (Math.abs(dx) > Math.abs(dy)) return dx >= 0 ? 'right' : 'left'
-  return dy >= 0 ? 'bottom' : 'top'
-}
-
 // 엣지 끝과 노드 박스 사이 여백 — 선이 박스에 딱 붙지 않고 살짝 떠 있게 (Excalidraw 의 binding gap).
 const EDGE_GAP = 6
 
