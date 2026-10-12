@@ -1,6 +1,6 @@
-import { Arrow, Group, Line, Rect, Text } from 'react-konva'
+import { Group, Line, Rect, Text } from 'react-konva'
 import type { Edge, Node } from '@/types/domain'
-import { edgePoints, polylineMid } from './geometry'
+import { arrowHeadPoints, edgePoints } from './geometry'
 
 interface Props {
   edge: Edge
@@ -18,8 +18,10 @@ function dash(style: Edge['style']): number[] | undefined {
 }
 
 export function EdgeShape({ edge, from, to, selected, onSelect, onLabelEdit }: Props) {
-  const points = edgePoints(edge, from, to)
-  const { x: midX, y: midY } = polylineMid(points)
+  const points = edgePoints(from, to)
+  const [ax, ay, bx, by] = points
+  const midX = (ax + bx) / 2
+  const midY = (ay + by) / 2
 
   const stroke = selected ? '#5d5bef' : '#6a7689'
   const strokeWidth = selected ? 2.5 : 1.5
@@ -28,19 +30,32 @@ export function EdgeShape({ edge, from, to, selected, onSelect, onLabelEdit }: P
   return (
     <Group onClick={(e) => onSelect(e.evt.shiftKey)} onTap={() => onSelect(false)}>
       <Line points={points} stroke="transparent" strokeWidth={12} listening />
-      {/* 마지막/첫 구간이 앵커 면에 수직이라 화살촉도 항상 면을 정면으로 가리킨다. */}
-      <Arrow
+      <Line
         points={points}
-        lineJoin="round"
         stroke={stroke}
         strokeWidth={strokeWidth}
-        fill={stroke}
         dash={dash(edge.style)}
-        pointerLength={10}
-        pointerWidth={10}
-        pointerAtEnding={edge.direction === 'forward' || edge.direction === 'both'}
-        pointerAtBeginning={edge.direction === 'backward' || edge.direction === 'both'}
+        lineCap="round"
       />
+      {/* Excalidraw 식 열린 화살촉 — 점선 스타일이어도 화살촉은 실선 */}
+      {(edge.direction === 'forward' || edge.direction === 'both') && (
+        <Line
+          points={arrowHeadPoints(ax, ay, bx, by)}
+          stroke={stroke}
+          strokeWidth={strokeWidth}
+          lineCap="round"
+          lineJoin="round"
+        />
+      )}
+      {(edge.direction === 'backward' || edge.direction === 'both') && (
+        <Line
+          points={arrowHeadPoints(bx, by, ax, ay)}
+          stroke={stroke}
+          strokeWidth={strokeWidth}
+          lineCap="round"
+          lineJoin="round"
+        />
+      )}
       {edge.label && (
         <Group onDblClick={onLabelEdit} onDblTap={onLabelEdit}>
           <Rect

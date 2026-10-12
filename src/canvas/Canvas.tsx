@@ -26,7 +26,7 @@ import {
   NODE_H,
   NODE_W,
   anchorPoint,
-  boxCenter,
+  boxBoundaryToward,
   coarseSnap,
   dropJitter,
   getNodeBox,
@@ -1129,7 +1129,7 @@ export function Canvas({
             (() => {
               const from = nodesById.get(pendingEdge.fromId)
               if (!from) return null
-              const a = anchorPoint(from.x, from.y, pendingEdge.fromAnchor, getNodeBox(from))
+              const a = boxBoundaryToward(from.x, from.y, getNodeBox(from), pendingEdge)
               return (
                 <Arrow
                   points={[a.x, a.y, pendingEdge.x, pendingEdge.y]}
@@ -1219,12 +1219,8 @@ export function Canvas({
                 onAnchorUp={() => {
                   if (readOnly) return
                   if (pendingEdge && pendingEdge.fromId !== n.id && doc) {
-                    const from = nodesById.get(pendingEdge.fromId)
-                    const fromC = from ? boxCenter(from.x, from.y, getNodeBox(from)) : null
-                    const guessTo = fromC
-                      ? nearestAnchor(n.x, n.y, getNodeBox(n), fromC.x, fromC.y)
-                      : null
-                    createEdge(doc, pendingEdge.fromId, n.id, pendingEdge.fromAnchor, guessTo ?? null)
+                    // 앵커는 고정하지 않는다(null) — 렌더 시 두 노드 중심을 잇는 방향으로 자동 계산.
+                    createEdge(doc, pendingEdge.fromId, n.id, null, null)
                     setPendingEdge(null)
                   }
                 }}

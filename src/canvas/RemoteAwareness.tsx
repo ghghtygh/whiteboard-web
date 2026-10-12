@@ -133,10 +133,10 @@ export function RemoteAwareness({ states, nodesById, edgesById, groupsById }: Pr
                 return (
                   <Line
                     key={`s-${clientId}-${key}`}
-                    points={edgePoints(e, from, to)}
+                    points={edgePoints(from, to)}
                     stroke={color}
                     strokeWidth={4}
-                    lineJoin="round"
+                    lineCap="round"
                     opacity={0.4}
                     listening={false}
                   />
