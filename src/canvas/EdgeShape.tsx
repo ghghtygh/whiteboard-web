@@ -1,6 +1,6 @@
 import { Arrow, Group, Line, Rect, Text } from 'react-konva'
 import type { Edge, Node } from '@/types/domain'
-import { anchorPoint, boxCenter, getNodeBox, nearestAnchor } from './geometry'
+import { edgePoints, polylineMid } from './geometry'
 
 interface Props {
   edge: Edge
@@ -18,66 +18,29 @@ function dash(style: Edge['style']): number[] | undefined {
 }
 
 export function EdgeShape({ edge, from, to, selected, onSelect, onLabelEdit }: Props) {
-  const fromDims = getNodeBox(from)
-  const toDims = getNodeBox(to)
-  const toC = boxCenter(to.x, to.y, toDims)
-  const fromC = boxCenter(from.x, from.y, fromDims)
-  const fromAnchor = edge.fromAnchor ?? nearestAnchor(from.x, from.y, fromDims, toC.x, toC.y)
-  const toAnchor = edge.toAnchor ?? nearestAnchor(to.x, to.y, toDims, fromC.x, fromC.y)
-  const a = anchorPoint(from.x, from.y, fromAnchor, fromDims)
-  const b = anchorPoint(to.x, to.y, toAnchor, toDims)
+  const points = edgePoints(edge, from, to)
+  const { x: midX, y: midY } = polylineMid(points)
 
   const stroke = selected ? '#5d5bef' : '#6a7689'
   const strokeWidth = selected ? 2.5 : 1.5
 
-  const arrowForward = edge.direction === 'forward' || edge.direction === 'both'
-  const arrowBackward = edge.direction === 'backward' || edge.direction === 'both'
-
-  const midX = (a.x + b.x) / 2
-  const midY = (a.y + b.y) / 2
-
   // 보이지 않는 굵은 hit-line으로 클릭 영역 확장
   return (
     <Group onClick={(e) => onSelect(e.evt.shiftKey)} onTap={() => onSelect(false)}>
-      <Line
-        points={[a.x, a.y, b.x, b.y]}
-        stroke="transparent"
-        strokeWidth={12}
-        listening
+      <Line points={points} stroke="transparent" strokeWidth={12} listening />
+      {/* 마지막/첫 구간이 앵커 면에 수직이라 화살촉도 항상 면을 정면으로 가리킨다. */}
+      <Arrow
+        points={points}
+        lineJoin="round"
+        stroke={stroke}
+        strokeWidth={strokeWidth}
+        fill={stroke}
+        dash={dash(edge.style)}
+        pointerLength={10}
+        pointerWidth={10}
+        pointerAtEnding={edge.direction === 'forward' || edge.direction === 'both'}
+        pointerAtBeginning={edge.direction === 'backward' || edge.direction === 'both'}
       />
-      {edge.direction === 'none' ? (
-        <Line
-          points={[a.x, a.y, b.x, b.y]}
-          stroke={stroke}
-          strokeWidth={strokeWidth}
-          dash={dash(edge.style)}
-        />
-      ) : (
-        <>
-          {arrowForward && (
-            <Arrow
-              points={[a.x, a.y, b.x, b.y]}
-              stroke={stroke}
-              strokeWidth={strokeWidth}
-              fill={stroke}
-              dash={dash(edge.style)}
-              pointerLength={10}
-              pointerWidth={10}
-            />
-          )}
-          {arrowBackward && (
-            <Arrow
-              points={[b.x, b.y, a.x, a.y]}
-              stroke={stroke}
-              strokeWidth={strokeWidth}
-              fill={stroke}
-              dash={dash(edge.style)}
-              pointerLength={10}
-              pointerWidth={10}
-            />
-          )}
-        </>
-      )}
       {edge.label && (
         <Group onDblClick={onLabelEdit} onDblTap={onLabelEdit}>
           <Rect

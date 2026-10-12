@@ -3,7 +3,7 @@ import Konva from 'konva'
 import { Group, Line, Rect, Text } from 'react-konva'
 import type { AwarenessState } from '@/collab/awareness'
 import type { Edge, Group as DGroup, Node } from '@/types/domain'
-import { anchorPoint, boxCenter, getNodeBox, nearestAnchor } from './geometry'
+import { edgePoints, getNodeBox } from './geometry'
 import { useT } from '@/i18n'
 
 interface Props {
@@ -130,20 +130,13 @@ export function RemoteAwareness({ states, nodesById, edgesById, groupsById }: Pr
                 const from = nodesById.get(e.from)
                 const to = nodesById.get(e.to)
                 if (!from || !to) return null
-                const fromDims = getNodeBox(from)
-                const toDims = getNodeBox(to)
-                const toC = boxCenter(to.x, to.y, toDims)
-                const fromC = boxCenter(from.x, from.y, fromDims)
-                const fa = e.fromAnchor ?? nearestAnchor(from.x, from.y, fromDims, toC.x, toC.y)
-                const ta = e.toAnchor ?? nearestAnchor(to.x, to.y, toDims, fromC.x, fromC.y)
-                const a = anchorPoint(from.x, from.y, fa, fromDims)
-                const b = anchorPoint(to.x, to.y, ta, toDims)
                 return (
                   <Line
                     key={`s-${clientId}-${key}`}
-                    points={[a.x, a.y, b.x, b.y]}
+                    points={edgePoints(e, from, to)}
                     stroke={color}
                     strokeWidth={4}
+                    lineJoin="round"
                     opacity={0.4}
                     listening={false}
                   />
