@@ -1,24 +1,47 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useCatalogStore } from '@/store/catalog'
 import type { ComponentType } from '@/types/domain'
-import { catalogColor, LOCAL_CATALOG } from '@/local/catalogSeed'
+import {
+  LOCAL_CATALOG,
+  catalogAliases,
+  catalogColor,
+  catalogRank,
+} from '@/local/catalogSeed'
 import { localRecents } from '@/local/recents'
 import { iconDataUrl, hasIcon } from '@/canvas/icons'
 import { useCanvasContext } from '@/canvas/useCanvasContext'
 import { useViewportStore } from '@/store/viewport'
 import { useSnapStore } from '@/canvas/snapStore'
 import { useSelection } from '@/canvas/selection'
-import { createNode } from '@/canvas/ops'
+import { createNode, createNodes, readNodes } from '@/canvas/ops'
 import { COARSE_GRID, NODE_H, NODE_W, coarseSnap, dropJitter } from '@/canvas/geometry'
 import { CloseIcon } from '@/components/icons'
+import { PresetPanel } from '@/components/PresetPanel'
 import { MOBILE_BP } from '@/styles/breakpoints'
 import { useT } from '@/i18n'
-import en from '@/i18n/locales/en'
+import { categoryLabel, groupByCategory } from '@/catalog/categories'
 
-// 카탈로그 카테고리 id → 번역 키. 모르는 카테고리(서버에서 새로 추가 등)는 id 를 그대로 보여준다.
-type CategoryId = keyof typeof en.sidebar.categories
-function isKnownCategory(category: string): category is CategoryId {
-  return category in en.sidebar.categories
+// 카테고리마다 인기순 상위 N개만 먼저 보여주고 나머지는 "더보기" 로 접는다.
+// 숨길 항목이 1개뿐이면 버튼이 그 자리를 차지할 뿐이라 전부 보여준다.
+const TOP_N = 4
+const EXPANDED_KEY = 'whiteboard.sidebar.expanded.v1'
+
+function readExpanded(): Record<string, boolean> {
+  try {
+    const raw = localStorage.getItem(EXPANDED_KEY)
+    const obj = raw ? JSON.parse(raw) : {}
+    return obj && typeof obj === 'object' ? (obj as Record<string, boolean>) : {}
+  } catch {
+    return {}
+  }
+}
+
+function writeExpanded(v: Record<string, boolean>) {
+  try {
+    localStorage.setItem(EXPANDED_KEY, JSON.stringify(v))
+  } catch {
+    // 저장 실패는 무시 — 다음 진입 때 기본(접힘) 상태로 보일 뿐
+  }
 }
 
 interface TouchDragState {
@@ -97,6 +120,7 @@ export function Sidebar({ open = false, onClose }: SidebarProps = {}) {
   const [query, setQuery] = useState('')
   const [debounced, setDebounced] = useState('')
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
+  const [expanded, setExpanded] = useState<Record<string, boolean>>(readExpanded)
   const [, setRecentsTick] = useState(0)
 
   const { doc } = useCanvasContext()
@@ -251,6 +275,54 @@ export function Sidebar({ open = false, onClose }: SidebarProps = {}) {
     onClose?.()
   }
 
+  // 프리셋 스택 일괄 배치 — 화면 중앙 기준 격자로 펼치고 한 Undo 스텝으로 묶는다.
+  function onAddAll(types: string[]) {
+    if (!doc || types.length === 0) return
+    const SPACING = COARSE_GRID * 4
+    const cols = Math.min(4, types.length)
+    const rows = Math.ceil(types.length / cols)
+    const cx = (cw / 2 - vx) / scale
+    const cy = (ch / 2 - vy) / scale
+    const entries = types.map((type, i) => {
+      let x = cx + ((i % cols) - (cols - 1) / 2) * SPACING
+      let y = cy + (Math.floor(i / cols) - (rows - 1) / 2) * SPACING
+      if (snapEnabled) {
+        x = coarseSnap(x - NODE_W / 2) + NODE_W / 2
+        y = coarseSnap(y - NODE_H / 2) + NODE_H / 2
+      }
+      const ct = LOCAL_CATALOG.find((c) => c.type === type)
+      return { type, x, y, catalogVersion: ct?.version ?? 1 }
+    })
+    const ids = createNodes(doc, entries)
+    setSel(ids.map((id) => ({ kind: 'node' as const, id })))
+    onClose?.()
+  }
+
+  function getBoardTypes(): string[] {
+    if (!doc) return []
+    return [...new Set(readNodes(doc).map((n) => n.type))]
+  }
+
+  function renderRow(c: ComponentType) {
+    return (
+      <ComponentRow
+        key={`preset-${c.type}`}
+        item={c}
+        onDragPick={onClose}
+        onTapAdd={onTapAdd}
+        onTouchDragStart={onTouchDragStart}
+      />
+    )
+  }
+
+  function toggleExpanded(category: string) {
+    setExpanded((s) => {
+      const next = { ...s, [category]: !s[category] }
+      writeExpanded(next)
+      return next
+    })
+  }
+
   useEffect(() => {
     void load()
   }, [load])
@@ -268,19 +340,17 @@ export function Sidebar({ open = false, onClose }: SidebarProps = {}) {
   const filtered = useMemo(() => {
     if (!debounced) return items
     return items.filter(
-      (c) => c.displayName.toLowerCase().includes(debounced) || c.type.toLowerCase().includes(debounced),
+      (c) =>
+        c.displayName.toLowerCase().includes(debounced) ||
+        c.type.toLowerCase().includes(debounced) ||
+        catalogAliases(c.type).some((a) => a.toLowerCase().includes(debounced)),
     )
   }, [items, debounced])
 
-  const grouped = useMemo(() => {
-    const map = new Map<string, ComponentType[]>()
-    for (const item of filtered) {
-      const arr = map.get(item.category) ?? []
-      arr.push(item)
-      map.set(item.category, arr)
-    }
-    return [...map.entries()]
-  }, [filtered])
+  const grouped = useMemo(
+    () => groupByCategory([...filtered].sort((a, b) => catalogRank(a.type) - catalogRank(b.type))),
+    [filtered],
+  )
 
   const recents = useMemo(() => {
     if (debounced) return []
@@ -321,6 +391,15 @@ export function Sidebar({ open = false, onClose }: SidebarProps = {}) {
           {loading && <p className="muted">{t('common.loading')}</p>}
           {error && <p className="error">{error}</p>}
 
+          {!debounced && items.length > 0 && (
+            <PresetPanel
+              items={items}
+              renderRow={renderRow}
+              getBoardTypes={getBoardTypes}
+              onAddAll={onAddAll}
+            />
+          )}
+
           {recents.length > 0 && (
             <section>
               <h3>{t('sidebar.recent')}</h3>
@@ -340,18 +419,22 @@ export function Sidebar({ open = false, onClose }: SidebarProps = {}) {
 
           {grouped.map(([category, list]) => {
             const isCollapsed = collapsed[category]
+            // 검색 중엔 일치 항목을 모두 보여준다
+            const canTruncate = !debounced && list.length > TOP_N + 1
+            const isExpanded = !!expanded[category]
+            const visible = canTruncate && !isExpanded ? list.slice(0, TOP_N) : list
             return (
               <section key={category}>
                 <h3
                   onClick={() => setCollapsed((s) => ({ ...s, [category]: !s[category] }))}
                   style={{ cursor: 'pointer' }}
                 >
-                  <span>{isCollapsed ? '▸' : '▾'}</span> {isKnownCategory(category) ? t(`sidebar.categories.${category}`) : category}
+                  <span>{isCollapsed ? '▸' : '▾'}</span> {categoryLabel(t, category)}
                   <span className="count">{list.length}</span>
                 </h3>
                 {!isCollapsed && (
                   <ul>
-                    {list.map((c) => (
+                    {visible.map((c) => (
                       <ComponentRow
                         key={c.type}
                         item={c}
@@ -361,6 +444,16 @@ export function Sidebar({ open = false, onClose }: SidebarProps = {}) {
                       />
                     ))}
                   </ul>
+                )}
+                {!isCollapsed && canTruncate && (
+                  <button
+                    type="button"
+                    className="more-btn"
+                    onClick={() => toggleExpanded(category)}
+                    aria-expanded={isExpanded}
+                  >
+                    {isExpanded ? t('sidebar.showLess') : t('sidebar.more', { count: list.length - TOP_N })}
+                  </button>
                 )}
               </section>
             )
@@ -398,6 +491,11 @@ export function Sidebar({ open = false, onClose }: SidebarProps = {}) {
                    color: white; font-size: 10px; font-weight: 700; flex-shrink: 0; }
           .icon { width: 20px; height: 20px; flex-shrink: 0; object-fit: contain; }
           .name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+          .more-btn { display: block; width: 100%; margin-top: 2px; padding: 5px 9px;
+                      background: none; border: none; border-radius: var(--radius-md);
+                      text-align: left; font-size: var(--text-xs); color: var(--text-muted);
+                      cursor: pointer; }
+          .more-btn:hover { background: var(--surface-hover); color: var(--text-body); }
           .muted { color: var(--text-muted); font-size: var(--text-sm); }
           .error { color: var(--danger); font-size: var(--text-sm); }
           .sidebar-backdrop { display: none; }

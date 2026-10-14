@@ -1,0 +1,53 @@
+{
+  "note": "공개 기술 블로그/발표/채용 공고 기준의 대표 스택. 팀마다 다르며 정확한 사실이 아닌 출발점 용도. 코드너리(codenary.co.kr) 회사 페이지와 대조해 갱신한다.",
+  "presets": [
+    {
+      "id": "naver",
+      "name": "Naver",
+      "source": "https://d2.naver.com",
+      "stacks": ["java", "kotlin", "spring-boot", "mysql", "cubrid", "arcus", "redis", "elasticsearch", "kafka", "hadoop", "spark", "kubernetes", "pinpoint", "naver-cloud", "react", "typescript"]
+    },
+    {
+      "id": "kakao",
+      "name": "Kakao",
+      "source": "https://tech.kakao.com",
+      "stacks": ["java", "kotlin", "spring-boot", "mysql", "redis", "mongodb", "kafka", "elasticsearch", "hadoop", "kubernetes", "argocd", "kakao-cloud", "react", "typescript"]
+    },
+    {
+      "id": "line",
+      "name": "LINE",
+      "source": "https://techblog.lycorp.co.jp/ko",
+      "stacks": ["java", "kotlin", "armeria", "spring-boot", "mysql", "redis", "hbase", "kafka", "elasticsearch", "kubernetes", "prometheus", "react", "typescript"]
+    },
+    {
+      "id": "coupang",
+      "name": "Coupang",
+      "source": "https://medium.com/coupang-engineering",
+      "stacks": ["java", "spring-boot", "mysql", "redis", "kafka", "elasticsearch", "hadoop", "spark", "kubernetes", "aws", "react", "typescript"]
+    },
+    {
+      "id": "woowahan",
+      "name": "Woowa Brothers",
+      "source": "https://techblog.woowahan.com",
+      "stacks": ["java", "kotlin", "spring-boot", "jpa", "querydsl", "mysql", "redis", "kafka", "elasticsearch", "aws", "kubernetes", "jenkins", "react", "typescript"]
+    },
+    {
+      "id": "toss",
+      "name": "Toss",
+      "source": "https://toss.tech",
+      "stacks": ["kotlin", "spring-boot", "jpa", "mysql", "redis", "kafka", "kubernetes", "istio", "prometheus", "grafana", "react", "typescript", "nextjs"]
+    },
+    {
+      "id": "daangn",
+      "name": "Karrot (Daangn)",
+      "source": "https://medium.com/daangn",
+      "stacks": ["go", "kotlin", "nodejs", "typescript", "react", "mysql", "redis", "kafka", "kubernetes", "argocd", "aws"]
+    },
+    {
+      "id": "google",
+      "name": "Google",
+      "source": "https://opensource.google",
+      "stacks": ["go", "java", "python", "cpp", "kotlin", "angular", "grpc", "kubernetes", "gcp", "bigquery", "tensorflow", "firebase"]
+    }
+  ]
+}

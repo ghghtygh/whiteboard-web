@@ -43,6 +43,7 @@ npm run dev
 | `npm run preview` | 빌드된 결과 미리보기 |
 | `npm run typecheck` | 타입체크만 수행 |
 | `npm run lint` | ESLint |
+| `npm run catalog:sync` | `src/catalog/stacks.json` 기준으로 기술 스택 아이콘 수집 + 카탈로그 생성 |
 
 ## 환경 변수
 
@@ -67,7 +68,8 @@ dev 서버는 `/api`와 `/ws`를 `VITE_API_URL` / `VITE_WS_URL` 로 프록시한
 - **그룹 박스**: 툴바 `그룹` 버튼 활성화 후 빈 영역 드래그. 내부 노드의 `groupId` 자동 설정.
 - **팬/줌**: 빈 영역 드래그 = 팬. 마우스 휠 = 줌 (25%–400%).
 - **Undo/Redo**: `⌘Z` / `⌘⇧Z` 또는 툴바 버튼. `captureTimeout: 350ms` 로 묶음 처리.
-- **검색**: 사이드바 검색 (200ms debounce). 카테고리별 접힘/펼침. 최근 사용 5개 상단 고정.
+- **검색**: 사이드바 검색 (200ms debounce, 별칭 포함 — `k8s`, `postgres` 등). 카테고리별 접힘/펼침, 인기순 상위 4개 + 더보기. 최근 사용 5개 상단 고정.
+- **기술 스택 프리셋**: 사이드바 `Preset` 에서 회사(Naver, Kakao, Toss 등)를 고르면 해당 스택이 맨 위에 고정. `Add all to board` 로 한 번에 배치 (Undo 1회로 되돌림). `+ Save board as preset…` 으로 현재 보드의 스택을 내 프리셋으로 저장. 로그인 회원은 백엔드(`/api/v1/me/presets`)에 저장돼 기기 간 동기화되고, 비회원·로컬 모드는 사용자별 localStorage 키에 저장된다 (이 브라우저에 남은 프리셋 — 비회원으로 저장한 것 포함 — 은 로그인 후 첫 조회 때 그 회원 계정으로 옮겨진다). 프리셋 섹션은 카테고리별로 묶어 보여준다.
 - **격자 토글**: 툴바 `격자` 버튼. localStorage 영속화.
 - **공유**: 헤더 `공유` 버튼 → 링크 복사 + 이메일 초대 (백엔드 도착 전엔 localStorage 보관). `VITE_SYNC_WS_URL` 설정 시 같은 링크 공유로 실시간 동시 편집.
 
@@ -75,6 +77,8 @@ dev 서버는 `/api`와 `/ws`를 `VITE_API_URL` / `VITE_WS_URL` 로 프록시한
 
 ```
 src/
+  catalog/     기술 스택 카탈로그 원본(stacks.json) + 생성 결과(catalog.generated.json)
+  assets/stack-icons/  수집된 기술 스택 아이콘 SVG (devicon / simple-icons, 라이선스 고지 포함)
   api/         REST 클라이언트 (axios). 로컬 모드에선 local/ 모듈로 분기
   collab/      Yjs Doc, IndexeddbPersistence / WebsocketProvider 래퍼, useBoardCollab 훅
   canvas/      Konva 기반 캔버스 — Canvas, NodeShape, EdgeShape, GroupShape,
@@ -123,3 +127,17 @@ UndoManager 가 트랜잭션 단위로 stack 을 쌓는다. 끊긴 엣지는 노
 - WebSocket: `${VITE_WS_URL}/ws/boards/{boardId}?token=...`
 
 `whiteboard-server` 가 위 엔드포인트를 제공하면 `VITE_REMOTE_MODE=true` 로 즉시 전환 가능.
+
+## 기술 스택 카탈로그
+
+원본은 `src/catalog/stacks.json` 하나다. 항목을 추가/수정한 뒤 `npm run catalog:sync` 를 돌리면
+`src/assets/stack-icons/*.svg` 와 `src/catalog/catalog.generated.json` 이 갱신된다 (둘 다 커밋 대상).
+
+- `icon`: `"devicon:<name>"` (버전 생략 시 original → plain → wordmark 순), `"devicon:<name>/<version>"`,
+  `"si:<simple-icons slug>"`, 또는 `null` (컬러 배지 폴백).
+- `color`: 생략하면 아이콘 출처의 브랜드 색을 쓴다. 미니맵/배지 색으로 사용.
+- 배열 순서 = 카테고리 안 인기순. 사이드바는 상위 4개만 먼저 보여준다.
+- 기존 `type` 값은 보드 문서에 저장돼 있으므로 바꾸거나 지우지 않는다.
+
+회사 프리셋은 `src/catalog/presets.json`. 공개 기술 블로그 기준의 대표 스택이며, 팀마다 다르다는 안내와 출처 링크를 함께 보여준다.
+`npm run catalog:sync` 가 프리셋이 카탈로그에 없는 type 을 가리키면 실패한다.
