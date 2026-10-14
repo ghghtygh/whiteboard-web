@@ -208,6 +208,11 @@ const en = {
     cancel: 'Cancel',
     nameRequired: 'Enter a preset name',
     boardEmpty: 'The board has no components yet',
+    limitReached: 'You can save up to {max} presets',
+    tooManyStacks: 'A preset can hold up to {max} components',
+    saveFailed: 'Could not save the preset. Try again.',
+    loadFailed: 'Could not load your presets',
+    deleteFailed: 'Could not delete the preset. Try again.',
   },
 
   share: {

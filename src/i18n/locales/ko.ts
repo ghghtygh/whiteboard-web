@@ -206,6 +206,11 @@ const ko: Messages = {
     cancel: '취소',
     nameRequired: '프리셋 이름을 입력하세요',
     boardEmpty: '보드에 아직 컴포넌트가 없습니다',
+    limitReached: '프리셋은 최대 {max}개까지 저장할 수 있습니다',
+    tooManyStacks: '프리셋에는 컴포넌트를 최대 {max}개까지 담을 수 있습니다',
+    saveFailed: '프리셋을 저장하지 못했습니다. 다시 시도해 주세요.',
+    loadFailed: '내 프리셋을 불러오지 못했습니다',
+    deleteFailed: '프리셋을 삭제하지 못했습니다. 다시 시도해 주세요.',
   },
 
   share: {

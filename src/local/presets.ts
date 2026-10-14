@@ -2,8 +2,8 @@ import builtin from '@/catalog/presets.json'
 
 // 기술 스택 프리셋.
 // - 내장: src/catalog/presets.json (회사별 대표 스택, 공개 기술 블로그 기준)
-// - 커스텀: 사용자가 "현재 보드의 스택" 으로 저장한 것. 사용자 id 별 localStorage 키에 보관한다
-//   (같은 브라우저에서 계정을 바꿔도 섞이지 않음). 기기 간 동기화는 백엔드 API 가 생기면 그쪽으로 옮긴다.
+// - 커스텀: 사용자가 "현재 보드의 스택" 으로 저장한 것. 여기(localStorage, 사용자 id 별 키)는
+//   로컬 모드·비회원용 저장소다. 로그인 회원은 `src/api/presets.ts` 가 백엔드로 보낸다.
 export interface StackPreset {
   id: string
   name: string

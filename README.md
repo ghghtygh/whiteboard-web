@@ -69,7 +69,7 @@ dev 서버는 `/api`와 `/ws`를 `VITE_API_URL` / `VITE_WS_URL` 로 프록시한
 - **팬/줌**: 빈 영역 드래그 = 팬. 마우스 휠 = 줌 (25%–400%).
 - **Undo/Redo**: `⌘Z` / `⌘⇧Z` 또는 툴바 버튼. `captureTimeout: 350ms` 로 묶음 처리.
 - **검색**: 사이드바 검색 (200ms debounce, 별칭 포함 — `k8s`, `postgres` 등). 카테고리별 접힘/펼침, 인기순 상위 4개 + 더보기. 최근 사용 5개 상단 고정.
-- **기술 스택 프리셋**: 사이드바 `Preset` 에서 회사(Naver, Kakao, Toss 등)를 고르면 해당 스택이 맨 위에 고정. `Add all to board` 로 한 번에 배치 (Undo 1회로 되돌림). `+ Save board as preset…` 으로 현재 보드의 스택을 내 프리셋으로 저장 (사용자별 localStorage 키 — 같은 브라우저에서 계정을 바꿔도 섞이지 않음). 프리셋 섹션은 카테고리별로 묶어 보여준다.
+- **기술 스택 프리셋**: 사이드바 `Preset` 에서 회사(Naver, Kakao, Toss 등)를 고르면 해당 스택이 맨 위에 고정. `Add all to board` 로 한 번에 배치 (Undo 1회로 되돌림). `+ Save board as preset…` 으로 현재 보드의 스택을 내 프리셋으로 저장. 로그인 회원은 백엔드(`/api/v1/me/presets`)에 저장돼 기기 간 동기화되고, 비회원·로컬 모드는 사용자별 localStorage 키에 저장된다 (회원이 이 브라우저에 남겨 둔 프리셋은 첫 조회 때 서버로 옮겨진다). 프리셋 섹션은 카테고리별로 묶어 보여준다.
 - **격자 토글**: 툴바 `격자` 버튼. localStorage 영속화.
 - **공유**: 헤더 `공유` 버튼 → 링크 복사 + 이메일 초대 (백엔드 도착 전엔 localStorage 보관). `VITE_SYNC_WS_URL` 설정 시 같은 링크 공유로 실시간 동시 편집.
 
