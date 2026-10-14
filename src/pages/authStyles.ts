@@ -73,10 +73,12 @@ export const authStyles = `
 
   /* ---------- 우측 폼 패널 ---------- */
   .auth-pane {
+    position: relative;
     display: grid; place-items: center;
     padding: 24px;
     background: var(--surface-app);
   }
+  .auth-pane .lang-select { position: absolute; top: 16px; right: 16px; }
   .auth-card {
     background: var(--surface-panel);
     border: 1px solid var(--border-subtle);

@@ -4,6 +4,7 @@ import { Group, Line, Rect, Text } from 'react-konva'
 import type { AwarenessState } from '@/collab/awareness'
 import type { Edge, Group as DGroup, Node } from '@/types/domain'
 import { anchorPoint, boxCenter, getNodeBox, nearestAnchor } from './geometry'
+import { useT } from '@/i18n'
 
 interface Props {
   states: Map<number, AwarenessState>
@@ -16,6 +17,7 @@ interface Props {
 const CURSOR_POINTS = [0, 0, 0, 16, 4, 12, 6.5, 18, 9.5, 17, 7, 11, 13, 11]
 
 function RemoteCursor({ state }: { state: AwarenessState }) {
+  const t = useT()
   const groupRef = useRef<Konva.Group>(null)
   const cursor = state.cursor
   const cx = cursor?.x
@@ -31,7 +33,7 @@ function RemoteCursor({ state }: { state: AwarenessState }) {
   }, [cx, cy])
 
   if (!cursor || !initRef.current) return null
-  const name = state.user.name || 'Anonymous'
+  const name = state.user.name || t('common.anonymous')
   const color = state.user.color
   // 라벨 폭 — 문자당 약 7px + padding
   const labelWidth = Math.min(160, Math.max(24, name.length * 7 + 12))

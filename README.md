@@ -1,5 +1,12 @@
 # whiteboard-web
 
+**Whiteboard** — 소프트웨어 아키텍처 다이어그램을 함께 그리는 협업 캔버스. Excalidraw 스타일 UX로
+기술 스택 컴포넌트(Spring Boot, Kafka, PostgreSQL...)를 검색·배치·연결하고, 실시간으로 같이 편집합니다.
+
+🔗 **라이브 데모**: [wb.gpglab.site](http://wb.gpglab.site/) · 🛠 React 18 · TypeScript · Vite · Yjs(CRDT) · react-konva
+
+---
+
 협업 화이트보드의 React 프론트엔드. 스펙 문서 v0.1 (2026-05-15) 기반.
 
 > **현재 상태**: 백엔드 없이 동작하는 **로컬 모드**가 기본. 보드 목록은 localStorage,
@@ -62,7 +69,7 @@ dev 서버는 `/api`와 `/ws`를 `VITE_API_URL` / `VITE_WS_URL` 로 프록시한
 - **팬/줌**: 빈 영역 드래그 = 팬. 마우스 휠 = 줌 (25%–400%).
 - **Undo/Redo**: `⌘Z` / `⌘⇧Z` 또는 툴바 버튼. `captureTimeout: 350ms` 로 묶음 처리.
 - **검색**: 사이드바 검색 (200ms debounce, 별칭 포함 — `k8s`, `postgres` 등). 카테고리별 접힘/펼침, 인기순 상위 4개 + 더보기. 최근 사용 5개 상단 고정.
-- **기술 스택 프리셋**: 사이드바 `Preset` 에서 회사(Naver, Kakao, Toss 등)를 고르면 해당 스택이 맨 위에 고정. `Add all to board` 로 한 번에 배치 (Undo 1회로 되돌림). `+ Save board as preset…` 으로 현재 보드의 스택을 내 프리셋으로 저장 (localStorage).
+- **기술 스택 프리셋**: 사이드바 `Preset` 에서 회사(Naver, Kakao, Toss 등)를 고르면 해당 스택이 맨 위에 고정. `Add all to board` 로 한 번에 배치 (Undo 1회로 되돌림). `+ Save board as preset…` 으로 현재 보드의 스택을 내 프리셋으로 저장 (사용자별 localStorage 키 — 같은 브라우저에서 계정을 바꿔도 섞이지 않음). 프리셋 섹션은 카테고리별로 묶어 보여준다.
 - **격자 토글**: 툴바 `격자` 버튼. localStorage 영속화.
 - **공유**: 헤더 `공유` 버튼 → 링크 복사 + 이메일 초대 (백엔드 도착 전엔 localStorage 보관). `VITE_SYNC_WS_URL` 설정 시 같은 링크 공유로 실시간 동시 편집.
 
@@ -81,6 +88,7 @@ src/
   pages/       Login, Signup, BoardList, BoardEdit, NotFound
   store/       zustand — auth (게스트 자동 시드), catalog, viewport
   local/       로컬 모드 전용 — mode 플래그, 카탈로그 시드, 보드 localStorage, 최근 사용
+  i18n/        다국어 — en(기준)/ko 메시지, useT/t, 언어 선택 상태. 가이드: docs/i18n.md
   types/       domain.ts — 스펙 §3 도메인 타입
   styles/      global.css
   App.tsx      RequireAuth 가드

@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { fetchCatalog } from '@/api/catalog'
 import type { ComponentType } from '@/types/domain'
+import { t } from '@/i18n'
 
 interface CatalogState {
   items: ComponentType[]
@@ -22,7 +23,7 @@ export const useCatalogStore = create<CatalogState>((set, get) => ({
       const items = await fetchCatalog()
       set({ items, loaded: true })
     } catch (err) {
-      set({ error: err instanceof Error ? err.message : 'Failed to load catalog' })
+      set({ error: err instanceof Error ? err.message : t('sidebar.loadFailed') })
     } finally {
       set({ loading: false })
     }

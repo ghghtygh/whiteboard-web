@@ -2,7 +2,8 @@ import builtin from '@/catalog/presets.json'
 
 // 기술 스택 프리셋.
 // - 내장: src/catalog/presets.json (회사별 대표 스택, 공개 기술 블로그 기준)
-// - 커스텀: 사용자가 "현재 보드의 스택" 으로 저장한 것. localStorage 에만 보관 (사용자 단위, 보드와 무관).
+// - 커스텀: 사용자가 "현재 보드의 스택" 으로 저장한 것. 사용자 id 별 localStorage 키에 보관한다
+//   (같은 브라우저에서 계정을 바꿔도 섞이지 않음). 기기 간 동기화는 백엔드 API 가 생기면 그쪽으로 옮긴다.
 export interface StackPreset {
   id: string
   name: string
@@ -11,15 +12,15 @@ export interface StackPreset {
   custom: boolean
 }
 
-const CUSTOM_KEY = 'whiteboard.presets.custom.v1'
-const SELECTED_KEY = 'whiteboard.presets.selected.v1'
 const CUSTOM_PREFIX = 'custom:'
+const customKey = (userId: string) => `whiteboard.presets.custom.v1.${userId}`
+const selectedKey = (userId: string) => `whiteboard.presets.selected.v1.${userId}`
 
 export const BUILTIN_PRESETS: StackPreset[] = builtin.presets.map((p) => ({ ...p, custom: false }))
 
-function readCustom(): StackPreset[] {
+function readCustom(userId: string): StackPreset[] {
   try {
-    const raw = localStorage.getItem(CUSTOM_KEY)
+    const raw = localStorage.getItem(customKey(userId))
     const arr = raw ? JSON.parse(raw) : []
     if (!Array.isArray(arr)) return []
     return arr
@@ -33,10 +34,10 @@ function readCustom(): StackPreset[] {
   }
 }
 
-function writeCustom(list: StackPreset[]) {
+function writeCustom(userId: string, list: StackPreset[]) {
   try {
     localStorage.setItem(
-      CUSTOM_KEY,
+      customKey(userId),
       JSON.stringify(list.map(({ id, name, stacks }) => ({ id, name, stacks }))),
     )
   } catch {
@@ -45,33 +46,33 @@ function writeCustom(list: StackPreset[]) {
 }
 
 export const localPresets = {
-  listCustom(): StackPreset[] {
-    return readCustom()
+  listCustom(userId: string): StackPreset[] {
+    return readCustom(userId)
   },
-  saveCustom(name: string, stacks: string[]): StackPreset {
+  saveCustom(userId: string, name: string, stacks: string[]): StackPreset {
     const preset: StackPreset = {
       id: `${CUSTOM_PREFIX}${Date.now().toString(36)}`,
       name,
       stacks,
       custom: true,
     }
-    writeCustom([...readCustom(), preset])
+    writeCustom(userId, [...readCustom(userId), preset])
     return preset
   },
-  removeCustom(id: string): void {
-    writeCustom(readCustom().filter((p) => p.id !== id))
+  removeCustom(userId: string, id: string): void {
+    writeCustom(userId, readCustom(userId).filter((p) => p.id !== id))
   },
-  getSelected(): string | null {
+  getSelected(userId: string): string | null {
     try {
-      return localStorage.getItem(SELECTED_KEY)
+      return localStorage.getItem(selectedKey(userId))
     } catch {
       return null
     }
   },
-  setSelected(id: string | null): void {
+  setSelected(userId: string, id: string | null): void {
     try {
-      if (id) localStorage.setItem(SELECTED_KEY, id)
-      else localStorage.removeItem(SELECTED_KEY)
+      if (id) localStorage.setItem(selectedKey(userId), id)
+      else localStorage.removeItem(selectedKey(userId))
     } catch {
       // 무시 — 다음 진입 때 프리셋 미선택 상태로 시작할 뿐
     }

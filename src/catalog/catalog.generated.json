@@ -1,65 +1,20 @@
 {
   "categories": [
-    {
-      "id": "language",
-      "label": "Language"
-    },
-    {
-      "id": "frontend",
-      "label": "Frontend"
-    },
-    {
-      "id": "mobile",
-      "label": "Mobile"
-    },
-    {
-      "id": "framework",
-      "label": "Backend"
-    },
-    {
-      "id": "database",
-      "label": "Database"
-    },
-    {
-      "id": "messaging",
-      "label": "Messaging"
-    },
-    {
-      "id": "data",
-      "label": "Data / ML"
-    },
-    {
-      "id": "ci-cd",
-      "label": "CI / CD · Build"
-    },
-    {
-      "id": "infrastructure",
-      "label": "Infrastructure"
-    },
-    {
-      "id": "cloud",
-      "label": "Cloud"
-    },
-    {
-      "id": "observability",
-      "label": "Observability"
-    },
-    {
-      "id": "auth",
-      "label": "Auth"
-    },
-    {
-      "id": "storage",
-      "label": "Storage"
-    },
-    {
-      "id": "testing",
-      "label": "Testing / API"
-    },
-    {
-      "id": "etc",
-      "label": "Collaboration"
-    }
+    "language",
+    "frontend",
+    "mobile",
+    "framework",
+    "database",
+    "messaging",
+    "data",
+    "ci-cd",
+    "infrastructure",
+    "cloud",
+    "observability",
+    "auth",
+    "storage",
+    "testing",
+    "etc"
   ],
   "items": [
     {

@@ -3,9 +3,12 @@ import { Link, useNavigate } from 'react-router-dom'
 import { login } from '@/api/auth'
 import { useAuthStore } from '@/store/auth'
 import { SocialLoginButtons } from '@/components/SocialLoginButtons'
+import { LanguageSelect } from '@/components/LanguageSelect'
+import { useT } from '@/i18n'
 import { authStyles } from './authStyles'
 
 export function LoginPage() {
+  const t = useT()
   const navigate = useNavigate()
   const setAuth = useAuthStore((s) => s.setAuth)
   const ensureGuest = useAuthStore((s) => s.ensureGuest)
@@ -23,7 +26,7 @@ export function LoginPage() {
       setAuth(tokens, user)
       navigate('/boards', { replace: true })
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed')
+      setError(err instanceof Error ? err.message : t('auth.login.failed'))
     } finally {
       setLoading(false)
     }
@@ -38,26 +41,27 @@ export function LoginPage() {
   return (
     <div className="auth-split">
       <aside className="auth-brand">
-        <Link to="/boards" className="brand-mark" title="Go to my boards">
+        <Link to="/boards" className="brand-mark" title={t('auth.goToBoards')}>
           <span className="brand-dot" />
-          Whiteboard
+          {t('app.name')}
         </Link>
         <div className="brand-pitch">
-          <p className="eyebrow">SOFTWARE ARCHITECTURE, TOGETHER</p>
-          <h2>Software architecture,<br />drawn together</h2>
+          <p className="eyebrow">{t('auth.eyebrow')}</p>
+          <h2>{t('auth.login.pitchTitleLine1')}<br />{t('auth.login.pitchTitleLine2')}</h2>
           <p className="brand-sub">
-            Drag in your stack, connect it with edges, and edit together in real time.
+            {t('auth.login.pitchBody')}
           </p>
         </div>
         <span className="brand-foot">wb.gpglab.site</span>
       </aside>
 
       <div className="auth-pane">
+        <LanguageSelect />
         <form className="auth-card" onSubmit={onSubmit}>
-          <h1>Log in</h1>
-          <p className="sub">Log in to your account and pick up where you left off.</p>
+          <h1>{t('auth.login.title')}</h1>
+          <p className="sub">{t('auth.login.subtitle')}</p>
           <label>
-            Email
+            {t('auth.email')}
             <input
               type="email"
               value={email}
@@ -67,7 +71,7 @@ export function LoginPage() {
             />
           </label>
           <label>
-            Password
+            {t('auth.password')}
             <input
               type="password"
               value={password}
@@ -77,14 +81,14 @@ export function LoginPage() {
           </label>
           {error && <p className="error">{error}</p>}
           <button type="submit" className="primary" disabled={loading}>
-            {loading ? 'Logging in…' : 'Log in'}
+            {loading ? t('auth.login.submitting') : t('auth.login.submit')}
           </button>
           <SocialLoginButtons />
           <button type="button" className="guest-btn" onClick={onGuest}>
-            Continue as guest
+            {t('auth.login.continueAsGuest')}
           </button>
           <p className="muted">
-            Don’t have an account? <Link to="/signup">Sign up</Link>
+            {t('auth.login.noAccount')} <Link to="/signup">{t('auth.login.signupLink')}</Link>
           </p>
         </form>
       </div>

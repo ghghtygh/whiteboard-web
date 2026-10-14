@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware'
 import { nanoid } from 'nanoid'
 import type { AuthTokens, User } from '@/types/domain'
 import { IS_LOCAL_MODE } from '@/local/mode'
+import { t } from '@/i18n'
 
 interface AuthState {
   token: string | null
@@ -39,7 +40,7 @@ export const useAuthStore = create<AuthState>()(
       ensureGuest: () => {
         const cur = get()
         if (cur.user) return
-        set({ user: { id: nanoid(8), email: 'guest@local', name: 'Guest' }, isGuest: true })
+        set({ user: { id: nanoid(8), email: 'guest@local', name: t('auth.guestName') }, isGuest: true })
       },
     }),
     { name: 'whiteboard-auth' },

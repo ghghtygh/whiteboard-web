@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useCatalogStore } from '@/store/catalog'
 import type { ComponentType } from '@/types/domain'
 import {
-  CATALOG_CATEGORIES,
   LOCAL_CATALOG,
   catalogAliases,
   catalogColor,
@@ -19,11 +18,8 @@ import { COARSE_GRID, NODE_H, NODE_W, coarseSnap, dropJitter } from '@/canvas/ge
 import { CloseIcon } from '@/components/icons'
 import { PresetPanel } from '@/components/PresetPanel'
 import { MOBILE_BP } from '@/styles/breakpoints'
-
-const CATEGORY_LABELS: Record<string, string> = Object.fromEntries(
-  CATALOG_CATEGORIES.map((c) => [c.id, c.label]),
-)
-const CATEGORY_ORDER = new Map(CATALOG_CATEGORIES.map((c, i) => [c.id, i]))
+import { useT } from '@/i18n'
+import { categoryLabel, groupByCategory } from '@/catalog/categories'
 
 // 카테고리마다 인기순 상위 N개만 먼저 보여주고 나머지는 "더보기" 로 접는다.
 // 숨길 항목이 1개뿐이면 버튼이 그 자리를 차지할 뿐이라 전부 보여준다.
@@ -116,6 +112,7 @@ interface SidebarProps {
 }
 
 export function Sidebar({ open = false, onClose }: SidebarProps = {}) {
+  const t = useT()
   const items = useCatalogStore((s) => s.items)
   const loading = useCatalogStore((s) => s.loading)
   const error = useCatalogStore((s) => s.error)
@@ -350,17 +347,10 @@ export function Sidebar({ open = false, onClose }: SidebarProps = {}) {
     )
   }, [items, debounced])
 
-  const grouped = useMemo(() => {
-    const map = new Map<string, ComponentType[]>()
-    for (const item of filtered) {
-      const arr = map.get(item.category) ?? []
-      arr.push(item)
-      map.set(item.category, arr)
-    }
-    for (const arr of map.values()) arr.sort((a, b) => catalogRank(a.type) - catalogRank(b.type))
-    const order = (c: string) => CATEGORY_ORDER.get(c) ?? Number.MAX_SAFE_INTEGER
-    return [...map.entries()].sort(([a], [b]) => order(a) - order(b))
-  }, [filtered])
+  const grouped = useMemo(
+    () => groupByCategory([...filtered].sort((a, b) => catalogRank(a.type) - catalogRank(b.type))),
+    [filtered],
+  )
 
   const recents = useMemo(() => {
     if (debounced) return []
@@ -382,7 +372,7 @@ export function Sidebar({ open = false, onClose }: SidebarProps = {}) {
       <aside className="sidebar" data-open={open} data-tour="sidebar">
         <div className="search">
           <input
-            placeholder="Search components"
+            placeholder={t('sidebar.search')}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
@@ -390,15 +380,15 @@ export function Sidebar({ open = false, onClose }: SidebarProps = {}) {
             type="button"
             className="close-btn"
             onClick={onClose}
-            aria-label="Close menu"
-            title="Close"
+            aria-label={t('sidebar.closeMenu')}
+            title={t('common.close')}
           >
             <CloseIcon />
           </button>
         </div>
 
         <div className="list">
-          {loading && <p className="muted">Loading…</p>}
+          {loading && <p className="muted">{t('common.loading')}</p>}
           {error && <p className="error">{error}</p>}
 
           {!debounced && items.length > 0 && (
@@ -412,7 +402,7 @@ export function Sidebar({ open = false, onClose }: SidebarProps = {}) {
 
           {recents.length > 0 && (
             <section>
-              <h3>Recently used</h3>
+              <h3>{t('sidebar.recent')}</h3>
               <ul>
                 {recents.map((c) => (
                   <ComponentRow
@@ -439,7 +429,7 @@ export function Sidebar({ open = false, onClose }: SidebarProps = {}) {
                   onClick={() => setCollapsed((s) => ({ ...s, [category]: !s[category] }))}
                   style={{ cursor: 'pointer' }}
                 >
-                  <span>{isCollapsed ? '▸' : '▾'}</span> {CATEGORY_LABELS[category] ?? category}
+                  <span>{isCollapsed ? '▸' : '▾'}</span> {categoryLabel(t, category)}
                   <span className="count">{list.length}</span>
                 </h3>
                 {!isCollapsed && (
@@ -462,7 +452,7 @@ export function Sidebar({ open = false, onClose }: SidebarProps = {}) {
                     onClick={() => toggleExpanded(category)}
                     aria-expanded={isExpanded}
                   >
-                    {isExpanded ? 'Show less' : `+${list.length - TOP_N} more`}
+                    {isExpanded ? t('sidebar.showLess') : t('sidebar.more', { count: list.length - TOP_N })}
                   </button>
                 )}
               </section>
@@ -470,7 +460,7 @@ export function Sidebar({ open = false, onClose }: SidebarProps = {}) {
           })}
 
           {!loading && items.length === 0 && !error && (
-            <p className="muted">The catalog is empty</p>
+            <p className="muted">{t('sidebar.empty')}</p>
           )}
         </div>
 

@@ -5,6 +5,7 @@ import { useNodesSnapshot, useGroupsSnapshot, useEdgesSnapshot } from '@/canvas/
 import { NODE_H, NODE_W } from '@/canvas/geometry'
 import { catalogColor } from '@/local/catalogSeed'
 import { MOBILE_BP } from '@/styles/breakpoints'
+import { useT } from '@/i18n'
 
 const MM_W = 200
 const MM_H = 140
@@ -19,6 +20,7 @@ interface Bounds {
 }
 
 export function Minimap() {
+  const t = useT()
   const { doc } = useCanvasContext()
   const nodes = useNodesSnapshot(doc)
   const groups = useGroupsSnapshot(doc)
@@ -132,7 +134,7 @@ export function Minimap() {
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
         role="img"
-        aria-label="Minimap — click or drag to pan"
+        aria-label={t('minimap.label')}
       >
         {/* 배경 */}
         <rect x={0} y={0} width={MM_W} height={MM_H} fill="#f6f8fb" />

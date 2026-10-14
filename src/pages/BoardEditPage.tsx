@@ -23,8 +23,11 @@ import { CanvasContextProvider } from '@/canvas/CanvasContext'
 import { useSelection } from '@/canvas/selection'
 import { SYNC_AVAILABLE, useSyncStore } from '@/store/sync'
 import type { Board } from '@/types/domain'
+import { useT } from '@/i18n'
+import { LanguageSelect } from '@/components/LanguageSelect'
 
 export function BoardEditPage() {
+  const t = useT()
   const { boardId } = useParams<{ boardId: string }>()
   const [board, setBoard] = useState<Board | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -105,12 +108,12 @@ export function BoardEditPage() {
             className="menu-btn"
             data-tour="menu"
             onClick={() => setSidebarOpen(true)}
-            aria-label="Open components menu"
-            title="Components"
+            aria-label={t('editor.openMenu')}
+            title={t('editor.menu')}
           >
             <MenuIcon />
           </button>
-          <Link to="/boards" className="back" aria-label="Back to board list" title="Board list">
+          <Link to="/boards" className="back" aria-label={t('editor.backToList')} title={t('editor.boardList')}>
             <ArrowLeftIcon />
           </Link>
           {editingTitle ? (
@@ -126,7 +129,7 @@ export function BoardEditPage() {
               }}
             />
           ) : (
-            <button className="title-btn" onClick={startEditTitle} title="Rename board">
+            <button className="title-btn" onClick={startEditTitle} title={t('editor.rename')}>
               {board?.title ?? '…'}
             </button>
           )}
@@ -138,8 +141,8 @@ export function BoardEditPage() {
             type="button"
             className="help-btn"
             data-tour="help"
-            aria-label="Show feature tour"
-            title="Feature tour"
+            aria-label={t('editor.showTour')}
+            title={t('editor.tour')}
             onClick={() => {
               setSidebarOpen(false)
               startTour()
@@ -147,11 +150,12 @@ export function BoardEditPage() {
           >
             <HelpIcon />
           </button>
+          <LanguageSelect compact />
           <button
             className="share-btn primary"
             data-tour="share"
             disabled={shareDisabled}
-            title={shareDisabled ? 'Sign in to share' : undefined}
+            title={shareDisabled ? t('editor.signInToShare') : undefined}
             onClick={async () => {
               // 공유 시 협업 세션 보장(비회원이면 게스트 토큰 발급 + 동기화 ON).
               // 실패해도 모달은 열어 로컬 안내를 보여준다.
@@ -163,7 +167,7 @@ export function BoardEditPage() {
               setShareOpen(true)
             }}
           >
-            Share
+            {t('editor.share')}
           </button>
           {SYNC_AVAILABLE ? (
             <button
@@ -172,16 +176,16 @@ export function BoardEditPage() {
               data-tour="sync"
               data-online={syncOn && syncConnected}
               data-on={syncOn}
-              title={syncOn ? 'Real-time sync on — click to turn off' : 'Real-time sync off — click to turn on'}
+              title={syncOn ? t('editor.syncOnHint') : t('editor.syncOffHint')}
               onClick={toggleSync}
             >
               <span className="dot" />
-              {syncOn ? (syncConnected ? 'Syncing' : 'Connecting…') : 'Sync off'}
+              {syncOn ? (syncConnected ? t('editor.syncing') : t('editor.connecting')) : t('editor.syncOff')}
             </button>
           ) : (
-            <span className="status" data-tour="sync" data-online={collab.ready} title="No sync server configured — saved locally only">
+            <span className="status" data-tour="sync" data-online={collab.ready} title={t('editor.localOnlyHint')}>
               <span className="dot" />
-              {collab.ready ? 'Local' : '…'}
+              {collab.ready ? t('editor.local') : '…'}
             </span>
           )}
         </header>
@@ -275,6 +279,7 @@ export function BoardEditPage() {
             .title-btn { font-size: 13px; max-width: 120px; }
             .share-btn { padding: 4px 8px; }
             .help-btn { width: 32px; height: 32px; }
+            .lang-select[data-compact="true"] .lang-trigger { width: 32px; height: 32px; }
             /* 10px 미만은 판독성이 떨어져 DS 최소 크기(--text-2xs)를 유지하고
                대신 패딩/줄바꿈으로 압축한다. */
             .status { font-size: var(--text-2xs); padding: 4px; white-space: nowrap; }

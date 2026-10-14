@@ -2,11 +2,15 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { createToken, listTokens, revokeToken } from '@/api/tokens'
 import { toast } from '@/store/toast'
+import { t as translateNow, useFormatDate, useT } from '@/i18n'
+import { Rich } from '@/i18n/Rich'
 import { IS_LOCAL_MODE } from '@/local/mode'
 import { COMPACT_BP } from '@/styles/breakpoints'
 import type { IssuedPersonalAccessToken, PersonalAccessToken } from '@/types/domain'
 
 export function TokensPage() {
+  const t = useT()
+  const formatDate = useFormatDate()
   const [tokens, setTokens] = useState<PersonalAccessToken[]>([])
   const [loading, setLoading] = useState(!IS_LOCAL_MODE)
   const [name, setName] = useState('')
@@ -21,7 +25,7 @@ export function TokensPage() {
     try {
       setTokens(await listTokens())
     } catch (err) {
-      toast.show(err instanceof Error ? err.message : 'Failed to load tokens.', { tone: 'danger' })
+      toast.show(err instanceof Error ? err.message : translateNow('tokens.loadFailed'), { tone: 'danger' })
     } finally {
       setLoading(false)
     }
@@ -41,7 +45,7 @@ export function TokensPage() {
       setName('')
       await refresh()
     } catch (err) {
-      toast.show(err instanceof Error ? err.message : 'Failed to create the token.', { tone: 'danger' })
+      toast.show(err instanceof Error ? err.message : translateNow('tokens.createFailed'), { tone: 'danger' })
     } finally {
       setCreating(false)
     }
@@ -64,12 +68,12 @@ export function TokensPage() {
       return
     }
     setArmedRevoke(null)
-    setTokens((ts) => ts.filter((t) => t.id !== id))
+    setTokens((ts) => ts.filter((tk) => tk.id !== id))
     try {
       await revokeToken(id)
-      toast.show('Token revoked.')
+      toast.show(translateNow('tokens.revoked'))
     } catch (err) {
-      toast.show(err instanceof Error ? err.message : 'Failed to revoke the token.', { tone: 'danger' })
+      toast.show(err instanceof Error ? err.message : translateNow('tokens.revokeFailed'), { tone: 'danger' })
       void refresh()
     }
   }
@@ -77,68 +81,64 @@ export function TokensPage() {
   return (
     <div className="page">
       <header className="topbar">
-        <Link to="/boards" className="back">← My boards</Link>
-        <h1>API tokens</h1>
+        <Link to="/boards" className="back">{t('tokens.back')}</Link>
+        <h1>{t('tokens.title')}</h1>
       </header>
 
-      <p className="intro">
-        Personal access tokens let external tools — like an MCP server — call the whiteboard API on
-        your behalf. Anyone with a token can read and edit your boards, so keep it as secret as a
-        password.
-      </p>
+      <p className="intro">{t('tokens.intro')}</p>
 
       {IS_LOCAL_MODE ? (
-        <p className="muted">API tokens are only available when connected to the backend (remote mode).</p>
+        <p className="muted">{t('tokens.remoteOnly')}</p>
       ) : (
         <>
           <form className="create" onSubmit={onCreate}>
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Token name (e.g. MCP on my laptop)"
+              placeholder={t('tokens.namePlaceholder')}
               maxLength={80}
             />
             <button className="primary" type="submit" disabled={!name.trim() || creating}>
-              {creating ? 'Creating…' : 'Create token'}
+              {creating ? t('tokens.creating') : t('tokens.create')}
             </button>
           </form>
 
           {issued && (
             <div className="issued">
               <p>
-                <strong>{issued.name}</strong> was created. Copy it now — it won’t be shown again.
+                <Rich text={t('tokens.issued', { name: issued.name })} />
               </p>
               <div className="issued-value">
                 <code>{issued.token}</code>
                 <button type="button" onClick={() => onCopy(issued.token)}>
-                  {copied ? 'Copied' : 'Copy'}
+                  {copied ? t('common.copied') : t('common.copy')}
                 </button>
               </div>
-              <button type="button" className="dismiss" onClick={() => setIssued(null)}>Done</button>
+              <button type="button" className="dismiss" onClick={() => setIssued(null)}>{t('common.done')}</button>
             </div>
           )}
 
-          {loading && <p className="muted">Loading…</p>}
+          {loading && <p className="muted">{t('common.loading')}</p>}
 
           {!loading && (
             <ul className="list">
-              {tokens.length === 0 && <li className="empty">No tokens yet.</li>}
-              {tokens.map((t) => (
-                <li key={t.id} className="row">
+              {tokens.length === 0 && <li className="empty">{t('tokens.empty')}</li>}
+              {tokens.map((tk) => (
+                <li key={tk.id} className="row">
                   <div className="row-main">
-                    <strong>{t.name}</strong>
+                    <strong>{tk.name}</strong>
                     <span className="muted">
-                      Created {new Date(t.createdAt).toLocaleDateString('en-US')} · Expires{' '}
-                      {new Date(t.expiresAt).toLocaleDateString('en-US')}
-                      {t.lastUsedAt && ` · Last used ${new Date(t.lastUsedAt).toLocaleDateString('en-US')}`}
+                      {t('tokens.created', { date: formatDate(tk.createdAt) })} ·{' '}
+                      {t('tokens.expires', { date: formatDate(tk.expiresAt) })}
+                      {tk.lastUsedAt && ` · ${t('tokens.lastUsed', { date: formatDate(tk.lastUsedAt) })}`}
                     </span>
                   </div>
                   <button
                     type="button"
-                    className={armedRevoke === t.id ? 'danger armed' : 'danger'}
-                    onClick={() => onRevoke(t.id)}
+                    className={armedRevoke === tk.id ? 'danger armed' : 'danger'}
+                    onClick={() => onRevoke(tk.id)}
                   >
-                    {armedRevoke === t.id ? 'Confirm revoke' : 'Revoke'}
+                    {armedRevoke === tk.id ? t('tokens.confirmRevoke') : t('common.revoke')}
                   </button>
                 </li>
               ))}

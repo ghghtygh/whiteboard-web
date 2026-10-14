@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import * as Y from 'yjs'
 import type { BoardDoc } from '@/collab/doc'
 import type { Edge, Group, Node } from '@/types/domain'
+import { track } from '@/metrics/track'
 import { readEdges, readGroups, readNodes } from './ops'
 
 export function useNodesSnapshot(doc: BoardDoc | null): Node[] {
@@ -59,8 +60,12 @@ export function useUndoManager(doc: BoardDoc | null): Y.UndoManager | null {
     const manager = new Y.UndoManager([doc.nodes, doc.edges, doc.groups], {
       captureTimeout: 350,
     })
+    // 단축키·툴바 어느 쪽으로 실행해도 한 곳에서 집계된다.
+    const onPopped = (e: { type: 'undo' | 'redo' }) => track(e.type)
+    manager.on('stack-item-popped', onPopped)
     setUm(manager)
     return () => {
+      manager.off('stack-item-popped', onPopped)
       manager.destroy()
       setUm(null)
     }

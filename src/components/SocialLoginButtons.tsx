@@ -1,12 +1,14 @@
 import { OAUTH_PROVIDERS, SOCIAL_LOGIN_ENABLED, oauthLoginUrl } from '@/api/oauth'
+import { useT } from '@/i18n'
 
 export function SocialLoginButtons() {
+  const t = useT()
   if (!SOCIAL_LOGIN_ENABLED) return null
 
   return (
     <div className="social-login">
       <div className="divider">
-        <span>or</span>
+        <span>{t('auth.or')}</span>
       </div>
       <div className="social-buttons">
         {OAUTH_PROVIDERS.map((p) => (
@@ -16,7 +18,7 @@ export function SocialLoginButtons() {
             href={oauthLoginUrl(p.id)}
             style={{ background: p.bg, color: p.fg, border: `1px solid ${p.border ?? p.bg}` }}
           >
-            Continue with {p.label}
+            {t('auth.continueWith', { provider: p.label })}
           </a>
         ))}
       </div>

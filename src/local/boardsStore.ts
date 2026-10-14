@@ -1,5 +1,6 @@
 import { nanoid } from 'nanoid'
 import type { Board } from '@/types/domain'
+import { t } from '@/i18n'
 
 const KEY = 'whiteboard.boards.v1'
 const LAST_OPENED_KEY = 'whiteboard.lastOpenedBoardId.v1'
@@ -33,7 +34,7 @@ export const localBoards = {
     const now = new Date().toISOString()
     const board: Board = {
       id: nanoid(12),
-      title: title.trim() || 'New board',
+      title: title.trim() || t('boards.defaultTitle'),
       ownerId: OWNER_ID,
       createdAt: now,
       updatedAt: now,
@@ -47,7 +48,7 @@ export const localBoards = {
   // 실제 내용은 boardId 기준 IndexedDB(Yjs)로 동기화되고, 이름 변경 등 명시적 행동 시 저장된다.
   transient(id: string): Board {
     const now = new Date().toISOString()
-    return { id, title: 'Untitled board', ownerId: OWNER_ID, createdAt: now, updatedAt: now }
+    return { id, title: t('boards.untitledBoard'), ownerId: OWNER_ID, createdAt: now, updatedAt: now }
   },
 
   // 주어진 id 를 유지한 채 보드를 저장(upsert). 임시 보드를 이름 변경으로 처음 저장할 때 사용.
@@ -56,7 +57,7 @@ export const localBoards = {
     const all = readAll().filter((b) => b.id !== id)
     const board: Board = {
       id,
-      title: title.trim() || 'New board',
+      title: title.trim() || t('boards.defaultTitle'),
       ownerId: OWNER_ID,
       createdAt: now,
       updatedAt: now,
@@ -107,6 +108,6 @@ export const localBoards = {
     if (last) return last
     const all = this.list()
     if (all.length > 0) return all[0]!.id
-    return this.create('Untitled whiteboard').id
+    return this.create(t('boards.untitledWhiteboard')).id
   },
 }

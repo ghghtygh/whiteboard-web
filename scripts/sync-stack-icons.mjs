@@ -13,6 +13,8 @@
 //   src/assets/stack-icons/LICENSE-*    출처 라이선스 고지
 //   src/catalog/catalog.generated.json  런타임 카탈로그 (색상 확정본)
 //
+// categories 는 사이드바 표시 순서(id 배열). 표시 이름은 i18n 의 sidebar.categories 에 있다.
+//
 // src/catalog/presets.json 의 회사 프리셋이 존재하는 type 만 참조하는지도 함께 검사한다.
 
 import fs from 'node:fs'
@@ -41,7 +43,7 @@ const siBySlug = new Map(
 )
 
 const errors = []
-const categoryIds = new Set(categories.map((c) => c.id))
+const categoryIds = new Set(categories)
 const seen = new Set()
 
 function normalizeHex(hex) {

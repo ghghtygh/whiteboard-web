@@ -1,8 +1,10 @@
 import { useViewportStore, MIN_SCALE, MAX_SCALE } from '@/store/viewport'
 import { MinusIcon, PlusIcon } from '@/components/icons'
 import { MOBILE_BP } from '@/styles/breakpoints'
+import { useT } from '@/i18n'
 
 export function ZoomOverlay() {
+  const t = useT()
   const scale = useViewportStore((s) => s.scale)
   const setScale = useViewportStore((s) => s.setScale)
   const reset = useViewportStore((s) => s.reset)
@@ -12,13 +14,13 @@ export function ZoomOverlay() {
 
   return (
     <div className="zoom-overlay" data-tour="zoom">
-      <button title="Zoom out" disabled={atMin} onClick={() => setScale(scale / 1.1)}>
+      <button title={t('zoom.out')} disabled={atMin} onClick={() => setScale(scale / 1.1)}>
         <MinusIcon />
       </button>
-      <button title="Reset to 100%" onClick={reset} className="zoom-pct">
+      <button title={t('zoom.reset')} onClick={reset} className="zoom-pct">
         {Math.round(scale * 100)}%
       </button>
-      <button title="Zoom in" disabled={atMax} onClick={() => setScale(scale * 1.1)}>
+      <button title={t('zoom.in')} disabled={atMax} onClick={() => setScale(scale * 1.1)}>
         <PlusIcon />
       </button>
 

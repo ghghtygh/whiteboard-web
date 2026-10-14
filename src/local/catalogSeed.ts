@@ -18,8 +18,6 @@ interface GeneratedEntry {
 
 const ENTRIES: GeneratedEntry[] = generated.items
 
-export const CATALOG_CATEGORIES: { id: string; label: string }[] = generated.categories
-
 export const LOCAL_CATALOG: ComponentType[] = ENTRIES.map((s) => ({
   type: s.type,
   displayName: s.displayName,
