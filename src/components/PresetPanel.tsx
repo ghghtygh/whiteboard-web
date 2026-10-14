@@ -57,7 +57,10 @@ function UserPresetPanel({
     let cancelled = false
     listPresets(userId)
       .then((list) => {
-        if (!cancelled) setCustom(list)
+        if (cancelled) return
+        setCustom(list)
+        // 로그인 직후 비회원 프리셋이 옮겨지면서 선택도 새 id 로 이어졌을 수 있다
+        setSelectedId(localPresets.getSelected(userId))
       })
       .catch(() => {
         if (!cancelled) setPanelError('presets.loadFailed')

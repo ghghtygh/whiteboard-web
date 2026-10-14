@@ -1,5 +1,5 @@
 import { apiClient, unwrap } from './client'
-import { isBackendActive } from '@/store/auth'
+import { isBackendActive, useAuthStore } from '@/store/auth'
 import { localPresets, type StackPreset } from '@/local/presets'
 
 // 커스텀 기술 스택 프리셋 저장소.
@@ -27,19 +27,34 @@ async function createRemote(name: string, stacks: string[]): Promise<StackPreset
   return fromDto(unwrap(res.data))
 }
 
-// 회원이 백엔드 연동 전에 이 브라우저에 저장해 둔 프리셋을 서버로 한 번 옮긴다.
-// 하나씩 올리고 성공한 것만 로컬에서 지우므로, 중간에 실패해도 다음 조회 때 남은 것부터 다시 시도한다.
+// 이 브라우저에 남은 프리셋을 로그인한 회원 계정(서버)으로 옮긴다.
+// - 그 회원 id 키에 남은 것 (백엔드 연동 전에 저장한 것)
+// - 비회원(게스트)으로 저장한 것 — 게스트 id 는 로그인하면 바뀌므로 저장할 때 기록해 둔 목록에서 찾는다
+// 하나씩 올리고 성공한 것만 로컬에서 지우므로, 중간에 실패해도(한도 초과 등) 다음 조회 때 남은 것부터 다시 시도한다.
+// 옮긴 프리셋이 선택돼 있었다면 회원 쪽 선택으로 이어 준다.
 // 같은 사용자에 대한 동시 호출(StrictMode 이중 마운트, 패널 재마운트 등)은 진행 중인 이관 하나를 공유해
 // 같은 프리셋이 두 번 올라가지 않게 한다.
 const migrating = new Map<string, Promise<void>>()
+
+async function migrateFrom(ownerId: string, userId: string): Promise<void> {
+  const selected = localPresets.getSelected(ownerId)
+  for (const p of localPresets.listCustom(ownerId)) {
+    const created = await createRemote(p.name, p.stacks)
+    localPresets.removeCustom(ownerId, p.id)
+    if (p.id === selected) localPresets.setSelected(userId, created.id)
+  }
+}
 
 function migrateLocal(userId: string): Promise<void> {
   const running = migrating.get(userId)
   if (running) return running
   const task = (async () => {
-    for (const p of localPresets.listCustom(userId)) {
-      await createRemote(p.name, p.stacks)
-      localPresets.removeCustom(userId, p.id)
+    await migrateFrom(userId, userId)
+    for (const guestId of localPresets.listGuestOwners()) {
+      if (guestId === userId) continue
+      await migrateFrom(guestId, userId)
+      localPresets.setSelected(guestId, null)
+      localPresets.removeGuestOwner(guestId)
     }
   })().finally(() => migrating.delete(userId))
   migrating.set(userId, task)
@@ -58,7 +73,11 @@ export async function listPresets(userId: string): Promise<StackPreset[]> {
 }
 
 export async function createPreset(userId: string, name: string, stacks: string[]): Promise<StackPreset> {
-  if (!isBackendActive()) return localPresets.saveCustom(userId, name, stacks)
+  if (!isBackendActive()) {
+    // 비회원 프리셋은 로그인 후 계정으로 옮길 수 있게 소유 게스트 id 를 기록해 둔다
+    if (useAuthStore.getState().isGuest) localPresets.markGuestOwner(userId)
+    return localPresets.saveCustom(userId, name, stacks)
+  }
   return createRemote(name, stacks)
 }
 
